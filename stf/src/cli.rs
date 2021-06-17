@@ -373,6 +373,7 @@ pub fn cmd<'a>(
                     Ok(())
                 }),
         )
+        //.add_cmd(place_order_cli_command(perform_operation))
         .into_cmd("trusted")
 }
 
