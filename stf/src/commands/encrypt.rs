@@ -28,9 +28,9 @@ use clap::{App, ArgMatches};
 use clap_nested::Command;
 use log::*;
 
-pub fn cancel_order_cli_command(perform_operation: OperationRunner) -> Command<str> {
-    Command::new("cancel_order")
-        .description("Cancel order")
+pub fn encrypt_cli_command(perform_operation: OperationRunner) -> Command<str> {
+    Command::new("encrypt")
+        .description("Generates an AES256 key, encrypts and stores the input data")
         .options(add_app_args)
         .runner(move |_args: &str, matches: &ArgMatches<'_>| {
             command_runner(matches, perform_operation)
@@ -38,49 +38,22 @@ pub fn cancel_order_cli_command(perform_operation: OperationRunner) -> Command<s
 }
 
 fn add_app_args<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
-    let app_with_main_account = add_main_account_args(app);
-    let app_with_proxy_account = add_proxy_account_args(app_with_main_account);
-    let app_with_market_id = add_market_id_args(app_with_proxy_account);
-    add_order_id_args(app_with_market_id)
+    app.arg(
+        Arg::with_name("data")
+            .takes_value(true)
+            .required(true)
+            .value_name("STRING")
+            .help("data to be encrypted"),
+    )
 }
 
 fn command_runner<'a>(
     matches: &ArgMatches<'_>,
     perform_operation: OperationRunner<'a>,
 ) -> Result<(), clap::Error> {
-    let account_details = AccountDetails::new(matches);
+    let data = matches.value_of("data").unwrap();
 
-    let signer_pair = account_details.signer_pair();
-    let signer_key_pair = account_details.signer_key_pair();
-
-    let (mrenclave, shard) = get_identifiers(matches);
-
-    let nonce = get_trusted_nonce(perform_operation, matches, &signer_pair, &signer_key_pair);
-
-    let cancel_order = get_cancel_order_from_matches(matches, account_details.main_account_public_key().into()).unwrap();
-
-    let direct: bool = matches.is_present("direct");
-
-    let cancel_order_top: TrustedOperation = TrustedCall::cancel_order(
-        account_details.signer_public_key().into(),
-        cancel_order,
-        account_details
-            .main_account_public_key_if_not_signer()
-            .map(|pk| pk.into()),
-    )
-    .sign(
-        &KeyPair::Sr25519(signer_key_pair),
-        nonce,
-        &mrenclave,
-        &shard,
-    )
-    .into_trusted_operation(direct);
-
-    debug!("Successfully built cancel_order trusted operation, dispatching now to enclave");
-
-    let _ = perform_operation(matches, &cancel_order_top);
-
-    debug!("cancel_order trusted operation was executed");
+    // ENCRYPT FUNCTION HERE #2
 
     Ok(())
 }
@@ -96,7 +69,7 @@ mod tests {
     };
     use clap::{App, AppSettings};
 
-    #[test]
+   /*  #[test]
     fn given_the_proper_arguments_then_run_operation() {
         let args = create_cancel_order_args();
         let matches = create_test_app().get_matches_from(args);
@@ -132,5 +105,5 @@ mod tests {
         let app_with_arg = add_app_args(test_app);
 
         add_identifiers_app_args(app_with_arg)
-    }
+    } */
 }
