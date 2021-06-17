@@ -118,7 +118,7 @@ fn main() {
                     .default_value("2000")
                     .help("worker direct invocation port"),
             )
-            .name("substratee-client")
+            .name("ternoa-client")
             .version(VERSION)
             .author("Supercomputing Systems AG <info@scs.ch>")
             .about("interact with substratee-node and workers")
