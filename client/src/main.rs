@@ -121,13 +121,13 @@ fn main() {
             .name("ternoa-client")
             .version(VERSION)
             .author("Supercomputing Systems AG <info@scs.ch>")
-            .about("interact with substratee-node and workers")
+            .about("interact with ternoa-node and workers")
             .after_help("stf subcommands depend on the stf crate this has been built against")
         })
         .args(|_args, matches| matches.value_of("environment").unwrap_or("dev"))
         .add_cmd(
             Command::new("new-account")
-                .description("generates a new account for the substraTEE chain")
+                .description("generates a new account for the ternoa chain")
                 .runner(|_args: &str, _matches: &ArgMatches<'_>| {
                     let store = LocalKeystore::open(PathBuf::from(&KEYSTORE_PATH), None).unwrap();
                     let key: sr25519::AppPair = store.generate().unwrap();
@@ -138,7 +138,7 @@ fn main() {
         )
         .add_cmd(
             Command::new("list-accounts")
-                .description("lists all accounts in keystore for the substraTEE chain")
+                .description("lists all accounts in keystore for the ternoa chain")
                 .runner(|_args: &str, _matches: &ArgMatches<'_>| {
                     let store = LocalKeystore::open(PathBuf::from(&KEYSTORE_PATH), None).unwrap();
                     println!("sr25519 keys:");
