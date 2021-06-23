@@ -9,7 +9,7 @@ log = "0.4"
 env_logger = "0.7"
 hex = "0.4.2"
 json = "0.12.0"
-substrate-bip39 = "0.3.1"
+substrate-bip39 = "0.4.2"
 tiny-bip39 = "0.6.2"
 serde_json = "1.0"
 clap = "2.33"
@@ -59,8 +59,8 @@ version = "3.0.0"
 default-features=false
 
 [dependencies.my-node-runtime]
-git = "https://github.com/scs/substraTEE-node"
-package = "substratee-node-runtime"
+git = "https://github.com/capsule-corp-ternoa/chain"
+package = "ternoa-runtime"
 
 [dependencies.substratee-worker-primitives]
 path = "../substratee-worker-primitives"

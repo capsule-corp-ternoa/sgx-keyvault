@@ -49,8 +49,8 @@ path = "../substratee-worker-primitives"
 path = "worker-api"
 
 [dependencies.my-node-runtime]
-git = "https://github.com/scs/substraTEE-node"
-package = "substratee-node-runtime"
+git = "https://github.com/capsule-corp-ternoa/chain"
+package = "ternoa-runtime"
 
 [dependencies.sp-finality-grandpa]
 git = "https://github.com/paritytech/substrate.git"

@@ -107,8 +107,8 @@ branch = "version-update-e5437e"
 optional = true
 
 [dependencies.my-node-runtime]
-git = "https://github.com/scs/substraTEE-node"
-package = "substratee-node-runtime"
+git = "https://github.com/capsule-corp-ternoa/chain"
+package = "ternoa-runtime"
 optional = true
 
 [dependencies.substrate-api-client]
