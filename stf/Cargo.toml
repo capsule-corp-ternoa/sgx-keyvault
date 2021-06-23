@@ -90,17 +90,20 @@ default-features = false
 [dependencies.sp-io]
 default-features = false
 git = "https://github.com/scs/sgx-runtime"
+branch = "version-update-e5437e"
 features = ["disable_oom", "disable_panic_handler", "disable_allocator", "sgx"]
 optional = true
 
 [dependencies.sgx-runtime]
 default-features = false
 git = "https://github.com/scs/sgx-runtime"
+branch = "version-update-e5437e"
 optional = true
 
 [dependencies.sgx-externalities]
 default-features = false
 git = "https://github.com/scs/sgx-runtime"
+branch = "version-update-e5437e"
 optional = true
 
 [dependencies.my-node-runtime]
@@ -114,6 +117,7 @@ optional = true
 
 [dependencies.substrate-client-keystore]
 git = "https://github.com/scs/substrate-api-client"
+branch = "version-update-e5437e"
 optional = true
 
 [dependencies.sc-keystore]

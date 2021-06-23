@@ -24,9 +24,11 @@ sgx_crypto_helper = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-
 
 [dependencies.substrate-api-client]
 git = "https://github.com/scs/substrate-api-client"
+branch = "version-update-e5437e"
 
 [dependencies.substrate-client-keystore]
 git = "https://github.com/scs/substrate-api-client"
+branch = "version-update-e5437e"
 
 [dependencies.serde]
 features = ["derive"]

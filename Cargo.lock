@@ -4021,7 +4021,7 @@ dependencies = [
 [[package]]
 name = "sgx-externalities"
 version = "0.3.0"
-source = "git+https://github.com/scs/sgx-runtime#3638c9d23f107d9dae7b9e6643af93e27da517bf"
+source = "git+https://github.com/scs/sgx-runtime?branch=version-update-e5437e#4af0e4e66a76a3e8c592f40bfec0d8f59a051e04"
 dependencies = [
  "environmental",
  "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
@@ -4034,7 +4034,7 @@ dependencies = [
 [[package]]
 name = "sgx-runtime"
 version = "0.8.0"
-source = "git+https://github.com/scs/sgx-runtime#3638c9d23f107d9dae7b9e6643af93e27da517bf"
+source = "git+https://github.com/scs/sgx-runtime?branch=version-update-e5437e#4af0e4e66a76a3e8c592f40bfec0d8f59a051e04"
 dependencies = [
  "frame-executive",
  "frame-support",
@@ -4624,7 +4624,7 @@ dependencies = [
 [[package]]
 name = "sp-io"
 version = "3.1.0"
-source = "git+https://github.com/scs/sgx-runtime#3638c9d23f107d9dae7b9e6643af93e27da517bf"
+source = "git+https://github.com/scs/sgx-runtime?branch=version-update-e5437e#4af0e4e66a76a3e8c592f40bfec0d8f59a051e04"
 dependencies = [
  "environmental",
  "hash-db",
