@@ -111,6 +111,11 @@ git = "https://github.com/capsule-corp-ternoa/chain"
 package = "ternoa-runtime"
 optional = true
 
+[dependencies.my-node-primitives]
+git = "https://github.com/capsule-corp-ternoa/chain"
+package = "ternoa-primitives"
+default_features = false
+
 [dependencies.substrate-api-client]
 git = "https://github.com/scs/substrate-api-client"
 branch = "version-update-e5437e"

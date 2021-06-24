@@ -5396,6 +5396,7 @@ dependencies = [
  "substratee-stf",
  "substratee-worker-api",
  "substratee-worker-primitives",
+ "ternoa-primitives",
  "ternoa-runtime",
  "tiny-bip39 0.6.2",
  "ws 0.7.9",
@@ -5444,6 +5445,7 @@ dependencies = [
  "substrate-api-client",
  "substrate-client-keystore",
  "substratee-worker-primitives",
+ "ternoa-primitives",
  "ternoa-runtime",
 ]
 

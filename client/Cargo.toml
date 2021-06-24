@@ -62,6 +62,10 @@ default-features=false
 git = "https://github.com/capsule-corp-ternoa/chain"
 package = "ternoa-runtime"
 
+[dependencies.my-node-primitives]
+git = "https://github.com/capsule-corp-ternoa/chain"
+package = "ternoa-primitives"
+
 [dependencies.substratee-worker-primitives]
 path = "../substratee-worker-primitives"
 
