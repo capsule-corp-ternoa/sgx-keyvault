@@ -196,7 +196,7 @@ fn main() {
                         let xt: UncheckedExtrinsicV4<_> = compose_extrinsic_offline!(
                             _api.clone().signer.unwrap(),
                             Call::Balances(BalancesCall::transfer(
-                                to.clone(),
+                                GenericAddress::Id(to.clone()),
                                 PREFUNDING_AMOUNT
                             )),
                             nonce,
