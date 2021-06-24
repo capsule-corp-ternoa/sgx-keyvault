@@ -240,8 +240,6 @@ update:
 	@cargo update -p sgx_tstd --precise ed9e7cce4fd40efd7a256d5c4be1c5f00778a5bb
 	@cargo update -p sgx_tstd --precise ed9e7cce4fd40efd7a256d5c4be1c5f00778a5bb
 
-
-
 .PHONY: identity
 identity: mrenclave mrsigner
 

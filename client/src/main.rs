@@ -39,12 +39,10 @@ use clap::{AppSettings, Arg, ArgMatches};
 use clap_nested::{Command, Commander};
 use codec::{Decode, Encode};
 use log::*;
+use my_node_primitives::{AccountId, Hash, Signature};
 use my_node_runtime::{
     substratee_registry::{Enclave, Request},
     BalancesCall, Call, Event,
-};
-use my_node_primitives::{
-    Hash, Signature, AccountId
 };
 use sp_core::{crypto::Ss58Codec, sr25519 as sr25519_core, Pair, H256};
 use sp_runtime::{
