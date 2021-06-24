@@ -15,44 +15,36 @@
 
 */
 
-use crate::cli_utils::account_parsing::get_identifiers;
-use crate::cli_utils::common_operations::get_trusted_nonce;
-use crate::cli_utils::common_types::OperationRunner;
-use crate::commands::account_details::AccountDetails;
-use crate::commands::common_args::{
-    add_main_account_args, add_order_id_args, add_proxy_account_args, add_market_id_args,
-};
-use crate::commands::common_args_processing::get_cancel_order_from_matches;
-use crate::{KeyPair, TrustedCall, TrustedOperation};
-use clap::{App, ArgMatches};
+use clap::{App, ArgMatches, Arg};
 use clap_nested::Command;
 use log::*;
 
-pub fn encrypt_cli_command(perform_operation: OperationRunner) -> Command<str> {
+/// creates an inputfile.cyphertext and inputfile.aes256 with the symmetric key
+/// INPUT: file path as String
+pub fn encrypt_cli_command() -> Command<'static, str> {
     Command::new("encrypt")
         .description("Generates an AES256 key, encrypts and stores the input data")
-        .options(add_app_args)
+        .options(add_arguments)
         .runner(move |_args: &str, matches: &ArgMatches<'_>| {
-            command_runner(matches, perform_operation)
+            command_runner(matches)
         })
 }
 
-fn add_app_args<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
+fn add_arguments<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
     app.arg(
-        Arg::with_name("data")
+        Arg::with_name("filepath")
             .takes_value(true)
             .required(true)
             .value_name("STRING")
-            .help("data to be encrypted"),
+            .help("filepath of the file to be encrypted"),
     )
 }
 
 fn command_runner<'a>(
     matches: &ArgMatches<'_>,
-    perform_operation: OperationRunner<'a>,
 ) -> Result<(), clap::Error> {
-    let data = matches.value_of("data").unwrap();
-
+    let path = matches.value_of("filepath").unwrap();
+    debug!("entering encryption function, received filepath: {}", path);
     // ENCRYPT FUNCTION HERE #2
 
     Ok(())
@@ -63,10 +55,6 @@ mod tests {
 
     use super::*;
 
-    use crate::commands::test_utils::utils::{
-        add_identifiers_app_args, create_identifier_args, create_main_account_args,
-        create_market_id_args, create_order_id_args, PerformOperationMock,
-    };
     use clap::{App, AppSettings};
 
    /*  #[test]
