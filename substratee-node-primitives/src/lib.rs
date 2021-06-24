@@ -27,8 +27,8 @@ pub type CallWorkerFn = ([u8; 2], Request);
 pub mod calls {
     pub use my_node_runtime::{
         substratee_registry::{Enclave, ShardIdentifier},
-        AccountId,
     };
+    pub use my_node_primitives::AccountId;
     use sp_core::crypto::Pair;
     use sp_runtime::MultiSignature;
 

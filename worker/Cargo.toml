@@ -52,6 +52,10 @@ path = "worker-api"
 git = "https://github.com/capsule-corp-ternoa/chain"
 package = "ternoa-runtime"
 
+[dependencies.my-node-primitives]
+git = "https://github.com/capsule-corp-ternoa/chain"
+package = "ternoa-primitives"
+
 [dependencies.sp-finality-grandpa]
 git = "https://github.com/paritytech/substrate.git"
 version = "3.0.0"
