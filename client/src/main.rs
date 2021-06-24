@@ -18,6 +18,9 @@
 //! substratee_client 127.0.0.1:9944 transfer //Alice 5G9RtsTbiYJYQYMHbWfyPoeuuxNaCbC16tZ2JGrZ4gRKwz14 1000
 //!
 #![feature(rustc_private)]
+
+mod aes;
+
 #[macro_use]
 extern crate clap;
 extern crate env_logger;
@@ -62,6 +65,7 @@ use substrate_api_client::{
     Api, XtStatus,
 };
 
+use crate::aes::encrypt_aes256;
 use substrate_client_keystore::LocalKeystore;
 use substratee_stf::{ShardIdentifier, TrustedCallSigned, TrustedOperation};
 use substratee_worker_api::direct_client::DirectApi as DirectWorkerApi;
@@ -425,6 +429,23 @@ fn main() {
         .add_cmd(ternoa_commands::nft_commands())
         .add_cmd(ternoa_commands::keyvault_commands())
         .add_cmd(substratee_stf::cli::cmd(&perform_trusted_operation))
+        .add_cmd(
+            Command::new("encrypt")
+                .description("Encrypt the input file")
+                .options(|app| {
+                    app.arg(
+                        Arg::with_name("inputFile")
+                            .takes_value(true)
+                            .required(true)
+                            .value_name("STRING")
+                            .help("Input file path"),
+                    )
+                })
+                .runner(move |_args: &str, matches: &ArgMatches<'_>| {
+                    encrypt(matches);
+                    Ok(())
+                }),
+        )
         .no_cmd(|_args, _matches| {
             println!("No subcommand matched");
             Ok(())
@@ -433,6 +454,17 @@ fn main() {
     if let Err(e) = res {
         println!("{}", e)
     }
+}
+
+fn encrypt(matches: &ArgMatches<'_>) {
+    let inputfile = format!("{}", matches.value_of("inputFile").unwrap());
+    match encrypt_aes256(inputfile.clone()) {
+        Ok(()) => println!("File {} is encrypted", inputfile),
+        Err(_e) => {
+            println!("Could not encrypt the file {} : {:?}", inputfile, _e);
+            return;
+        }
+    };
 }
 
 fn get_chain_api(matches: &ArgMatches<'_>) -> Api<sr25519::Pair> {
