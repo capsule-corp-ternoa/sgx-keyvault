@@ -72,6 +72,9 @@ path = "../substratee-worker-primitives"
 [dependencies.substratee-stf]
 path = "../stf"
 
+[dependencies.substratee-client-primitives]
+path = "../substratee-client-primitives"
+
 [dependencies.substratee-worker-api]
 path = "../worker/worker-api"
 

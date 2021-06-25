@@ -15,8 +15,9 @@
 
 */
 
-use crate::ternoa_commands::nft::common_args_processing::get_nft_id_from_matches;
-use crate::ternoa_commands::nft::common_arguments::{add_account_id_arg, add_nft_id_arg};
+use substratee_client_primitives::common_args::{add_account_id_arg, add_nft_id_arg};
+use substratee_client_primitives::common_args_processing::get_nft_id_from_matches;
+
 use clap::{App, ArgMatches};
 use clap_nested::Command;
 use log::*;

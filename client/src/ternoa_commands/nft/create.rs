@@ -15,7 +15,7 @@
 
 */
 
-use crate::ternoa_commands::nft::common_arguments::{add_account_id_arg, add_filename_arg};
+use substratee_client_primitives::common_args::{add_account_id_arg, add_filename_arg};
 use clap::{App, ArgMatches};
 use clap_nested::Command;
 use log::*;
