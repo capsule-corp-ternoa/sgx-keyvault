@@ -19,6 +19,7 @@ use clap::{App, Arg};
 
 pub const NFTID_ARG_NAME: &str = "nftid";
 pub const FILENAME_ARG_NAME: &str = "filename";
+pub const URL_ARG_NAME: &str = "url";
 
 pub fn add_nft_id_arg<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
     app.arg(
@@ -47,5 +48,16 @@ pub fn add_filename_arg<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
             .required(true)
             .value_name("STRING")
             .help("new file name to be contained in the NFT"),
+    )
+}
+
+
+pub fn add_url_arg<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
+    app.arg(
+        Arg::with_name(URL_ARG_NAME)
+            .takes_value(true)
+            .required(true)
+            .value_name("STRING")
+            .help("url of sgx keyvault enclave"),
     )
 }

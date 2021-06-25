@@ -426,6 +426,7 @@ fn main() {
         .add_cmd(ternoa_commands::decrypt_shamir::decrypt_shamir_cli_command())
         .add_cmd(ternoa_commands::nft::nft_cmd())
         .add_cmd(substratee_stf::cli::cmd(&perform_keyvault_operation))
+        .add_cmd(substratee_stf::keyvault_commands::keyvault_cmd(&perform_keyvault_operation))
         .no_cmd(|_args, _matches| {
             println!("No subcommand matched");
             Ok(())
