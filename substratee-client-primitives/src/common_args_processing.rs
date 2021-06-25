@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::ternoa_commands::nft::common_arguments::{FILENAME_ARG_NAME, NFTID_ARG_NAME};
+use crate::common_args::{FILENAME_ARG_NAME, NFTID_ARG_NAME};
 use clap::ArgMatches;
 
 pub fn get_nft_id_from_matches(matches: &ArgMatches<'_>) -> u32 {
