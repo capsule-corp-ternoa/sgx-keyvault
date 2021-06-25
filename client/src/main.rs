@@ -67,7 +67,6 @@ use substratee_stf::{ShardIdentifier, TrustedCallSigned, TrustedOperation};
 use substratee_worker_api::direct_client::DirectApi as DirectWorkerApi;
 use substratee_worker_primitives::{DirectRequestStatus, RpcRequest, RpcResponse, RpcReturnValue};
 
-
 pub mod ternoa_commands;
 
 type AccountPublic = <Signature as Verify>::Signer;

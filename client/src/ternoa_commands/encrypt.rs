@@ -15,7 +15,7 @@
 
 */
 
-use clap::{App, ArgMatches, Arg};
+use clap::{App, Arg, ArgMatches};
 use clap_nested::Command;
 use log::*;
 
@@ -25,9 +25,7 @@ pub fn encrypt_cli_command() -> Command<'static, str> {
     Command::new("encrypt")
         .description("Generates an AES256 key, encrypts and stores the input data")
         .options(add_arguments)
-        .runner(move |_args: &str, matches: &ArgMatches<'_>| {
-            command_runner(matches)
-        })
+        .runner(move |_args: &str, matches: &ArgMatches<'_>| command_runner(matches))
 }
 
 fn add_arguments<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
@@ -40,9 +38,7 @@ fn add_arguments<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
     )
 }
 
-fn command_runner<'a>(
-    matches: &ArgMatches<'_>,
-) -> Result<(), clap::Error> {
+fn command_runner<'a>(matches: &ArgMatches<'_>) -> Result<(), clap::Error> {
     let path: &str = matches.value_of("filepath").unwrap();
     debug!("entering encryption function, received filepath: {}", path);
     // ENCRYPT FUNCTION HERE #2
@@ -57,7 +53,7 @@ mod tests {
 
     use clap::{App, AppSettings};
 
-   /*  #[test]
+    /*  #[test]
     fn given_the_proper_arguments_then_run_operation() {
         let args = create_cancel_order_args();
         let matches = create_test_app().get_matches_from(args);

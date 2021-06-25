@@ -15,10 +15,10 @@
 
 */
 
+use crate::ternoa_commands::nft::common_arguments::{add_account_id_arg, add_filename_arg};
 use clap::{App, ArgMatches};
 use clap_nested::Command;
 use log::*;
-use crate::ternoa_commands::nft::common_arguments::{add_account_id_arg, add_filename_arg};
 
 const OWNER: &str = "owner";
 
@@ -31,23 +31,21 @@ pub fn nft_create_cli_command() -> Command<'static, str> {
     Command::new("create")
         .description("Create a new NFT with the provided filename.")
         .options(add_arguments)
-        .runner(move |_args: &str, matches: &ArgMatches<'_>| {
-            command_runner(matches)
-        })
+        .runner(move |_args: &str, matches: &ArgMatches<'_>| command_runner(matches))
 }
-
 
 fn add_arguments<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
     let app_with_owner = add_account_id_arg(app, OWNER);
     add_filename_arg(app_with_owner)
 }
 
-fn command_runner<'a>(
-    matches: &ArgMatches<'_>,
-) -> Result<(), clap::Error> {
+fn command_runner<'a>(matches: &ArgMatches<'_>) -> Result<(), clap::Error> {
     let owner_ss58: &str = matches.value_of(OWNER).unwrap();
     let filename: &str = matches.value_of("filename").unwrap();
-    debug!("entering nft create function, owner: {}, filename: {}", owner_ss58, filename);
+    debug!(
+        "entering nft create function, owner: {}, filename: {}",
+        owner_ss58, filename
+    );
     // NFT CREATE FUNCTION HERE
 
     Ok(())
@@ -60,7 +58,7 @@ mod tests {
 
     use clap::{App, AppSettings};
 
-   /*  #[test]
+    /*  #[test]
     fn given_the_proper_arguments_then_run_operation() {
         let args = create_cancel_order_args();
         let matches = create_test_app().get_matches_from(args);

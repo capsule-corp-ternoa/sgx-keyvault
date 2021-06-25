@@ -15,11 +15,13 @@
 
 */
 
+use crate::ternoa_commands::nft::common_args_processing::get_nft_id_from_matches;
+use crate::ternoa_commands::nft::common_arguments::{
+    add_account_id_arg, add_filename_arg, add_nft_id_arg,
+};
 use clap::{App, ArgMatches};
 use clap_nested::Command;
 use log::*;
-use crate::ternoa_commands::nft::common_arguments::{add_account_id_arg, add_filename_arg, add_nft_id_arg};
-use crate::ternoa_commands::nft::common_args_processing::{get_nft_id_from_matches};
 
 const OWNER: &str = "owner";
 
@@ -32,11 +34,8 @@ pub fn nft_mutate_cli_command() -> Command<'static, str> {
     Command::new("mutate")
         .description("Updates NFT to new filename")
         .options(add_arguments)
-        .runner(move |_args: &str, matches: &ArgMatches<'_>| {
-            command_runner(matches)
-        })
+        .runner(move |_args: &str, matches: &ArgMatches<'_>| command_runner(matches))
 }
-
 
 fn add_arguments<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
     let app_with_owner = add_account_id_arg(app, OWNER);
@@ -44,13 +43,14 @@ fn add_arguments<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
     add_filename_arg(app_with_nftid)
 }
 
-fn command_runner<'a>(
-    matches: &ArgMatches<'_>,
-) -> Result<(), clap::Error> {
+fn command_runner<'a>(matches: &ArgMatches<'_>) -> Result<(), clap::Error> {
     let owner_ss58: &str = matches.value_of(OWNER).unwrap();
     let nftid = get_nft_id_from_matches(matches);
     let filename: &str = matches.value_of("filename").unwrap();
-    debug!("entering nft create function, owner: {}, filename: {}, id: {:?}", owner_ss58, filename, nftid);
+    debug!(
+        "entering nft create function, owner: {}, filename: {}, id: {:?}",
+        owner_ss58, filename, nftid
+    );
     // NFT CREATE FUNCTION HERE
 
     Ok(())
@@ -63,7 +63,7 @@ mod tests {
 
     use clap::{App, AppSettings};
 
-   /*  #[test]
+    /*  #[test]
     fn given_the_proper_arguments_then_run_operation() {
         let args = create_cancel_order_args();
         let matches = create_test_app().get_matches_from(args);

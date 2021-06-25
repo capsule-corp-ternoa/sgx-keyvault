@@ -16,17 +16,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::ternoa_commands::nft::common_arguments::{FILENAME_ARG_NAME, NFTID_ARG_NAME};
 use clap::ArgMatches;
-use crate::ternoa_commands::nft::common_arguments::{
-    FILENAME_ARG_NAME, NFTID_ARG_NAME,
-};
 
 pub fn get_nft_id_from_matches(matches: &ArgMatches<'_>) -> u32 {
     get_u32_from_str(matches.value_of(NFTID_ARG_NAME).unwrap())
 }
 
 fn get_u32_from_str(arg: &str) -> u32 {
-    arg.parse::<u32>().unwrap_or_else(|_| panic!("failed to convert {} into an integer", arg))
+    arg.parse::<u32>()
+        .unwrap_or_else(|_| panic!("failed to convert {} into an integer", arg))
 }
 
 // TODO: Add get_accountid function here?
@@ -34,7 +33,7 @@ fn get_u32_from_str(arg: &str) -> u32 {
 #[cfg(test)]
 mod tests {
 
-   /*  use super::*;
+    /*  use super::*;
     use crate::commands::common_args::add_order_args;
     use crate::commands::test_utils::utils::create_order_args;
     use clap::{App, AppSettings};

@@ -20,11 +20,11 @@
 use clap::AppSettings;
 use clap_nested::{Commander, MultiCommand};
 
-pub mod create;
-pub mod transfer;
-pub mod mutate;
-pub mod common_arguments;
 pub mod common_args_processing;
+pub mod common_arguments;
+pub mod create;
+pub mod mutate;
+pub mod transfer;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -40,5 +40,5 @@ pub fn nft_cmd() -> MultiCommand<'static, str, str> {
         .add_cmd(create::nft_create_cli_command())
         .add_cmd(transfer::nft_transfer_cli_command())
         .add_cmd(mutate::nft_mutate_cli_command())
-    .into_cmd("nft")
+        .into_cmd("nft")
 }

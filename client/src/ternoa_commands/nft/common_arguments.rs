@@ -47,5 +47,5 @@ pub fn add_filename_arg<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
             .required(true)
             .value_name("STRING")
             .help("new file name to be contained in the NFT"),
-        )
+    )
 }

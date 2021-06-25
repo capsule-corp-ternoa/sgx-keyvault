@@ -15,15 +15,14 @@
 
 */
 
+use crate::ternoa_commands::nft::common_args_processing::get_nft_id_from_matches;
+use crate::ternoa_commands::nft::common_arguments::{add_account_id_arg, add_nft_id_arg};
 use clap::{App, ArgMatches};
 use clap_nested::Command;
 use log::*;
-use crate::ternoa_commands::nft::common_arguments::{add_account_id_arg, add_nft_id_arg};
-use crate::ternoa_commands::nft::common_args_processing::{get_nft_id_from_matches};
 
 const FROM: &str = "from";
 const TO: &str = "to";
-
 
 /// Transfer an NFT from an account to another one. Must be called by the
 /// actual owner of the NFT.
@@ -34,11 +33,8 @@ pub fn nft_transfer_cli_command() -> Command<'static, str> {
     Command::new("transfer")
         .description("Create a new NFT with the provided details.")
         .options(add_arguments)
-        .runner(move |_args: &str, matches: &ArgMatches<'_>| {
-            command_runner(matches)
-        })
+        .runner(move |_args: &str, matches: &ArgMatches<'_>| command_runner(matches))
 }
-
 
 fn add_arguments<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
     let app_with_from = add_account_id_arg(app, FROM);
@@ -46,13 +42,14 @@ fn add_arguments<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
     add_nft_id_arg(app_with_to)
 }
 
-fn command_runner<'a>(
-    matches: &ArgMatches<'_>,
-) -> Result<(), clap::Error> {
+fn command_runner<'a>(matches: &ArgMatches<'_>) -> Result<(), clap::Error> {
     let from: &str = matches.value_of(FROM).unwrap();
     let to: &str = matches.value_of(TO).unwrap();
     let nftid = get_nft_id_from_matches(matches);
-    debug!("entering nft transfer function, owner: {}, new owner: {}, id: {:?}", from, to, nftid);
+    debug!(
+        "entering nft transfer function, owner: {}, new owner: {}, id: {:?}",
+        from, to, nftid
+    );
     // TRANFERFUNCTION HERE
     Ok(())
 }
@@ -64,7 +61,7 @@ mod tests {
 
     use clap::{App, AppSettings};
 
-   /*  #[test]
+    /*  #[test]
     fn given_the_proper_arguments_then_run_operation() {
         let args = create_cancel_order_args();
         let matches = create_test_app().get_matches_from(args);
