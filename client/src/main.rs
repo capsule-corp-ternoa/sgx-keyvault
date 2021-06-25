@@ -69,7 +69,6 @@ use substratee_worker_primitives::{DirectRequestStatus, RpcRequest, RpcResponse,
 
 
 pub mod ternoa_commands;
-use crate::ternoa_commands::encrypt::encrypt_cli_command;
 
 type AccountPublic = <Signature as Verify>::Signer;
 const KEYSTORE_PATH: &str = "my_keystore";
@@ -423,7 +422,9 @@ fn main() {
                     Ok(())
                 }),
         )
-        .add_cmd(encrypt_cli_command())
+        .add_cmd(ternoa_commands::encrypt::encrypt_cli_command())
+        .add_cmd(ternoa_commands::decrypt::decrypt_cli_command())
+        .add_cmd(ternoa_commands::decrypt_shamir::decrypt_shamir_cli_command())
         .add_cmd(substratee_stf::cli::cmd(&perform_trusted_operation))
         .no_cmd(|_args, _matches| {
             println!("No subcommand matched");

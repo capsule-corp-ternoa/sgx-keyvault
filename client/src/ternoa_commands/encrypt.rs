@@ -19,7 +19,7 @@ use clap::{App, ArgMatches, Arg};
 use clap_nested::Command;
 use log::*;
 
-/// creates an inputfile.cyphertext and inputfile.aes256 with the symmetric key
+/// creates an inputfile.cyphertext and inputfile.aes256 with the symmetric key and stores it locally
 /// INPUT: file path as String
 pub fn encrypt_cli_command() -> Command<'static, str> {
     Command::new("encrypt")
@@ -43,7 +43,7 @@ fn add_arguments<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
 fn command_runner<'a>(
     matches: &ArgMatches<'_>,
 ) -> Result<(), clap::Error> {
-    let path = matches.value_of("filepath").unwrap();
+    let path: &str = matches.value_of("filepath").unwrap();
     debug!("entering encryption function, received filepath: {}", path);
     // ENCRYPT FUNCTION HERE #2
 
