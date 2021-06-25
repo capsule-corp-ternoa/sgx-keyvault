@@ -20,4 +20,4 @@ pub mod encrypt;
 pub mod decrypt;
 pub mod decrypt_shamir;
 
-pub mod nft_create;
+pub mod nft;

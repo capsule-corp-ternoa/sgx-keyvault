@@ -425,7 +425,7 @@ fn main() {
         .add_cmd(ternoa_commands::encrypt::encrypt_cli_command())
         .add_cmd(ternoa_commands::decrypt::decrypt_cli_command())
         .add_cmd(ternoa_commands::decrypt_shamir::decrypt_shamir_cli_command())
-        .add_cmd(ternoa_commands::nft_create::nft_create_cli_command())
+        .add_cmd(ternoa_commands::nft::nft_cmd())
         .add_cmd(substratee_stf::cli::cmd(&perform_trusted_operation))
         .no_cmd(|_args, _matches| {
             println!("No subcommand matched");
