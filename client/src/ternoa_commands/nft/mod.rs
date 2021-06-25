@@ -15,15 +15,10 @@
 
 */
 
+// example command: ./ternoa-client -p 9994 -P 2094 nft mutate AFJKA 8 FILE
 
-use clap::{AppSettings, Arg, ArgMatches};
-use clap_nested::{Command, Commander, MultiCommand};
-use codec::Decode;
-use log::*;
-use sp_application_crypto::{ed25519, sr25519};
-use sp_core::{crypto::Ss58Codec, sr25519 as sr25519_core, Pair};
-use substrate_client_keystore::LocalKeystore;
-
+use clap::AppSettings;
+use clap_nested::{Commander, MultiCommand};
 
 pub mod create;
 pub mod transfer;
