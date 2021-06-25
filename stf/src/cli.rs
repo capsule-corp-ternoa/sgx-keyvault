@@ -374,7 +374,7 @@ pub fn cmd<'a>(
                 }),
         )
         //.add_cmd(place_order_cli_command(perform_operation))
-        .into_cmd("trusted")
+        .into_cmd("keyvault")
 }
 
 fn get_keystore_path(matches: &ArgMatches<'_>) -> PathBuf {
