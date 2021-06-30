@@ -179,7 +179,7 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                         "entering nft transfer function, owner: {}, new owner: {}, id: {:?}",
                         from, to, nftid
                     );
-                    // TRANFERFUNCTION HERE
+                    // TRANFER FUNCTION HERE
                     Ok(())
                 }
             )
@@ -350,63 +350,4 @@ pub fn add_url_arg<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
             .value_name("STRING")
             .help("url of sgx keyvault enclave"),
     )
-}
-
-
-
-/* pub fn get_rpc_function_name_from_top(trusted_operation: &TrustedOperation) -> Option<String> {
-    match trusted_operation {
-        TrustedOperation::get(getter) => match getter {
-            public(_) => None,
-            trusted(tgs) => match tgs.getter {
-                TrustedGetter::get_balance(_, _, _) => Some("get_balance".to_owned()),
-                _ => None,
-            },
-        },
-        TrustedOperation::indirect_call(_) => None,
-        TrustedOperation::direct_call(trusted_call_signed) => match trusted_call_signed.call {
-            TrustedCall::place_order(_, _, _) => Some("place_order".to_owned()),
-            TrustedCall::cancel_order(_, _, _) => Some("cancel_order".to_owned()),
-            TrustedCall::withdraw(_, _, _, _) => Some("withdraw".to_owned()),
-            _ => None,
-        },
-    }
-}
- */
-
-#[cfg(test)]
-mod tests {
-
-    /*  use super::*;
-    use crate::commands::common_args::add_order_args;
-    use crate::commands::test_utils::utils::create_order_args;
-    use clap::{App, AppSettings};
-    use sp_application_crypto::sr25519;
-    use sp_core::{sr25519 as sr25519_core, Pair};
-
-    #[test]
-    pub fn given_correct_args_then_map_to_order() {
-        let order_args = create_order_args();
-        let matches = create_test_app().get_matches_from(order_args);
-
-        let main_account_key_pair = sr25519::AppPair::from_string("//test-account", None).unwrap();
-        let main_account: AccountId =
-            sr25519_core::Public::from(main_account_key_pair.public()).into();
-
-        let order_mapping_result = get_order_from_matches(&matches, main_account);
-
-        assert!(order_mapping_result.is_ok());
-
-        let order = order_mapping_result.unwrap();
-        assert_eq!(order.order_type, OrderType::MARKET);
-        assert_eq!(order.side, OrderSide::BID);
-        assert_eq!(order.quantity, 198475);
-        assert_eq!(order.market_id.base, AssetId::POLKADEX);
-        assert_eq!(order.market_id.quote, AssetId::DOT);
-    }
-
-    fn create_test_app<'a, 'b>() -> App<'a, 'b> {
-        let test_app = App::new("test_account_details").setting(AppSettings::NoBinaryName);
-        add_order_args(test_app)
-    } */
 }
