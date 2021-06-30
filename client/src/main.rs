@@ -424,7 +424,7 @@ fn main() {
         .add_cmd(ternoa_commands::decrypt_cmd())
         .add_cmd(ternoa_commands::nft_commands())
         .add_cmd(ternoa_commands::keyvault_commands())
-        .add_cmd(substratee_stf::cli::cmd(&perform_keyvault_operation))
+        .add_cmd(substratee_stf::cli::cmd(&perform_trusted_operation))
         .no_cmd(|_args, _matches| {
             println!("No subcommand matched");
             Ok(())
@@ -445,7 +445,7 @@ fn get_chain_api(matches: &ArgMatches<'_>) -> Api<sr25519::Pair> {
     Api::<sr25519::Pair>::new(url).unwrap()
 }
 
-fn perform_keyvault_operation(matches: &ArgMatches<'_>, top: &TrustedOperation) -> Option<Vec<u8>> {
+fn perform_trusted_operation(matches: &ArgMatches<'_>, top: &TrustedOperation) -> Option<Vec<u8>> {
     match top {
         TrustedOperation::indirect_call(call) => send_request(matches, call.clone()),
         TrustedOperation::direct_call(call) => {
