@@ -421,12 +421,11 @@ fn main() {
                     Ok(())
                 }),
         )
-        .add_cmd(ternoa_commands::encrypt::encrypt_cli_command())
-        .add_cmd(ternoa_commands::decrypt::decrypt_cli_command())
-        .add_cmd(ternoa_commands::decrypt_shamir::decrypt_shamir_cli_command())
-        .add_cmd(ternoa_commands::nft::nft_cmd())
+        .add_cmd(ternoa_commands::encrypt_cmd())
+        .add_cmd(ternoa_commands::decrypt_cmd())
+        .add_cmd(ternoa_commands::nft_commands())
+        .add_cmd(ternoa_commands::keyvault_commands())
         .add_cmd(substratee_stf::cli::cmd(&perform_keyvault_operation))
-        .add_cmd(substratee_stf::keyvault_commands::keyvault_cmd(&perform_keyvault_operation))
         .no_cmd(|_args, _matches| {
             println!("No subcommand matched");
             Ok(())

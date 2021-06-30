@@ -28,8 +28,7 @@ std = [
     "substrate-api-client",
     "substrate-client-keystore",
     "my-node-runtime",
-    "my-node-primitives",
-    "substratee-client-primitives",
+    "my-node-primitives"
 ]
 
 [dependencies]
@@ -137,10 +136,6 @@ optional = true
 path = "../substratee-worker-primitives"
 default-features = false
 features = ["sgx"]
-optional = true
-
-[dependencies.substratee-client-primitives]
-path = "../substratee-client-primitives"
 optional = true
 
 [dev-dependencies.sp-keyring]

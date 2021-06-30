@@ -37,8 +37,6 @@ pub use my_node_primitives::Index;
 use sgx_runtime::Balance;
 #[cfg(feature = "sgx")]
 pub use sgx_runtime::Index;
-#[cfg(feature = "std")]
-pub mod keyvault_commands;
 
 use sp_core::crypto::AccountId32;
 //use sp_core::{Encode, Decode};
