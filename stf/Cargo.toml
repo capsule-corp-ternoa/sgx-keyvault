@@ -28,7 +28,7 @@ std = [
     "substrate-api-client",
     "substrate-client-keystore",
     "my-node-runtime",
-    "my-node-primitives"
+    "my-node-primitives",
 ]
 
 [dependencies]
