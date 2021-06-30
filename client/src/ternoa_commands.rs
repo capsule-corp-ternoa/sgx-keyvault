@@ -12,51 +12,11 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-use chrono::{DateTime, Utc};
-use std::time::{Duration, UNIX_EPOCH};
-
-use sgx_crypto_helper::rsa3072::Rsa3072PubKey;
-
-use sp_application_crypto::{ed25519, sr25519};
-use sp_keyring::AccountKeyring;
-use std::path::PathBuf;
-
-use base58::{FromBase58, ToBase58};
-
 use clap::{AppSettings, Arg, ArgMatches, App};
 use clap_nested::{Command, Commander, MultiCommand};
-use codec::{Decode, Encode};
 use log::*;
-use my_node_primitives::{AccountId, Hash, Signature};
-use my_node_runtime::{
-    substratee_registry::{Enclave, Request},
-    BalancesCall, Call, Event,
-};
-use sp_core::{crypto::Ss58Codec, sr25519 as sr25519_core, Pair, H256};
-use sp_runtime::{
-    traits::{IdentifyAccount, Verify},
-    MultiSignature,
-};
-use std::convert::TryFrom;
-use std::result::Result as StdResult;
-use std::sync::mpsc::channel;
-use std::thread;
-use substrate_api_client::{
-    compose_extrinsic, compose_extrinsic_offline,
-    events::EventsDecoder,
-    extrinsic::xt_primitives::{GenericAddress, UncheckedExtrinsicV4},
-    node_metadata::Metadata,
-    utils::FromHexString,
-    Api, XtStatus,
-};
-
-use substrate_client_keystore::LocalKeystore;
-use substratee_stf::{ShardIdentifier, TrustedCallSigned, TrustedOperation};
-use substratee_worker_api::direct_client::DirectApi as DirectWorkerApi;
-use substratee_worker_primitives::{DirectRequestStatus, RpcRequest, RpcResponse, RpcReturnValue};
 
 
-type AccountPublic = <Signature as Verify>::Signer;
 use crate::VERSION;
 
 const NFTID_ARG_NAME: &str = "nftid";
@@ -120,7 +80,7 @@ pub fn decrypt_cmd() -> Command<'static, str> {
         })
         .runner(|_args: &str, matches: &ArgMatches<'_>| {
             let path: &str = matches.value_of("filepath").unwrap();
-            let keysharesfile = match matches.value_of("keysharesfile") {
+            let _keysharesfile = match matches.value_of("keysharesfile") {
                 Some(keysharesfile) => {
                     debug!(
                         "entering decrypt shamir function, received filepaths: {},{}",
