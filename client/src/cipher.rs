@@ -49,12 +49,14 @@ fn create_symmetric_key() -> Result<Key> {
     Ok((key.to_vec(), iv.to_vec()))
 }
 
+
 ///Read the encryption key from the file and generate one if there is none
 pub fn recover_or_generate_encryption_key(key_filename: &Path) -> Result<Key> {
-    match File::open(&key_filename) {
-        Err(_e) => {
+    match recover_encryption_key(&key_filename) {
+        Err(e) => {
             debug!(
-                "Keyfile not found, creating new! {}",
+                "Key recovery error {}, creating new! {}",
+                e,
                 key_filename.display()
             );
             let key_iv = create_symmetric_key()?;
@@ -63,16 +65,21 @@ pub fn recover_or_generate_encryption_key(key_filename: &Path) -> Result<Key> {
             let mut key_file = File::create(key_filename)?;
             key_file.write_all(&buf)?;
             Ok((key_iv.0, key_iv.1))
-        }
-        Ok(mut file) => {
-            let mut buffer = [0u8; 48];
-            file.read_exact(&mut buffer)?;
-            let key = buffer[..32].to_vec();
-            let iv = buffer[32..].to_vec();
-            Ok((key, iv))
-        }
+        },
+        Ok(key) => Ok(key)
     }
 }
+
+///Read the encryption key from the file 
+pub fn recover_encryption_key(key_filename: &Path) -> Result<Key> {
+    let mut file = File::open(&key_filename)?;
+    let mut buffer = [0u8; 48];
+    file.read_exact(&mut buffer)?;
+    let key = buffer[..32].to_vec();
+    let iv = buffer[32..].to_vec();
+    Ok((key, iv))
+}
+
 
 /// If AES acts on the encrypted file it decrypts and vice versa
 /// Key and iv are not in the file
@@ -99,47 +106,60 @@ fn de_or_encrypt_file(input_file: &Path, output_file: &Path, key: Key) -> Result
     Ok(())
 }
 
+fn ciphertext_path(plaintext_filename: &str) -> PathBuf {
+    let mut path = PathBuf::from(plaintext_filename);
+    path.set_extension("ciphertext");
+    path
+}
+
+fn decrypted_path(ciphertext_filename: &str) -> PathBuf {
+    let mut path = PathBuf::from(ciphertext_filename);
+    path.set_extension("decrypted");
+    path
+}
+
+fn keyfile_path(plaintext_filename: &str) -> PathBuf {
+    let mut path = PathBuf::from(plaintext_filename);
+    path.set_extension("aes256");
+    path
+}
+
 ///Encrypt a file with AES256 and save it in the same folder as file_name.ciphertext
 ///Create a key and save it into a file it in the same folder as file_name.aes256 if key is None
 pub fn encrypt(plaintext_filename: &str, key: Option<Key>) -> Result<()> {
-    let input_file = Path::new(plaintext_filename);
-    let mut path = PathBuf::from(plaintext_filename);
-    path.set_extension("ciphertext");
-    let encrypted_file = path.as_path();
 
     let encryption_key = match key {
         None => {
-            let mut path2 = PathBuf::from(plaintext_filename);
-            path2.set_extension("aes256");
-            let key_file = path2.as_path();
-            recover_or_generate_encryption_key(key_file)?
+            recover_or_generate_encryption_key(
+                &keyfile_path(plaintext_filename)
+            )?
         }
         Some(key) => key,
     };
 
-    de_or_encrypt_file(&input_file, &encrypted_file, encryption_key)?;
-
-    Ok(())
+    de_or_encrypt_file(
+        &Path::new(plaintext_filename), 
+        &ciphertext_path(plaintext_filename), 
+        encryption_key
+    )
 }
 
 ///Decrypt a file with AES256 and save it in the same folder as file_name.decrypted
 ///Create a key and save it into a file it in the same folder as file_name.aes256 if key is None
 pub fn decrypt(ciphertext_filename: &str, key: Option<Key>) -> Result<()> {
-    let input_file = Path::new(ciphertext_filename);
-    let mut path = PathBuf::from(ciphertext_filename);
-    path.set_extension("decrypted");
-    let decrypted_file = path.as_path();
 
     let encryption_key = match key {
         None => {
-            let mut path2 = PathBuf::from(ciphertext_filename);
-            path2.set_extension("aes256");
-            let key_file = path2.as_path();
-            recover_or_generate_encryption_key(key_file)?
+            recover_encryption_key(
+                &keyfile_path(ciphertext_filename)
+            )?
         }
         Some(key) => key,
     };
-    de_or_encrypt_file(&input_file, &decrypted_file, encryption_key)?;
 
-    Ok(())
+    de_or_encrypt_file(
+        &Path::new(ciphertext_filename), 
+        &decrypted_path(ciphertext_filename), 
+        encryption_key
+    )
 }
