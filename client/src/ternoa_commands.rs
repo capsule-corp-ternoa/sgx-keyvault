@@ -15,8 +15,11 @@
 use clap::{App, AppSettings, Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 use log::*;
+use sp_application_crypto::sr25519;
+use substrate_api_client::Api;
 
 use crate::ternoa_implementation::cipher;
+use crate::ternoa_implementation::nft::create::create;
 
 use crate::VERSION;
 
@@ -114,6 +117,7 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                     add_filename_arg(app_with_owner)
                 })
                 .runner(|_args: &str, matches: &ArgMatches<'_>| {
+                    let chain_api = get_ternoa_chain_api(matches);
                     // Create a new NFT with the provided details. An ID will be auto
                     // generated and logged as an event, The caller of this function
                     // will become the owner of the new NFT.
@@ -125,7 +129,9 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                         "entering nft create function, owner: {}, filename: {}",
                         owner_ss58, filename
                     );
-                    // NFT CREATE FUNCTION HERE
+
+                    let nft_id = create(owner_ss58, filename, chain_api).unwrap();
+                    info!("NFT was created {}", nft_id);
 
                     Ok(())
                 }),
@@ -338,4 +344,14 @@ pub fn add_url_arg<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
             .value_name("STRING")
             .help("url of sgx keyvault enclave"),
     )
+}
+
+fn get_ternoa_chain_api(matches: &ArgMatches<'_>) -> Api<sr25519::Pair> {
+    let url = format!(
+        "{}:{}",
+        matches.value_of("node-url").unwrap(),
+        matches.value_of("node-port").unwrap()
+    );
+    info!("connecting to {}", url);
+    Api::<sr25519::Pair>::new(url).unwrap()
 }
