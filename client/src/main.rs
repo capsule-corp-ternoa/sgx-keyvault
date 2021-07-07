@@ -19,7 +19,10 @@
 //!
 #![feature(rustc_private)]
 
-mod aes;
+#[cfg(test)]
+mod tests;
+
+mod cipher;
 
 #[macro_use]
 extern crate clap;
@@ -65,7 +68,7 @@ use substrate_api_client::{
     Api, XtStatus,
 };
 
-use crate::aes::encrypt_aes256;
+use cipher::encrypt;
 use substrate_client_keystore::LocalKeystore;
 use substratee_stf::{ShardIdentifier, TrustedCallSigned, TrustedOperation};
 use substratee_worker_api::direct_client::DirectApi as DirectWorkerApi;
@@ -442,7 +445,8 @@ fn main() {
                     )
                 })
                 .runner(move |_args: &str, matches: &ArgMatches<'_>| {
-                    encrypt(matches);
+                    let inputfile = matches.value_of("inputFile").unwrap();
+                    encrypt(inputfile, None).unwrap();
                     Ok(())
                 }),
         )
@@ -454,17 +458,6 @@ fn main() {
     if let Err(e) = res {
         println!("{}", e)
     }
-}
-
-fn encrypt(matches: &ArgMatches<'_>) {
-    let inputfile = format!("{}", matches.value_of("inputFile").unwrap());
-    match encrypt_aes256(inputfile.clone()) {
-        Ok(()) => println!("File {} is encrypted", inputfile),
-        Err(_e) => {
-            println!("Could not encrypt the file {} : {:?}", inputfile, _e);
-            return;
-        }
-    };
 }
 
 fn get_chain_api(matches: &ArgMatches<'_>) -> Api<sr25519::Pair> {
