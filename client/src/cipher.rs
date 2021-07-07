@@ -49,7 +49,6 @@ fn create_symmetric_key() -> Result<Key> {
     Ok((key.to_vec(), iv.to_vec()))
 }
 
-
 ///Read the encryption key from the file and generate one if there is none
 pub fn recover_or_generate_encryption_key(key_filename: &Path) -> Result<Key> {
     match recover_encryption_key(&key_filename) {
@@ -65,12 +64,12 @@ pub fn recover_or_generate_encryption_key(key_filename: &Path) -> Result<Key> {
             let mut key_file = File::create(key_filename)?;
             key_file.write_all(&buf)?;
             Ok((key_iv.0, key_iv.1))
-        },
-        Ok(key) => Ok(key)
+        }
+        Ok(key) => Ok(key),
     }
 }
 
-///Read the encryption key from the file 
+///Read the encryption key from the file
 pub fn recover_encryption_key(key_filename: &Path) -> Result<Key> {
     let mut file = File::open(&key_filename)?;
     let mut buffer = [0u8; 48];
@@ -79,7 +78,6 @@ pub fn recover_encryption_key(key_filename: &Path) -> Result<Key> {
     let iv = buffer[32..].to_vec();
     Ok((key, iv))
 }
-
 
 /// If AES acts on the encrypted file it decrypts and vice versa
 /// Key and iv are not in the file
@@ -112,6 +110,7 @@ fn ciphertext_path(plaintext_filename: &str) -> PathBuf {
     path
 }
 
+#[allow(dead_code)]
 fn decrypted_path(ciphertext_filename: &str) -> PathBuf {
     let mut path = PathBuf::from(ciphertext_filename);
     path.set_extension("decrypted");
@@ -127,39 +126,30 @@ fn keyfile_path(plaintext_filename: &str) -> PathBuf {
 ///Encrypt a file with AES256 and save it in the same folder as file_name.ciphertext
 ///Create a key and save it into a file it in the same folder as file_name.aes256 if key is None
 pub fn encrypt(plaintext_filename: &str, key: Option<Key>) -> Result<()> {
-
     let encryption_key = match key {
-        None => {
-            recover_or_generate_encryption_key(
-                &keyfile_path(plaintext_filename)
-            )?
-        }
+        None => recover_or_generate_encryption_key(&keyfile_path(plaintext_filename))?,
         Some(key) => key,
     };
 
     de_or_encrypt_file(
-        &Path::new(plaintext_filename), 
-        &ciphertext_path(plaintext_filename), 
-        encryption_key
+        &Path::new(plaintext_filename),
+        &ciphertext_path(plaintext_filename),
+        encryption_key,
     )
 }
 
+#[allow(dead_code)]
 ///Decrypt a file with AES256 and save it in the same folder as file_name.decrypted
-///Create a key and save it into a file it in the same folder as file_name.aes256 if key is None
+///if key is None, recover it from the file ciphertext_filename.aes256
 pub fn decrypt(ciphertext_filename: &str, key: Option<Key>) -> Result<()> {
-
     let encryption_key = match key {
-        None => {
-            recover_encryption_key(
-                &keyfile_path(ciphertext_filename)
-            )?
-        }
+        None => recover_encryption_key(&keyfile_path(ciphertext_filename))?,
         Some(key) => key,
     };
 
     de_or_encrypt_file(
-        &Path::new(ciphertext_filename), 
-        &decrypted_path(ciphertext_filename), 
-        encryption_key
+        &Path::new(ciphertext_filename),
+        &decrypted_path(ciphertext_filename),
+        encryption_key,
     )
 }
