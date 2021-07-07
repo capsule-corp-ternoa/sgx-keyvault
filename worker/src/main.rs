@@ -46,7 +46,7 @@ use sp_core::{
 use sp_keyring::AccountKeyring;
 use substrate_api_client::{utils::FromHexString, Api, GenericAddress, XtStatus};
 
-use crate::enclave::api::{enclave_init_chain_relay, enclave_produce_blocks};
+use crate::enclave::api::{enclave_init_chain_relay, enclave_sync_chain};
 use enclave::api::{
     enclave_dump_ra, enclave_init, enclave_mrenclave, enclave_perform_ra, enclave_shielding_key,
     enclave_signing_key,
@@ -391,7 +391,7 @@ fn start_interval_block_production(
             if elapsed >= block_production_interval {
                 // update interval time
                 interval_start = SystemTime::now();
-                latest_head = produce_blocks(eid, api, latest_head)
+                latest_head = sync_chain(eid, api, latest_head)
             } else {
                 // sleep for the rest of the interval
                 let sleep_time = block_production_interval - elapsed;
@@ -547,13 +547,13 @@ pub fn init_chain_relay(eid: sgx_enclave_id_t, api: &Api<sr25519::Pair>) -> Head
 
     info!("Finished initializing chain relay, syncing....");
 
-    produce_blocks(eid, api, latest)
+    sync_chain(eid, api, latest)
 }
 
 /// Starts block production
 ///
 /// Returns the last synced header of layer one
-pub fn produce_blocks(
+pub fn sync_chain(
     eid: sgx_enclave_id_t,
     api: &Api<sr25519::Pair>,
     last_synced_head: Header,
@@ -615,7 +615,7 @@ pub fn produce_blocks(
     for chunk in blocks_to_sync.chunks(BLOCK_SYNC_BATCH_SIZE as usize) {
         let tee_nonce = get_nonce(&api, &tee_accountid);
         // Produce blocks
-        if let Err(e) = enclave_produce_blocks(eid, chunk.to_vec(), tee_nonce) {
+        if let Err(e) = enclave_sync_chain(eid, chunk.to_vec(), tee_nonce) {
             error!("{}", e);
             // enclave might not have synced
             return last_synced_head;
