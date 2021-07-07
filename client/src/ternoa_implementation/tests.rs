@@ -1,4 +1,4 @@
-use crate::cipher::{decrypt, encrypt, recover_or_generate_encryption_key};
+use crate::ternoa_implementation::cipher::{decrypt, encrypt, recover_or_generate_encryption_key};
 use std::fs;
 use std::fs::File;
 use std::io::Write;

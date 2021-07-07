@@ -12,10 +12,11 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-use clap::{AppSettings, Arg, ArgMatches, App};
+use clap::{App, AppSettings, Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 use log::*;
 
+use crate::ternoa_implementation::cipher;
 
 use crate::VERSION;
 
@@ -26,7 +27,6 @@ const URL_ARG_NAME: &str = "url";
 const OWNER: &str = "owner";
 const TO: &str = "to";
 const FROM: &str = "from";
-
 
 /// creates an inputfile.cyphertext and inputfile.aes256 with the symmetric key and stores it locally
 /// INPUT: file path as String
@@ -46,10 +46,9 @@ pub fn encrypt_cmd() -> Command<'static, str> {
             let path: &str = matches.value_of("filepath").unwrap();
             debug!("entering encryption function, received filepath: {}", path);
             // ENCRYPT FUNCTION HERE #2
+            cipher::encrypt(path, None).unwrap();
             Ok(())
-        }
-    )
-
+        })
 }
 
 /// decrypts cyphertext using the aes256 key stored in inputfile.aes256. for debug only
@@ -86,14 +85,15 @@ pub fn decrypt_cmd() -> Command<'static, str> {
                         "entering decrypt shamir function, received filepaths: {},{}",
                         path, keysharesfile
                     );
-                },
+                }
                 None => {
                     debug!("entering decrypt function, received filepath: {}", path);
+                    //TODO: For debug. To check when implement issue #5: decryption.
+                    cipher::decrypt(path, None).unwrap();
                 }
             };
             Ok(())
-        }
-    )
+        })
 }
 
 /// Adds all nft commands
@@ -128,8 +128,7 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                     // NFT CREATE FUNCTION HERE
 
                     Ok(())
-                }
-            )
+                }),
         )
         .add_cmd(
             Command::new("mutate")
@@ -155,8 +154,7 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                     // NFT MUTATE FUNCTION HERE
 
                     Ok(())
-                }
-            )
+                }),
         )
         .add_cmd(
             Command::new("transfer")
@@ -181,13 +179,10 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                     );
                     // TRANFER FUNCTION HERE
                     Ok(())
-                }
-            )
+                }),
         )
         .into_cmd("nft")
 }
-
-
 
 /// Adds all keyvault commands
 pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
@@ -219,8 +214,7 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     // KEYVAULT CHECK CODE HERE
 
                     Ok(())
-                }
-            )
+                }),
         )
         .add_cmd(
             Command::new("get")
@@ -240,12 +234,11 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     let url: &str = matches.value_of(URL_ARG_NAME).unwrap();
                     debug!(
                         "entering keyvault get funtciotn, nftid: {}, owner: {}, urll: {}",
-                        nftid,owner_ss58, url
+                        nftid, owner_ss58, url
                     );
                     // KEYVAULT GET CODE HERE
                     Ok(())
-                }
-            )
+                }),
         )
         .add_cmd(
             Command::new("list")
@@ -255,28 +248,28 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     debug!("entering keyvault list commands");
                     // LIST IMPLEMENATION HERE :
                     Ok(())
-                }
-            )
+                }),
         )
         .add_cmd(
             Command::new("provision")
                 .description("provisions all keyvaults and verifies")
                 .options(|app| {
                     let app_with_nftid = add_nft_id_arg(app);
-                    app_with_nftid.arg(
-                        Arg::with_name("urllist")
-                            .takes_value(true)
-                            .required(true)
-                            .value_name("List of Strings")
-                            .help("list of enclave url lists"),
-                    )
-                    .arg(
-                        Arg::with_name("needed_keys")
-                            .takes_value(true)
-                            .required(true)
-                            .value_name("u32")
-                            .help("specifies the minimum necessary recovery keys < #urllist"),
-                    )
+                    app_with_nftid
+                        .arg(
+                            Arg::with_name("urllist")
+                                .takes_value(true)
+                                .required(true)
+                                .value_name("List of Strings")
+                                .help("list of enclave url lists"),
+                        )
+                        .arg(
+                            Arg::with_name("needed_keys")
+                                .takes_value(true)
+                                .required(true)
+                                .value_name("u32")
+                                .help("specifies the minimum necessary recovery keys < #urllist"),
+                        )
                 })
                 .runner(|_args: &str, matches: &ArgMatches<'_>| {
                     // Will read aes256 key, shamir-split shares, provision all keyvaults and verify
@@ -293,13 +286,10 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     );
                     // KEYVAULT PROVISION CODE HERE
                     Ok(())
-                }
-            )
+                }),
         )
         .into_cmd("keyvault")
 }
-
-
 
 pub fn get_nft_id_from_matches(matches: &ArgMatches<'_>) -> u32 {
     get_u32_from_str(matches.value_of(NFTID_ARG_NAME).unwrap())
@@ -309,7 +299,6 @@ fn get_u32_from_str(arg: &str) -> u32 {
     arg.parse::<u32>()
         .unwrap_or_else(|_| panic!("failed to convert {} into an integer", arg))
 }
-
 
 pub fn add_nft_id_arg<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
     app.arg(
@@ -340,7 +329,6 @@ pub fn add_filename_arg<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
             .help("new file name to be contained in the NFT"),
     )
 }
-
 
 pub fn add_url_arg<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
     app.arg(
