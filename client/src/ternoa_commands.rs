@@ -176,6 +176,7 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                     // INPUT:  AccountId (current owner)
                     //         AccountId (new owner)
                     //         NFTId
+                    let chain_api = get_ternoa_chain_api(matches);
                     let from: &str = matches.value_of(FROM).unwrap();
                     let to: &str = matches.value_of(TO).unwrap();
                     let nftid = get_nft_id_from_matches(matches);
@@ -184,6 +185,8 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                         from, to, nftid
                     );
                     // TRANFER FUNCTION HERE
+                    transfer(from, to, nftid, chain_api);
+                    info!("NFT was transfered {} to {}", nftid, to);
                     Ok(())
                 }),
         )
