@@ -5376,7 +5376,7 @@ dependencies = [
  "sp-core",
  "sp-runtime",
  "substrate-api-client",
- "ternoa-primitives 0.2.0 (git+https://github.com/capsule-corp-ternoa/chain)",
+ "ternoa-primitives",
  "ternoa-runtime",
 ]
 
@@ -5408,7 +5408,7 @@ dependencies = [
  "substrate-api-client",
  "substrate-client-keystore",
  "substratee-worker-primitives",
- "ternoa-primitives 0.2.0 (git+https://github.com/capsule-corp-ternoa/chain)",
+ "ternoa-primitives",
  "ternoa-runtime",
 ]
 
@@ -5448,7 +5448,7 @@ dependencies = [
  "substratee-stf",
  "substratee-worker-api",
  "substratee-worker-primitives",
- "ternoa-primitives 0.2.0 (git+https://github.com/capsule-corp-ternoa/chain)",
+ "ternoa-primitives",
  "ternoa-runtime",
  "tokio 0.2.25",
  "ws 0.7.9",
@@ -5622,8 +5622,7 @@ dependencies = [
  "substratee-stf",
  "substratee-worker-api",
  "substratee-worker-primitives",
- "ternoa-primitives 0.2.0 (git+https://github.com/capsule-corp-ternoa/chain?branch=main)",
- "ternoa-primitives 0.2.0 (git+https://github.com/capsule-corp-ternoa/chain)",
+ "ternoa-primitives",
  "ternoa-runtime",
  "tiny-bip39 0.6.2",
  "ws 0.7.9",
@@ -5667,19 +5666,6 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "ternoa-common",
-]
-
-[[package]]
-name = "ternoa-primitives"
-version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?branch=main#2f39cb59c02b655fbc1ef6a3b57ba41568be309c"
-dependencies = [
- "frame-system",
- "parity-scale-codec 2.1.3",
- "sp-application-crypto",
- "sp-core",
- "sp-runtime",
- "sp-std",
 ]
 
 [[package]]
@@ -5748,7 +5734,7 @@ dependencies = [
  "ternoa-account-store",
  "ternoa-marketplace",
  "ternoa-nfts",
- "ternoa-primitives 0.2.0 (git+https://github.com/capsule-corp-ternoa/chain)",
+ "ternoa-primitives",
  "ternoa-timed-escrow",
 ]
 

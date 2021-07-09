@@ -87,10 +87,5 @@ version = "3.0.0"
 git = "https://github.com/paritytech/substrate.git"
 version = "3.0.0"
 
-[dependencies.ternoa-primitives]
-git = "https://github.com/capsule-corp-ternoa/chain"
-branch = "main"
-default-features = false
-
 #[patch.crates-io]
 #ed25519-dalek = { git = "https://github.com/scs/ed25519-dalek.git", branch = "no_std_sgx"}
