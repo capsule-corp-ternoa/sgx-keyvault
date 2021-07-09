@@ -54,7 +54,7 @@ use enclave::api::{
 use enclave::tls_ra::{enclave_request_key_provisioning, enclave_run_key_provisioning_server};
 use enclave::worker_api_direct_server::start_worker_api_direct_server;
 use sp_finality_grandpa::{AuthorityList, VersionedAuthorityList, GRANDPA_AUTHORITIES_KEY};
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 
 use substratee_worker_primitives::block::SignedBlock as SignedSidechainBlock;
 
@@ -66,8 +66,6 @@ mod tests;
 /// how many blocks will be synced before storing the chain db to disk
 const BLOCK_SYNC_BATCH_SIZE: u32 = 1000;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
-/// start block production every ... ms
-const BLOCK_PRODUCTION_INTERVAL: u64 = 1000;
 
 fn main() {
     // Setup logging
