@@ -19,9 +19,14 @@ use sp_application_crypto::sr25519;
 use substrate_api_client::Api;
 
 use crate::ternoa_implementation::cipher;
+use crate::ternoa_implementation::keyvault;
 use crate::ternoa_implementation::nft::create::create;
 use crate::ternoa_implementation::nft::mutate::mutate;
 use crate::ternoa_implementation::nft::transfer::transfer;
+
+use ternoa_primitives::NFTId;
+
+
 
 use crate::VERSION;
 
@@ -299,18 +304,27 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                         nftid, urllist, needed_keys
                     );
                     // KEYVAULT PROVISION CODE HERE
+                    let result = keyvault::provision();
                     Ok(())
                 }),
         )
         .into_cmd("keyvault")
 }
 
-pub fn get_nft_id_from_matches(matches: &ArgMatches<'_>) -> u32 {
+
+
+pub fn get_nft_id_from_matches(matches: &ArgMatches<'_>) -> NFTId {
     get_u32_from_str(matches.value_of(NFTID_ARG_NAME).unwrap())
 }
 
+//FIXME: obsolete?
 fn get_u32_from_str(arg: &str) -> u32 {
     arg.parse::<u32>()
+        .unwrap_or_else(|_| panic!("failed to convert {} into an integer", arg))
+}
+
+fn get_nftid_from_str(arg: &str) -> NFTId {
+    arg.parse::<NFTId>()
         .unwrap_or_else(|_| panic!("failed to convert {} into an integer", arg))
 }
 
