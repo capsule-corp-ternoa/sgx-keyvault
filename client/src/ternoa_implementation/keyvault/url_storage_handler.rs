@@ -22,11 +22,11 @@ pub struct UrlStorageHandler {
 }
 
 impl UrlStorageHandler {
-
     pub fn new(filepath: &str) -> Self {
-		UrlStorageHandler{filepath: filepath.to_owned()}
-	}
-
+        UrlStorageHandler {
+            filepath: filepath.to_owned(),
+        }
+    }
 
     // write/overwrite string to file:
     pub fn write_urls_to_file(&self, urls: Vec<String>) -> std::io::Result<()> {
@@ -41,17 +41,13 @@ impl UrlStorageHandler {
         Ok(String::from_utf8_lossy(&fs::read(&self.filepath)?)
             .split('\n')
             .map(|str| str.to_owned())
-            .collect()
-        )
+            .collect())
     }
-
 }
-
-
 
 #[cfg(test)]
 mod tests {
-	use super::*;
+    use super::*;
 
     #[test]
     fn write_and_read_empty_url_works() {
@@ -64,14 +60,14 @@ mod tests {
         url_handler.write_urls_to_file(url).unwrap();
 
         // then
-		assert_eq!(url_handler.read_urls_from_file().unwrap(), vec![""]);
+        assert_eq!(url_handler.read_urls_from_file().unwrap(), vec![""]);
 
-         //clean up
+        //clean up
         fs::remove_file(filename).unwrap()
-	}
+    }
 
     #[test]
-	fn write_and_read_one_line_works() {
+    fn write_and_read_one_line_works() {
         // given
         let filename = "one_line_file.txt";
         let url = vec!["hello_there".to_owned()];
@@ -81,14 +77,14 @@ mod tests {
         url_handler.write_urls_to_file(url.clone()).unwrap();
 
         // then
-		assert_eq!(url_handler.read_urls_from_file().unwrap(), url);
+        assert_eq!(url_handler.read_urls_from_file().unwrap(), url);
 
         //clean up
         fs::remove_file(filename).unwrap();
-	}
+    }
 
     #[test]
-	fn write_and_read_multi_lines_works() {
+    fn write_and_read_multi_lines_works() {
         // given
         let filename = "multi_line_file.txt";
         let url1 = "hello_there".to_owned();
@@ -101,10 +97,9 @@ mod tests {
         url_handler.write_urls_to_file(urls.clone()).unwrap();
 
         // then
-		assert_eq!(url_handler.read_urls_from_file().unwrap(), urls);
+        assert_eq!(url_handler.read_urls_from_file().unwrap(), urls);
 
         //clean up
         fs::remove_file(filename).unwrap();
-	}
-
+    }
 }

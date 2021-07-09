@@ -15,7 +15,4 @@
 
 */
 
-
-pub fn provision() {
-
-}
+pub fn provision() {}

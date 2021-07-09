@@ -14,27 +14,26 @@
     limitations under the License.
 
 */
-use substrate_api_client::Api;
-use sp_application_crypto::sr25519;
-use sp_core::crypto::Ss58Codec;
 use base58::ToBase58;
 use chrono::{DateTime, Utc};
+use sp_application_crypto::sr25519;
+use sp_core::crypto::Ss58Codec;
 use std::time::{Duration, UNIX_EPOCH};
+use substrate_api_client::Api;
 
+use super::url_storage_handler::UrlStorageHandler;
 use crate::get_enclave;
 use crate::get_enclave_count;
-use super::url_storage_handler::UrlStorageHandler;
 
 /// Prints all registered keyvaults and stores all url within a file (one url per line)
 pub fn list(api: Api<sr25519::Pair>, filepath: &str) -> std::io::Result<()> {
     let number_of_keyvaults = get_enclave_count(&api);
     println!("number of keyvaults registered: {}", number_of_keyvaults);
     let mut keyvault_urls: Vec<String> = Vec::new();
-    for w in 1..= number_of_keyvaults {
+    for w in 1..=number_of_keyvaults {
         if let Some(enclave) = get_enclave(&api, w) {
-            let timestamp = DateTime::<Utc>::from(
-                UNIX_EPOCH + Duration::from_millis(enclave.timestamp as u64),
-            );
+            let timestamp =
+                DateTime::<Utc>::from(UNIX_EPOCH + Duration::from_millis(enclave.timestamp as u64));
             let keyvault_url = String::from_utf8(enclave.url).unwrap();
             keyvault_urls.push(keyvault_url.clone());
             println!("Sgx Keyvault {}", w);
@@ -42,19 +41,15 @@ pub fn list(api: Api<sr25519::Pair>, filepath: &str) -> std::io::Result<()> {
             println!("   MRENCLAVE: {}", enclave.mr_enclave.to_base58());
             println!("   RA timestamp: {}", timestamp);
             println!("   URL: {}", keyvault_url);
-
         } else {
             println!("error reading enclave data");
         };
-
     }
 
     save_urls(filepath, keyvault_urls)
 }
 
-
 fn save_urls(filepath: &str, keyvault_urls: Vec<String>) -> std::io::Result<()> {
     let url_handler = UrlStorageHandler::new(filepath);
     url_handler.write_urls_to_file(keyvault_urls)
-
 }
