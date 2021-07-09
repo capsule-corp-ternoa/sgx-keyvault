@@ -26,9 +26,9 @@ use crate::ternoa_implementation::nft::transfer::transfer;
 
 use ternoa_primitives::NFTId;
 
-
-
 use crate::VERSION;
+
+const KEYVAULT_PATH: &str = "my_keyvaults";
 
 const NFTID_ARG_NAME: &str = "nftid";
 const FILENAME_ARG_NAME: &str = "filename";
@@ -264,7 +264,7 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                 .description("lists urls of registered enclaves, one per line")
                 .runner(|_args: &str, _matches: &ArgMatches<'_>| {
                     // Lists urls of registered enclaves, one per line
-                    keyvault::list();
+                    //keyvault::list();
                     Ok(())
                 }),
         )
@@ -303,7 +303,7 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                         nftid, urllist, needed_keys
                     );
                     // KEYVAULT PROVISION CODE HERE
-                    let result = keyvault::provision();
+                    //let result = keyvault::provision();
                     Ok(())
                 }),
         )
