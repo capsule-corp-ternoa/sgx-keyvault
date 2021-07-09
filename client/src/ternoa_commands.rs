@@ -16,6 +16,8 @@ use clap::{AppSettings, Arg, ArgMatches, App};
 use clap_nested::{Command, Commander, MultiCommand};
 use log::*;
 
+use ternoa_primitives::NFTId;
+use ternoa_implementation::keyvault;
 
 use crate::VERSION;
 
@@ -292,6 +294,7 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                         nftid, urllist, needed_keys
                     );
                     // KEYVAULT PROVISION CODE HERE
+                    let result = keyvault::provision();
                     Ok(())
                 }
             )
@@ -301,15 +304,20 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
 
 
 
-pub fn get_nft_id_from_matches(matches: &ArgMatches<'_>) -> u32 {
+pub fn get_nft_id_from_matches(matches: &ArgMatches<'_>) -> NFTId {
     get_u32_from_str(matches.value_of(NFTID_ARG_NAME).unwrap())
 }
 
+//FIXME: obsolete?
 fn get_u32_from_str(arg: &str) -> u32 {
     arg.parse::<u32>()
         .unwrap_or_else(|_| panic!("failed to convert {} into an integer", arg))
 }
 
+fn get_nftid_from_str(arg: &str) -> NFTId {
+    arg.parse::<NFTId>()
+        .unwrap_or_else(|_| panic!("failed to convert {} into an integer", arg))
+}
 
 pub fn add_nft_id_arg<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
     app.arg(
