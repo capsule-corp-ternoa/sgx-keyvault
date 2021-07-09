@@ -16,20 +16,35 @@
 */
 use std::fs;
 use std::io::Write;
+use std::io::Result;
+
 
 pub struct UrlStorageHandler {
     pub filepath: String,
 }
 
 impl UrlStorageHandler {
-    pub fn new(filepath: &str) -> Self {
+    fn new(filepath: String) -> Self {
         UrlStorageHandler {
-            filepath: filepath.to_owned(),
+            filepath: filepath,
         }
     }
 
+    pub fn create(path: &str, filename: &str) -> Result<Self> {
+        let filepath = format!("{}/{}", path, filename);
+        UrlStorageHandler::ensure_dir_exists(path)?;
+        Ok(UrlStorageHandler::new(filepath))
+    }
+
+    fn ensure_dir_exists(path: &str) -> Result<()> {
+        if fs::read_dir(path).is_err() {
+            fs::create_dir_all(path)?
+        }
+        Ok(())
+    }
+
     // write/overwrite string to file:
-    pub fn write_urls_to_file(&self, urls: Vec<String>) -> std::io::Result<()> {
+    pub fn write_urls_to_file(&self, urls: Vec<String>) ->Result<()> {
         let mut text: String = urls.iter().map(|url| format!("{}\n", url)).collect();
         text.pop(); // remove last line break
         let mut file = fs::File::create(&self.filepath)?;
@@ -37,8 +52,8 @@ impl UrlStorageHandler {
     }
 
     // write/overwrite string to file:
-    pub fn read_urls_from_file(&self) -> std::io::Result<Vec<String>> {
-        Ok(String::from_utf8_lossy(&fs::read(&self.filepath)?)
+    pub fn read_urls_from_file(&self) -> Result<Vec<String>> {
+        Ok(fs::read_to_string(&self.filepath)?
             .split('\n')
             .map(|str| str.to_owned())
             .collect())
@@ -50,11 +65,68 @@ mod tests {
     use super::*;
 
     #[test]
+    fn create_folder_works() {
+        // given
+        let path = "hello";
+
+        // when
+        UrlStorageHandler::create(path, "").unwrap();
+
+        // then
+        fs::read_dir(path).unwrap();
+
+        //clean up
+        fs::remove_dir(path).unwrap();
+    }
+
+    #[test]
+    fn create_file_works() {
+        // given
+        let path = "hello_two";
+        let filename = "hello_world.txt";
+        let filepath = format!("{}/{}", path, filename);
+        let url = vec![];
+
+        // when
+        let url_handler = UrlStorageHandler::create(path, filename).unwrap();
+        url_handler.write_urls_to_file(url).unwrap();
+
+        // then
+        fs::read_dir(path).unwrap();
+        fs::read(&filepath).unwrap();
+
+        //clean up
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn does_not_fail_due_to_existing_path() {
+        // given
+        let path = "hello_three";
+        let filename = "hello_world.txt";
+        let filepath = format!("{}/{}", path, filename);
+        let url = vec![];
+
+        // when
+        let url_handler = UrlStorageHandler::create(path, filename).unwrap();
+        url_handler.write_urls_to_file(url.clone()).unwrap();
+        let url_handler_two = UrlStorageHandler::create(path, filename).unwrap();
+        url_handler_two.write_urls_to_file(url).unwrap();
+
+        // then
+        fs::read_dir(path).unwrap();
+        fs::read(&filepath).unwrap();
+
+        //clean up
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
     fn write_and_read_empty_url_works() {
         // given
-        let filename = "empty_file.txt";
+        let filename = "empty_file.txt".to_owned();
         let url = vec![];
-        let url_handler = UrlStorageHandler::new(filename);
+        let url_handler = UrlStorageHandler::new(filename.clone());
 
         // when
         url_handler.write_urls_to_file(url).unwrap();
@@ -69,9 +141,9 @@ mod tests {
     #[test]
     fn write_and_read_one_line_works() {
         // given
-        let filename = "one_line_file.txt";
+        let filename = "one_line_file.txt".to_owned();
         let url = vec!["hello_there".to_owned()];
-        let url_handler = UrlStorageHandler::new(filename);
+        let url_handler = UrlStorageHandler::new(filename.clone());
 
         // when
         url_handler.write_urls_to_file(url.clone()).unwrap();
@@ -86,12 +158,12 @@ mod tests {
     #[test]
     fn write_and_read_multi_lines_works() {
         // given
-        let filename = "multi_line_file.txt";
+        let filename = "multi_line_file.txt".to_owned();
         let url1 = "hello_there".to_owned();
         let url2 = "ohhh_hi".to_owned();
         let url3 = "who are you?".to_owned();
         let urls = vec![url1, url2, url3];
-        let url_handler = UrlStorageHandler::new(filename);
+        let url_handler = UrlStorageHandler::new(filename.clone());
 
         // when
         url_handler.write_urls_to_file(urls.clone()).unwrap();
@@ -102,4 +174,5 @@ mod tests {
         //clean up
         fs::remove_file(filename).unwrap();
     }
+
 }
