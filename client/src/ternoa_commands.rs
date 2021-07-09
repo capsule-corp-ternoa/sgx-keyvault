@@ -20,6 +20,8 @@ use substrate_api_client::Api;
 
 use crate::ternoa_implementation::cipher;
 use crate::ternoa_implementation::nft::create::create;
+use crate::ternoa_implementation::nft::mutate::mutate;
+use crate::ternoa_implementation::nft::transfer::transfer;
 
 use crate::VERSION;
 
@@ -150,6 +152,7 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                     // INPUT:  AccountId (owner)
                     //         NFTId
                     //         Filename
+                    let chain_api = get_ternoa_chain_api(matches);
                     let owner_ss58: &str = matches.value_of(OWNER).unwrap();
                     let nftid = get_nft_id_from_matches(matches);
                     let filename: &str = matches.value_of("filename").unwrap();
@@ -158,7 +161,7 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                         owner_ss58, filename, nftid
                     );
                     // NFT MUTATE FUNCTION HERE
-
+                    mutate(owner_ss58, nftid, filename, chain_api);
                     Ok(())
                 }),
         )
