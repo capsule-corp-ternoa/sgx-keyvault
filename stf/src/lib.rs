@@ -61,6 +61,9 @@ pub static UNSHIELD: u8 = 6u8;
 pub type ShardIdentifier = H256;
 //pub type Index = u32;
 
+pub use ternoa_primitives::NFTId;
+pub type ShamirKeyShare = String;
+
 #[derive(Clone)]
 pub enum KeyPair {
     Sr25519(sr25519::Pair),
@@ -166,6 +169,12 @@ pub enum TrustedCall {
     balance_transfer(AccountId, AccountId, Balance),
     balance_unshield(AccountId, AccountId, Balance, ShardIdentifier), // (AccountIncognito, BeneficiaryPublicAccount, Amount, Shard)
     balance_shield(AccountId, AccountId, Balance), // (Root, AccountIncognito, Amount)
+    /// (Owner, NFTid, shamir keyshare)
+    keyvault_provision(AccountId, NFTId, ShamirKeyShare),
+    /// (Owner, NFTid)
+    keyvault_check(AccountId, NFTId),
+    /// (Owner, NFTid)
+    keyvault_get(AccountId, NFTId),
 }
 
 impl TrustedCall {
@@ -175,6 +184,9 @@ impl TrustedCall {
             TrustedCall::balance_transfer(account, _, _) => account,
             TrustedCall::balance_unshield(account, _, _, _) => account,
             TrustedCall::balance_shield(account, _, _) => account,
+            TrustedCall::keyvault_provision(account, _, _) => account,
+            TrustedCall::keyvault_check(account, _) => account,
+            TrustedCall::keyvault_get(account, _) => account,
         }
     }
 

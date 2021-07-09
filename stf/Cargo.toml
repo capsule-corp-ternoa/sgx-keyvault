@@ -138,6 +138,11 @@ default-features = false
 features = ["sgx"]
 optional = true
 
+[dependencies.ternoa-primitives]
+git = "https://github.com/capsule-corp-ternoa/chain"
+branch = "main"
+default-features = false
+
 [dev-dependencies.sp-keyring]
 git = "https://github.com/paritytech/substrate.git"
 version = "3.0.0"
