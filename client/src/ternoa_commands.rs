@@ -264,8 +264,7 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                 .description("lists urls of registered enclaves, one per line")
                 .runner(|_args: &str, _matches: &ArgMatches<'_>| {
                     // Lists urls of registered enclaves, one per line
-                    debug!("entering keyvault list commands");
-                    // LIST IMPLEMENATION HERE :
+                    keyvault::list();
                     Ok(())
                 }),
         )
