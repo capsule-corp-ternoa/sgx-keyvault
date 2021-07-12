@@ -20,6 +20,7 @@ use ternoa_primitives::NFTId;
 
 /// Prints all registered keyvaults and stores all url within a file (one url per line)
 pub fn get(nft_id: NFTId, owner: AccountId, url: &str) -> Result<(), String> {
+    // TODO: check url format?
     // TODO: Task #6, create trusted call
     Ok(())
 }

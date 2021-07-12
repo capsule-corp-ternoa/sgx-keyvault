@@ -15,17 +15,17 @@
 
 */
 use super::url_storage_handler::UrlStorageHandler;
-use sharks::{ Sharks, Share };
-use ternoa_primitives::NFTId;
 use log::*;
+use sharks::{Share, Sharks};
+use ternoa_primitives::NFTId;
 
 pub fn provision(filename: &str, recovery_number_n: u8, nft_id: NFTId) -> Result<(), String> {
     // TODO: how / from where to read aes256 key -> wait for PR of issue #1?
-    let secret = &[0u8,4];
+    let secret = &[0u8, 4];
     // read urllist from file
-    let url_handler = UrlStorageHandler::new()
-            .set_filename(filename);
-    let urls = url_handler.read_urls_from_file()
+    let url_handler = UrlStorageHandler::new().set_filename(filename);
+    let urls = url_handler
+        .read_urls_from_file()
         .map_err(|e| format!("Could not read urls: {}", e))?;
 
     // create shamir shares
@@ -35,17 +35,20 @@ pub fn provision(filename: &str, recovery_number_n: u8, nft_id: NFTId) -> Result
     //    a. send ith share to url_i
     //    b. verify availability
     for _shamir_share in shamir_shares.iter() {
-       // send to enclave:
+        // send to enclave:
         // TODO: TASK of ISSUE #6
     }
 
     // TODO: create file NFT urllist NFT File
     Ok(())
-
 }
 
 /// shamir split aes256 key into M shares, of which any N are needed for key recovery
-fn create_shamir_shares(m_shares: usize, recovery_number_n: u8, secret: &[u8]) -> Result<Vec<Share>, String> {
+fn create_shamir_shares(
+    m_shares: usize,
+    recovery_number_n: u8,
+    secret: &[u8],
+) -> Result<Vec<Share>, String> {
     // ensure m >= n
     if m_shares < (recovery_number_n as usize) {
         return Err(format!("The threshold of shamir shards necessary for secret recovery (N = {:?}) must be smaller than the number of keyvaults (M = {:?})", recovery_number_n, m_shares));
@@ -56,10 +59,12 @@ fn create_shamir_shares(m_shares: usize, recovery_number_n: u8, secret: &[u8]) -
     let dealer = sharks.dealer(secret);
     // create shares
     let shares: Vec<Share> = dealer.take(m_shares).collect();
-    debug!("Recovered secret: {:?}", sharks.recover(shares.as_slice()).unwrap());
+    debug!(
+        "Recovered secret: {:?}",
+        sharks.recover(shares.as_slice()).unwrap()
+    );
     Ok(shares)
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -92,7 +97,7 @@ mod tests {
         // when
         let shares = create_shamir_shares(m_shares, recovery_number_n, secret).unwrap();
 
-        for i in 0 ..  (recovery_number_n - 3) {
+        for i in 0..(recovery_number_n - 3) {
             too_few_shares.push(shares[i as usize].clone());
         }
 

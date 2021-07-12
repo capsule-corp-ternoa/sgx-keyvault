@@ -15,9 +15,8 @@
 
 */
 use std::fs;
-use std::io::Write;
 use std::io::Result;
-
+use std::io::Write;
 
 const KEYVAULT_DEFAULT_PATH: &str = "my_keyvaults";
 const KEYVAULT_DEFAULT_URLLIST_FILENAME: &str = "keyvault_pool.txt";
@@ -97,7 +96,6 @@ mod tests {
         // then
         assert_eq!(handler.filename, filename);
         assert_eq!(handler.path, path);
-
     }
 
     #[test]
@@ -219,5 +217,4 @@ mod tests {
         //clean up
         fs::remove_dir_all(path).unwrap();
     }
-
 }
