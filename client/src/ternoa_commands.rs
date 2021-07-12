@@ -316,14 +316,14 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
 
 
 pub fn get_nft_id_from_matches(matches: &ArgMatches<'_>) -> NFTId {
-    get_u32_from_str(matches.value_of(NFTID_ARG_NAME).unwrap())
+    get_nftid_from_str(matches.value_of(NFTID_ARG_NAME).unwrap())
 }
 
 //FIXME: obsolete?
-fn get_u32_from_str(arg: &str) -> u32 {
+/* fn get_u32_from_str(arg: &str) -> u32 {
     arg.parse::<u32>()
         .unwrap_or_else(|_| panic!("failed to convert {} into an integer", arg))
-}
+} */
 
 fn get_nftid_from_str(arg: &str) -> NFTId {
     arg.parse::<NFTId>()
