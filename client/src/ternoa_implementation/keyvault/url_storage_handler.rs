@@ -45,7 +45,7 @@ impl UrlStorageHandler {
     }
 
     // write/overwrite string to file:
-    pub fn write_urls_to_file(&self, urls: Vec<String>) ->Result<()> {
+    pub fn write_urls_to_file(&self, urls: Vec<String>) -> Result<()> {
         let mut text: String = urls.iter().map(|url| format!("{}\n", url)).collect();
         text.pop(); // remove last line break
         let mut file = fs::File::create(&self.filepath)?;

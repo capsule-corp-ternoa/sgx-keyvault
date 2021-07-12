@@ -305,8 +305,8 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                         "entering keyvault provision, nftid: {}, urllist: {}, N: {:?}",
                         nftid, urllist, needed_keys
                     );
-                    // KEYVAULT PROVISION CODE HERE
-                    //let result = keyvault::provision();
+                    //let result = keyvault::provision::provision().unwrap();
+
                     Ok(())
                 }),
         )
