@@ -29,7 +29,7 @@ pub fn provision(path: &str, filename: &str, recovery_number_n: u8) -> Result<()
         .map_err(|e| format!("Could not read urls: {}", e))?;
 
     // create shamir shares
-    let shamir_shares = create_shamir_shares(urls.len() as usize, recovery_number_n, secret);
+    let shamir_shares = create_shamir_shares(urls.len() as usize, recovery_number_n, secret)?;
 
     // for all urls in list (= # of shares):
     //    a. send ith share to url_i
@@ -45,7 +45,11 @@ pub fn provision(path: &str, filename: &str, recovery_number_n: u8) -> Result<()
 }
 
 /// shamir split aes256 key into M shares, of which any N are needed for key recovery
-fn create_shamir_shares(m_shares: usize, recovery_number_n: u8, secret: &[u8]) -> Vec<Share> {
+fn create_shamir_shares(m_shares: usize, recovery_number_n: u8, secret: &[u8]) -> Result<Vec<Share>, String> {
+    // ensure m >= n
+    if m_shares < (recovery_number_n as usize) {
+        return Err(format!("The threshold of shamir shards necessary for secret recovery (N = {:?}) must be smaller than the number of keyvaults (M = {:?})", recovery_number_n, m_shares));
+    }
     // Set a minimum threshold of 10 shares
     let sharks = Sharks(recovery_number_n);
     // Obtain an iterator over the shares for secret [1, 2, 3, 4]
@@ -53,5 +57,76 @@ fn create_shamir_shares(m_shares: usize, recovery_number_n: u8, secret: &[u8]) -
     // create shares
     let shares: Vec<Share> = dealer.take(m_shares).collect();
     debug!("Recovered secret: {:?}", sharks.recover(shares.as_slice()).unwrap());
-    shares
+    Ok(shares)
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Tests for create shamir shares
+    #[test]
+    fn create_shamir_shares_works() {
+        // given
+        let m_shares: usize = 8;
+        let recovery_number_n: u8 = 5;
+        let secret: &[u8] = &[0, 1, 4, 6, 9, 0, 1, 20, 1];
+
+        // when
+        let shares = create_shamir_shares(m_shares, recovery_number_n, secret).unwrap();
+
+        // then
+        let sharks = Sharks(recovery_number_n);
+        assert_eq!(secret, sharks.recover(shares.as_slice()).unwrap());
+    }
+
+    #[test]
+    fn no_secret_recovery_with_too_few_shares() {
+        // given
+        let m_shares: usize = 20;
+        let recovery_number_n: u8 = 19;
+        let secret: &[u8] = &[0, 1, 4, 6, 9, 0, 1, 20, 1];
+        let mut too_few_shares = Vec::new();
+
+        // when
+        let shares = create_shamir_shares(m_shares, recovery_number_n, secret).unwrap();
+
+        for i in 0 ..  (recovery_number_n - 3) {
+            too_few_shares.push(shares[i as usize].clone());
+        }
+
+        // then
+        let sharks = Sharks(recovery_number_n);
+        assert!(sharks.recover(&too_few_shares).is_err());
+    }
+
+    #[test]
+    fn shark_number_input_does_not_matter_when_recovering() {
+        // given
+        let m_shares: usize = 10;
+        let recovery_number_n: u8 = 7;
+        let secret: &[u8] = &[0, 1, 4, 6, 9, 0, 1, 20, 1];
+
+        // when
+        let shares = create_shamir_shares(m_shares, recovery_number_n, secret).unwrap();
+
+        // then
+        let sharks = Sharks(0);
+        assert_eq!(secret, sharks.recover(shares.as_slice()).unwrap());
+    }
+
+    #[test]
+    fn no_secret_recovery_when_m_smaller_n() {
+        // given
+        let m_shares: usize = 4;
+        let recovery_number_n: u8 = 7;
+        let secret: &[u8] = &[0, 1, 4, 6, 9, 0, 1, 20, 1];
+
+        // when
+        let shares = create_shamir_shares(m_shares, recovery_number_n, secret);
+
+        // then
+        assert!(shares.is_err());
+    }
 }
