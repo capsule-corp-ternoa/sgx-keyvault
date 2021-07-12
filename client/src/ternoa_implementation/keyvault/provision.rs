@@ -16,14 +16,14 @@
 */
 use super::url_storage_handler::UrlStorageHandler;
 use sharks::{ Sharks, Share };
+use ternoa_primitives::NFTId;
 use log::*;
 
-pub fn provision(path: &str, filename: &str, recovery_number_n: u8) -> Result<(), String> {
+pub fn provision(filename: &str, recovery_number_n: u8, nft_id: NFTId) -> Result<(), String> {
     // TODO: how / from where to read aes256 key -> wait for PR of issue #1?
     let secret = &[0u8,4];
     // read urllist from file
     let url_handler = UrlStorageHandler::new()
-            .set_path(path)
             .set_filename(filename);
     let urls = url_handler.read_urls_from_file()
         .map_err(|e| format!("Could not read urls: {}", e))?;

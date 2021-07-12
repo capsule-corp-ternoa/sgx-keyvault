@@ -295,14 +295,17 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     // INPUT:  NFTId (u32)
                     //         urllist ("[...]")
                     //         N
-                    let nftid = get_nft_id_from_matches(matches);
+                    let nft_id = get_nft_id_from_matches(matches);
                     let urllist: &str = matches.value_of("urllist").unwrap();
-                    let needed_keys: &str = matches.value_of("needed_keys").unwrap();
+                    let needed_keys = get_u8_from_str(matches.value_of("needed_keys").unwrap());
                     debug!(
                         "entering keyvault provision, nftid: {}, urllist: {}, N: {:?}",
-                        nftid, urllist, needed_keys
+                        nft_id, urllist, needed_keys
                     );
-                    //let result = keyvault::provision::provision().unwrap();
+                    match keyvault::provision::provision(urllist, needed_keys, nft_id) {
+                        Ok(_) => println!("success!"),
+                        Err(msg) => println!("[Error]: {}", msg),
+                    };
 
                     Ok(())
                 }),
@@ -312,15 +315,14 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
 
 
 
+fn get_u8_from_str(arg: &str) -> u8 {
+    arg.parse::<u8>()
+        .unwrap_or_else(|_| panic!("failed to convert {} into an integer", arg))
+}
+
 pub fn get_nft_id_from_matches(matches: &ArgMatches<'_>) -> NFTId {
     get_nftid_from_str(matches.value_of(NFTID_ARG_NAME).unwrap())
 }
-
-//FIXME: obsolete?
-/* fn get_u32_from_str(arg: &str) -> u32 {
-    arg.parse::<u32>()
-        .unwrap_or_else(|_| panic!("failed to convert {} into an integer", arg))
-} */
 
 fn get_nftid_from_str(arg: &str) -> NFTId {
     arg.parse::<NFTId>()
