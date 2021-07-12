@@ -52,6 +52,6 @@ pub fn list(api: Api<sr25519::Pair>, path: &str, filename: &str) -> Result<()> {
 }
 
 fn save_urls(path: &str, filename: &str, keyvault_urls: Vec<String>) -> Result<()> {
-    let url_handler = UrlStorageHandler::create(path, filename)?;
+    let url_handler = UrlStorageHandler::open(path, filename)?;
     url_handler.write_urls_to_file(keyvault_urls)
 }

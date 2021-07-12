@@ -24,18 +24,19 @@ pub struct UrlStorageHandler {
 }
 
 impl UrlStorageHandler {
-    fn new(filepath: String) -> Self {
+    pub fn new(filepath: String) -> Self {
         UrlStorageHandler {
-            filepath: filepath,
+            filepath,
         }
     }
 
-    pub fn create(path: &str, filename: &str) -> Result<Self> {
+    pub fn open(path: &str, filename: &str) -> Result<Self> {
         let filepath = format!("{}/{}", path, filename);
         UrlStorageHandler::ensure_dir_exists(path)?;
         Ok(UrlStorageHandler::new(filepath))
     }
 
+    /// checks if the dir exists, and if not, creates a new one
     fn ensure_dir_exists(path: &str) -> Result<()> {
         if fs::read_dir(path).is_err() {
             fs::create_dir_all(path)?
@@ -70,7 +71,7 @@ mod tests {
         let path = "hello";
 
         // when
-        UrlStorageHandler::create(path, "").unwrap();
+        UrlStorageHandler::open(path, "").unwrap();
 
         // then
         fs::read_dir(path).unwrap();
@@ -88,7 +89,7 @@ mod tests {
         let url = vec![];
 
         // when
-        let url_handler = UrlStorageHandler::create(path, filename).unwrap();
+        let url_handler = UrlStorageHandler::open(path, filename).unwrap();
         url_handler.write_urls_to_file(url).unwrap();
 
         // then
@@ -108,9 +109,9 @@ mod tests {
         let url = vec![];
 
         // when
-        let url_handler = UrlStorageHandler::create(path, filename).unwrap();
+        let url_handler = UrlStorageHandler::open(path, filename).unwrap();
         url_handler.write_urls_to_file(url.clone()).unwrap();
-        let url_handler_two = UrlStorageHandler::create(path, filename).unwrap();
+        let url_handler_two = UrlStorageHandler::open(path, filename).unwrap();
         url_handler_two.write_urls_to_file(url).unwrap();
 
         // then
