@@ -28,7 +28,7 @@ use crate::get_enclave_count;
 use std::io::Result;
 
 /// Prints all registered keyvaults and stores all url within a file (one url per line)
-pub fn list(api: Api<sr25519::Pair>, path: &str, filename: &str) -> Result<()> {
+pub fn list(api: Api<sr25519::Pair>) -> Result<()> {
     let number_of_keyvaults = get_enclave_count(&api);
     println!("number of keyvaults registered: {}", number_of_keyvaults);
     let mut keyvault_urls: Vec<String> = Vec::new();
@@ -48,10 +48,10 @@ pub fn list(api: Api<sr25519::Pair>, path: &str, filename: &str) -> Result<()> {
         };
     }
 
-    save_urls(path, filename, keyvault_urls)
+    save_urls(keyvault_urls)
 }
 
-fn save_urls(path: &str, filename: &str, keyvault_urls: Vec<String>) -> Result<()> {
-    let url_handler = UrlStorageHandler::open(path, filename)?;
+fn save_urls(keyvault_urls: Vec<String>) -> Result<()> {
+    let url_handler = UrlStorageHandler::new();
     url_handler.write_urls_to_file(keyvault_urls)
 }

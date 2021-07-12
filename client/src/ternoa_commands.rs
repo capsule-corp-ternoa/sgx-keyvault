@@ -29,9 +29,6 @@ use crate::get_chain_api;
 
 use crate::VERSION;
 
-const KEYVAULT_PATH: &str = "my_keyvaults";
-const KEYVAULT_URLLIST_FILENAME: &str = "keyvault_pool.txt";
-
 const NFTID_ARG_NAME: &str = "nftid";
 const FILENAME_ARG_NAME: &str = "filename";
 const URL_ARG_NAME: &str = "url";
@@ -267,7 +264,7 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                 .runner(|_args: &str, matches: &ArgMatches<'_>| {
                     let api = get_chain_api(matches);
                     // Lists urls of registered enclaves, one per line
-                    keyvault::list::list(api, KEYVAULT_PATH, KEYVAULT_URLLIST_FILENAME).unwrap();
+                    keyvault::list::list(api).unwrap();
                     Ok(())
                 }),
         )

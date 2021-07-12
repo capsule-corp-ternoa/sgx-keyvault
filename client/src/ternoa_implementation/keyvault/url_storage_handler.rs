@@ -19,42 +19,60 @@ use std::io::Write;
 use std::io::Result;
 
 
+const KEYVAULT_DEFAULT_PATH: &str = "my_keyvaults";
+const KEYVAULT_DEFAULT_URLLIST_FILENAME: &str = "keyvault_pool.txt";
+
 pub struct UrlStorageHandler {
-    pub filepath: String,
+    path: String,
+    filename: String,
 }
 
 impl UrlStorageHandler {
-    pub fn new(filepath: String) -> Self {
+    pub fn default() -> Self {
         UrlStorageHandler {
-            filepath,
+            path: KEYVAULT_DEFAULT_PATH.to_string(),
+            filename: KEYVAULT_DEFAULT_URLLIST_FILENAME.to_string(),
         }
     }
 
-    pub fn open(path: &str, filename: &str) -> Result<Self> {
-        let filepath = format!("{}/{}", path, filename);
-        UrlStorageHandler::ensure_dir_exists(path)?;
-        Ok(UrlStorageHandler::new(filepath))
+    pub fn new() -> Self {
+        UrlStorageHandler::default()
+    }
+
+    pub fn set_path(mut self, path: &str) -> Self {
+        self.path = path.to_owned();
+        self
+    }
+
+    pub fn set_filename(mut self, filename: &str) -> Self {
+        self.filename = filename.to_owned();
+        self
+    }
+
+    pub fn filepath(&self) -> String {
+        format!("{}/{}", self.path, self.filename)
     }
 
     /// checks if the dir exists, and if not, creates a new one
-    fn ensure_dir_exists(path: &str) -> Result<()> {
-        if fs::read_dir(path).is_err() {
-            fs::create_dir_all(path)?
+    fn ensure_dir_exists(&self) -> Result<()> {
+        if fs::read_dir(&self.path).is_err() {
+            fs::create_dir_all(&self.path)?
         }
         Ok(())
     }
 
     // write/overwrite string to file:
     pub fn write_urls_to_file(&self, urls: Vec<String>) -> Result<()> {
+        self.ensure_dir_exists()?;
         let mut text: String = urls.iter().map(|url| format!("{}\n", url)).collect();
         text.pop(); // remove last line break
-        let mut file = fs::File::create(&self.filepath)?;
+        let mut file = fs::File::create(&self.filepath())?;
         file.write_all(text.as_bytes())
     }
 
     // write/overwrite string to file:
     pub fn read_urls_from_file(&self) -> Result<Vec<String>> {
-        Ok(fs::read_to_string(&self.filepath)?
+        Ok(fs::read_to_string(&self.filepath())?
             .split('\n')
             .map(|str| str.to_owned())
             .collect())
@@ -66,18 +84,31 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_folder_works() {
+    fn create_urlstoragehandler_works() {
         // given
         let path = "hello";
+        let filename = "name.txt";
 
         // when
-        UrlStorageHandler::open(path, "").unwrap();
+        let handler = UrlStorageHandler::new()
+            .set_path(path)
+            .set_filename(filename);
 
         // then
-        fs::read_dir(path).unwrap();
+        assert_eq!(handler.filename, filename);
+        assert_eq!(handler.path, path);
 
-        //clean up
-        fs::remove_dir(path).unwrap();
+    }
+
+    #[test]
+    fn filepath_concat_works() {
+        // when
+        let handler = UrlStorageHandler::new()
+            .set_path("hello")
+            .set_filename("name.txt");
+
+        // then
+        assert_eq!(handler.filepath(), "hello/name.txt");
     }
 
     #[test]
@@ -85,16 +116,17 @@ mod tests {
         // given
         let path = "hello_two";
         let filename = "hello_world.txt";
-        let filepath = format!("{}/{}", path, filename);
         let url = vec![];
 
         // when
-        let url_handler = UrlStorageHandler::open(path, filename).unwrap();
+        let url_handler = UrlStorageHandler::new()
+            .set_path(path)
+            .set_filename(filename);
         url_handler.write_urls_to_file(url).unwrap();
 
         // then
         fs::read_dir(path).unwrap();
-        fs::read(&filepath).unwrap();
+        fs::read(&url_handler.filepath()).unwrap();
 
         //clean up
         fs::remove_dir_all(path).unwrap();
@@ -105,18 +137,21 @@ mod tests {
         // given
         let path = "hello_three";
         let filename = "hello_world.txt";
-        let filepath = format!("{}/{}", path, filename);
         let url = vec![];
 
         // when
-        let url_handler = UrlStorageHandler::open(path, filename).unwrap();
+        let url_handler = UrlStorageHandler::new()
+            .set_path(path)
+            .set_filename(filename);
         url_handler.write_urls_to_file(url.clone()).unwrap();
-        let url_handler_two = UrlStorageHandler::open(path, filename).unwrap();
+        let url_handler_two = UrlStorageHandler::new()
+            .set_path(path)
+            .set_filename(filename);
         url_handler_two.write_urls_to_file(url).unwrap();
 
         // then
         fs::read_dir(path).unwrap();
-        fs::read(&filepath).unwrap();
+        fs::read(&url_handler.filepath()).unwrap();
 
         //clean up
         fs::remove_dir_all(path).unwrap();
@@ -125,9 +160,12 @@ mod tests {
     #[test]
     fn write_and_read_empty_url_works() {
         // given
-        let filename = "empty_file.txt".to_owned();
+        let path = "test_empty";
+        let filename = "empty_file.txt";
         let url = vec![];
-        let url_handler = UrlStorageHandler::new(filename.clone());
+        let url_handler = UrlStorageHandler::new()
+            .set_path(path)
+            .set_filename(filename);
 
         // when
         url_handler.write_urls_to_file(url).unwrap();
@@ -136,15 +174,18 @@ mod tests {
         assert_eq!(url_handler.read_urls_from_file().unwrap(), vec![""]);
 
         //clean up
-        fs::remove_file(filename).unwrap()
+        fs::remove_dir_all(path).unwrap();
     }
 
     #[test]
     fn write_and_read_one_line_works() {
         // given
-        let filename = "one_line_file.txt".to_owned();
+        let path = "test_one_line";
+        let filename = "one_line_file.txt";
         let url = vec!["hello_there".to_owned()];
-        let url_handler = UrlStorageHandler::new(filename.clone());
+        let url_handler = UrlStorageHandler::new()
+            .set_path(path)
+            .set_filename(filename);
 
         // when
         url_handler.write_urls_to_file(url.clone()).unwrap();
@@ -153,18 +194,21 @@ mod tests {
         assert_eq!(url_handler.read_urls_from_file().unwrap(), url);
 
         //clean up
-        fs::remove_file(filename).unwrap();
+        fs::remove_dir_all(path).unwrap();
     }
 
     #[test]
     fn write_and_read_multi_lines_works() {
         // given
-        let filename = "multi_line_file.txt".to_owned();
+        let path = "test_multi_line";
+        let filename = "multi_line_file.txt";
         let url1 = "hello_there".to_owned();
         let url2 = "ohhh_hi".to_owned();
         let url3 = "who are you?".to_owned();
         let urls = vec![url1, url2, url3];
-        let url_handler = UrlStorageHandler::new(filename.clone());
+        let url_handler = UrlStorageHandler::new()
+            .set_path(path)
+            .set_filename(filename);
 
         // when
         url_handler.write_urls_to_file(urls.clone()).unwrap();
@@ -173,7 +217,7 @@ mod tests {
         assert_eq!(url_handler.read_urls_from_file().unwrap(), urls);
 
         //clean up
-        fs::remove_file(filename).unwrap();
+        fs::remove_dir_all(path).unwrap();
     }
 
 }
