@@ -30,7 +30,7 @@ use crate::get_chain_api;
 use crate::VERSION;
 
 const KEYVAULT_PATH: &str = "my_keyvaults";
-const KEYVAULT_URLLIST_FILENAME: &str = "keyvaultlist.txt";
+const KEYVAULT_URLLIST_FILENAME: &str = "keyvault_pool.txt";
 
 const NFTID_ARG_NAME: &str = "nftid";
 const FILENAME_ARG_NAME: &str = "filename";
