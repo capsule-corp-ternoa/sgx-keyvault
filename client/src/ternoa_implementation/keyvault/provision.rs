@@ -19,7 +19,7 @@ use log::*;
 use sharks::{Share, Sharks};
 use ternoa_primitives::NFTId;
 
-pub fn provision(filename: &str, recovery_number_n: u8, nft_id: NFTId) -> Result<(), String> {
+pub fn provision(filename: &str, recovery_number_n: u8, _nft_id: NFTId) -> Result<(), String> {
     // TODO: how / from where to read aes256 key -> wait for PR of issue #1?
     let secret = &[0u8, 4];
     // read urllist from file

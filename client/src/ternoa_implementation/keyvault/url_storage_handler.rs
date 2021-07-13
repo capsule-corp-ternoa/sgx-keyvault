@@ -27,15 +27,11 @@ pub struct UrlStorageHandler {
 }
 
 impl UrlStorageHandler {
-    pub fn default() -> Self {
+    pub fn new() -> Self {
         UrlStorageHandler {
             path: KEYVAULT_DEFAULT_PATH.to_string(),
             filename: KEYVAULT_DEFAULT_URLLIST_FILENAME.to_string(),
         }
-    }
-
-    pub fn new() -> Self {
-        UrlStorageHandler::default()
     }
 
     pub fn set_path(mut self, path: &str) -> Self {
@@ -75,6 +71,12 @@ impl UrlStorageHandler {
             .split('\n')
             .map(|str| str.to_owned())
             .collect())
+    }
+}
+
+impl Default for UrlStorageHandler {
+    fn default() -> Self {
+        UrlStorageHandler::new()
     }
 }
 
