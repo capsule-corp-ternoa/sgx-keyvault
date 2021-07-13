@@ -15,7 +15,9 @@
 
 */
 
+pub mod LinesStorageHandler;
 pub mod cipher;
+pub mod decrypt;
 pub mod keyvault;
 pub mod local_storage_handler;
 pub mod nft;
