@@ -21,11 +21,14 @@ use sp_core::crypto::Ss58Codec;
 use std::time::{Duration, UNIX_EPOCH};
 use substrate_api_client::Api;
 
-use super::url_storage_handler::UrlStorageHandler;
 use crate::get_enclave;
 use crate::get_enclave_count;
 
+use super::constants::KEYVAULT_DEFAULT_PATH;
+use super::constants::KEYVAULT_DEFAULT_URLLIST_FILENAME;
+use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
 use std::io::Result;
+use std::path::PathBuf;
 
 /// Prints all registered keyvaults and stores all url within a file (one url per line)
 pub fn list(api: Api<sr25519::Pair>) -> Result<()> {
@@ -52,6 +55,9 @@ pub fn list(api: Api<sr25519::Pair>) -> Result<()> {
 }
 
 fn save_urls(keyvault_urls: Vec<String>) -> Result<()> {
-    let url_handler = UrlStorageHandler::new();
-    url_handler.write_urls_to_file(keyvault_urls)
+    let url_handler = LocalFileStorage::new(
+        PathBuf::from(KEYVAULT_DEFAULT_PATH),
+        PathBuf::from(KEYVAULT_DEFAULT_URLLIST_FILENAME),
+    );
+    url_handler.writelines(keyvault_urls)
 }

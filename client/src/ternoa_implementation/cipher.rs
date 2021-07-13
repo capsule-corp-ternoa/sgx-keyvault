@@ -12,6 +12,8 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
+use crate::ternoa_implementation::cipher::Error::ShamirError;
+use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
 ///A module to encrypt or decrypt file with AES256
 use aes::Aes256;
 use derive_more::{Display, From};
@@ -19,6 +21,7 @@ use log::*;
 use ofb::stream_cipher::{InvalidKeyNonceLength, NewStreamCipher, SyncStreamCipher};
 use ofb::Ofb;
 use rand::{thread_rng, Rng};
+use sharks::{Share, Sharks};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -31,12 +34,15 @@ pub enum Error {
     KeyStream(InvalidKeyNonceLength),
     ///Wrapping of rand::Error to Aes Error
     RandError(rand::Error),
+    ///Wrapping of Shamir's share error
+    ShamirError(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-///Symmetric keyKey & iv
+///Symmetric key Key & iv
 pub type Key = (Vec<u8>, Vec<u8>);
+
 ///Cipher for AES 256
 type AesOfb = Ofb<Aes256>;
 
@@ -49,7 +55,7 @@ fn create_symmetric_key() -> Result<Key> {
     Ok((key.to_vec(), iv.to_vec()))
 }
 
-///Read the encryption key from the file and generate one if there is none
+///Read the encryption key from a file or generate one if there is none
 pub fn recover_or_generate_encryption_key(key_filename: &Path) -> Result<Key> {
     match recover_encryption_key(&key_filename) {
         Err(e) => {
@@ -77,6 +83,58 @@ pub fn recover_encryption_key(key_filename: &Path) -> Result<Key> {
     let key = buffer[..32].to_vec();
     let iv = buffer[32..].to_vec();
     Ok((key, iv))
+}
+
+///Get the shamir shares from a file
+pub fn shamir_shares_from_file(shamir_share_filename: PathBuf) -> Result<Vec<Share>> {
+    let dir = match shamir_share_filename.parent() {
+        Some(path) => path,
+        None => {
+            return Err(ShamirError(format!(
+                "The shamir share file is invalid. No parent directory : {}.",
+                shamir_share_filename.as_path().to_str().unwrap()
+            )))
+        }
+    };
+
+    let filename = match shamir_share_filename.file_name() {
+        Some(path) => path,
+        None => {
+            return Err(ShamirError(format!(
+                "The shamir share file is invalid. No valid filename : {}.",
+                shamir_share_filename.as_path().to_str().unwrap()
+            )))
+        }
+    };
+
+    //read shamir shares from file -> return Vec(String) ?
+    let shares_handler = LocalFileStorage::new(PathBuf::from(dir), PathBuf::from(filename));
+
+    shares_handler
+        .readlines()
+        .map_err(|e| ShamirError(format!("Could not read shares: {}", e)))
+}
+
+///Recover the encryption key from shamir shares
+pub fn aes256key_from_shamir_shares(shares: Vec<Share>) -> Result<Key> {
+    if shares.is_empty() {
+        return Err(ShamirError(
+            "No shamir shares to recover the encryption key ".to_string(),
+        ));
+    }
+    //No need of threshold shares num to recover key
+    let sharks = Sharks(0);
+    let mut secret = sharks.recover(shares.as_slice()).unwrap();
+    if secret.len() != 48 {
+        return Err(
+            ShamirError(
+                format!("The recovered secret size doesn't correspond to the size of a Aes256 key (Found {:?} != (Aes256 {:?})", secret.len(), 48)
+            )
+        );
+    }
+    let iv = secret.drain(32..).collect();
+    debug!("Found secret : {:?},{:?}", secret, iv);
+    Ok((secret, iv))
 }
 
 /// If AES acts on the encrypted file it decrypts and vice versa
@@ -130,7 +188,6 @@ pub fn encrypt(plaintext_filename: &str, key: Option<Key>) -> Result<()> {
         None => recover_or_generate_encryption_key(&keyfile_path(plaintext_filename))?,
         Some(key) => key,
     };
-
     de_or_encrypt_file(
         &Path::new(plaintext_filename),
         &ciphertext_path(plaintext_filename),
@@ -141,11 +198,24 @@ pub fn encrypt(plaintext_filename: &str, key: Option<Key>) -> Result<()> {
 #[allow(dead_code)]
 ///Decrypt a file with AES256 and save it in the same folder as file_name.decrypted
 ///if key is None, recover it from the file ciphertext_filename.aes256
-pub fn decrypt(ciphertext_filename: &str, key: Option<Key>) -> Result<()> {
+pub fn decrypt_with_key(ciphertext_filename: &str, key: Option<Key>) -> Result<()> {
     let encryption_key = match key {
         None => recover_encryption_key(&keyfile_path(ciphertext_filename))?,
         Some(key) => key,
     };
+
+    de_or_encrypt_file(
+        &Path::new(ciphertext_filename),
+        &decrypted_path(ciphertext_filename),
+        encryption_key,
+    )
+}
+
+///Decrypt a file with a key recover from shamir shares
+///Assume that the shamir_share_file provides the correct number of shares needed for recovery
+pub fn decrypt(ciphertext_filename: &str, shamir_share_file: &str) -> Result<()> {
+    let shares = shamir_shares_from_file(PathBuf::from(shamir_share_file))?;
+    let encryption_key = aes256key_from_shamir_shares(shares)?;
 
     de_or_encrypt_file(
         &Path::new(ciphertext_filename),
