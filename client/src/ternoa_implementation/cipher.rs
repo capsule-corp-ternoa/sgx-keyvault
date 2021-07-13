@@ -35,8 +35,11 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-///Symmetric keyKey & iv
+///Symmetric key Key & iv
 pub type Key = (Vec<u8>, Vec<u8>);
+pub type Aes256Key = [u8; 32];
+pub type IV = [u8; 16];
+
 ///Cipher for AES 256
 type AesOfb = Ofb<Aes256>;
 
