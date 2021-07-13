@@ -99,6 +99,7 @@ pub mod rpc;
 pub mod tests;
 pub mod tls_ra;
 pub mod top_pool;
+pub mod nft_registry;
 
 pub const CERTEXPIRYDAYS: i64 = 90i64;
 
