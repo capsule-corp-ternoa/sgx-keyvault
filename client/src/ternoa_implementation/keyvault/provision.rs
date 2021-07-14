@@ -19,17 +19,21 @@ use log::*;
 use sharks::{Share, Sharks};
 use ternoa_primitives::NFTId;
 
-pub fn provision(filename: &str, recovery_number_n: u8, _nft_id: NFTId) -> Result<(), String> {
+pub fn provision(
+    keyvault_selection_file: &str,
+    recovery_threshold: u8,
+    _nft_id: NFTId,
+) -> Result<(), String> {
     // TODO: how / from where to read aes256 key -> wait for PR of issue #1?
     let secret = &[0u8, 4];
     // read urllist from file
-    let url_handler = UrlStorageHandler::new().set_filename(filename);
+    let url_handler = UrlStorageHandler::new().set_filename(keyvault_selection_file);
     let urls = url_handler
         .read_urls_from_file()
         .map_err(|e| format!("Could not read urls: {}", e))?;
 
     // create shamir shares
-    let shamir_shares = create_shamir_shares(urls.len() as usize, recovery_number_n, secret)?;
+    let shamir_shares = create_shamir_shares(urls.len() as usize, recovery_threshold, secret)?;
 
     // for all urls in list (= # of shares):
     //    a. send ith share to url_i
@@ -46,24 +50,24 @@ pub fn provision(filename: &str, recovery_number_n: u8, _nft_id: NFTId) -> Resul
 /// shamir split aes256 key into M shares, of which any N are needed for key recovery
 fn create_shamir_shares(
     m_shares: usize,
-    recovery_number_n: u8,
+    recovery_threshold: u8,
     secret: &[u8],
 ) -> Result<Vec<Share>, String> {
     // ensure m >= n
-    if m_shares < (recovery_number_n as usize) {
-        return Err(format!("The threshold of shamir shards necessary for secret recovery (N = {:?}) must be smaller than the number of keyvaults (M = {:?})", recovery_number_n, m_shares));
+    if m_shares < (recovery_threshold as usize) {
+        return Err(
+            format!(
+                "The threshold of shamir shards necessary for secret recovery (N = {:?}) must be smaller than the number of keyvaults (M = {:?})",
+                recovery_threshold, m_shares
+            )
+        );
     }
-    // Set a minimum threshold of 10 shares
-    let sharks = Sharks(recovery_number_n);
-    // Obtain an iterator over the shares for secret [1, 2, 3, 4]
+    // Set a minimum threshold of n shares
+    let sharks = Sharks(recovery_threshold);
+    // Obtain an iterator over the shares for secret
     let dealer = sharks.dealer(secret);
     // create shares
-    let shares: Vec<Share> = dealer.take(m_shares).collect();
-    debug!(
-        "Recovered secret: {:?}",
-        sharks.recover(shares.as_slice()).unwrap()
-    );
-    Ok(shares)
+    Ok(dealer.take(m_shares).collect())
 }
 
 #[cfg(test)]
