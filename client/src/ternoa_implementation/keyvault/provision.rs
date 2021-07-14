@@ -15,7 +15,6 @@
 
 */
 use super::url_storage_handler::UrlStorageHandler;
-use log::*;
 use sharks::{Share, Sharks};
 use ternoa_primitives::NFTId;
 
