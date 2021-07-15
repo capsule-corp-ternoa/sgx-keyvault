@@ -126,8 +126,8 @@ mod tests {
         // then
         assert!(fs::read_dir(path).is_ok());
 
-         //clean up
-         fs::remove_dir_all(path).unwrap();
+        //clean up
+        fs::remove_dir_all(path).unwrap();
     }
 
     #[test]
@@ -161,7 +161,7 @@ mod tests {
         let line1 = "lfaljaklaf a";
         let line2 = "kfjak.a-lasa";
         let line3 = "hellolee";
-        let text = format!{"{}\n{}\n{}\n", line1, line2, line3};
+        let text = format! {"{}\n{}\n{}\n", line1, line2, line3};
         let url_handler = UrlStorageHandler::new()
             .set_path(path)
             .set_filename(filename);
@@ -190,7 +190,7 @@ mod tests {
         let line1 = "lfaljaklaf a";
         let line2 = "kfjak.a-lasa";
         let line3 = "hellolee";
-        let text = format!{"{}\n{}\n{}", line1, line2, line3};
+        let text = format! {"{}\n{}\n{}", line1, line2, line3};
         let url_handler = UrlStorageHandler::new()
             .set_path(path)
             .set_filename(filename);
