@@ -112,46 +112,100 @@ mod tests {
     }
 
     #[test]
-    fn create_file_works() {
+    fn ensure_dir_exists_creates_new_if_not_existing() {
         // given
-        let path = "hello_two";
+        let path = "hello_create";
         let filename = "hello_world.txt";
-        let url = vec![];
-
-        // when
         let url_handler = UrlStorageHandler::new()
             .set_path(path)
             .set_filename(filename);
-        url_handler.write_urls_to_file(url).unwrap();
+
+        // when
+        url_handler.ensure_dir_exists().unwrap();
 
         // then
-        fs::read_dir(path).unwrap();
-        fs::read(&url_handler.filepath()).unwrap();
+        assert!(fs::read_dir(path).is_ok());
+
+         //clean up
+         fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn ensure_dir_exists_does_not_fail_due_to_existing_path() {
+        // given
+        let path = "hello_already_there";
+        let filename = "hello_world.txt";
+        let url_handler = UrlStorageHandler::new()
+            .set_path(path)
+            .set_filename(filename);
+        let url_handler_two = UrlStorageHandler::new()
+            .set_path(path)
+            .set_filename(filename);
+
+        // when
+        url_handler.ensure_dir_exists().unwrap();
+        url_handler_two.ensure_dir_exists().unwrap();
+
+        // then
+        assert!(fs::read_dir(path).is_ok());
 
         //clean up
         fs::remove_dir_all(path).unwrap();
     }
 
     #[test]
-    fn does_not_fail_due_to_existing_path() {
+    fn read_from_file_works_with_proper_line_ending() {
         // given
-        let path = "hello_three";
-        let filename = "hello_world.txt";
-        let url = vec![];
-
-        // when
+        let path = "read_file";
+        let filename = "empty_file.txt";
+        let line1 = "lfaljaklaf a";
+        let line2 = "kfjak.a-lasa";
+        let line3 = "hellolee";
+        let text = format!{"{}\n{}\n{}\n", line1, line2, line3};
         let url_handler = UrlStorageHandler::new()
             .set_path(path)
             .set_filename(filename);
-        url_handler.write_urls_to_file(url.clone()).unwrap();
-        let url_handler_two = UrlStorageHandler::new()
-            .set_path(path)
-            .set_filename(filename);
-        url_handler_two.write_urls_to_file(url).unwrap();
+        // create file
+        fs::create_dir_all(path).unwrap();
+        let mut file = fs::File::create(format!("{}/{}", path, filename)).unwrap();
+        file.write_all(text.as_bytes()).unwrap();
+
+        // when
+        let read_lines = url_handler.read_urls_from_file().unwrap();
 
         // then
-        fs::read_dir(path).unwrap();
-        fs::read(&url_handler.filepath()).unwrap();
+        assert_eq!(read_lines[0], line1);
+        assert_eq!(read_lines[1], line2);
+        assert_eq!(read_lines[2], line3);
+
+        //clean up
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn read_from_file_works_without_proper_line_ending() {
+        // given
+        let path = "read_file_not_proper";
+        let filename = "empty_file.txt";
+        let line1 = "lfaljaklaf a";
+        let line2 = "kfjak.a-lasa";
+        let line3 = "hellolee";
+        let text = format!{"{}\n{}\n{}", line1, line2, line3};
+        let url_handler = UrlStorageHandler::new()
+            .set_path(path)
+            .set_filename(filename);
+        // create file
+        fs::create_dir_all(path).unwrap();
+        let mut file = fs::File::create(format!("{}/{}", path, filename)).unwrap();
+        file.write_all(text.as_bytes()).unwrap();
+
+        // when
+        let read_lines = url_handler.read_urls_from_file().unwrap();
+
+        // then
+        assert_eq!(read_lines[0], line1);
+        assert_eq!(read_lines[1], line2);
+        assert_eq!(read_lines[2], line3);
 
         //clean up
         fs::remove_dir_all(path).unwrap();
