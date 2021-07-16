@@ -25,28 +25,56 @@ fn decrypted_text(decrypted_file_path: &str) -> String {
 }
 
 #[test]
-fn verify_recover_or_generate_encryption_key() {
+fn verify_recover_encryption_key() {
     let dir = tempdir().unwrap();
     let key_path = dir.path().join("keyfile.".to_owned() + KEYFILE_EXT);
-    assert!(!key_path.exists());
 
-    let result = recover_or_generate_encryption_key(&key_path);
-    assert!(result.is_ok());
+    recover_or_generate_encryption_key(&key_path).unwrap();
     assert!(key_path.exists());
 
-    let aes = result.ok().unwrap();
+    let re_result = recover_or_generate_encryption_key(&key_path);
+    let aes = re_result.ok().unwrap();
     assert_eq!(aes.0.len(), 32);
     assert_eq!(aes.1.len(), 16);
-
-    let re_result = recover_or_generate_encryption_key(&key_path);
-    assert!(re_result.is_ok());
     assert!(key_path.exists());
 
     dir.close();
 }
 
 #[test]
-fn verify_encrypt_default_key() {
+fn verify_generate_encryption_key() {
+    let dir = tempdir().unwrap();
+    let key_path = dir.path().join("keyfile.".to_owned() + KEYFILE_EXT);
+
+    assert!(!key_path.exists());
+
+    let result = recover_or_generate_encryption_key(&key_path);
+    let aes = result.ok().unwrap();
+    assert_eq!(aes.0.len(), 32);
+    assert_eq!(aes.1.len(), 16);
+    assert!(key_path.exists());
+
+    dir.close();
+}
+
+#[test]
+fn verify_encrypt_with_default_key() {
+    let dir = tempdir().unwrap();
+    let ciphertext_path = dir.path().join("input.".to_owned() + CIPHERTEXT_EXT);
+    let key_path = dir.path().join("input.".to_owned() + KEYFILE_EXT);
+
+    //Create test input file
+    let inputfile_path = plaintext_input(dir.path()).ok().unwrap();
+    assert!(!key_path.exists());
+
+    assert!(encrypt(inputfile_path.to_str().unwrap(), None).is_ok());
+    assert!(ciphertext_path.exists());
+    assert!(key_path.exists());
+    dir.close();
+}
+
+#[test]
+fn verify_decrypt_with_default_key() {
     let dir = tempdir().unwrap();
     let ciphertext_path = dir.path().join("input.".to_owned() + CIPHERTEXT_EXT);
     let decrypted_path = dir.path().join("input.".to_owned() + DECRYPTED_EXT);
@@ -54,16 +82,10 @@ fn verify_encrypt_default_key() {
 
     //Create test input file
     let inputfile_path = plaintext_input(dir.path()).ok().unwrap();
-    assert!(inputfile_path.exists());
+    assert!(!key_path.exists());
 
-    let encrypt_result = encrypt(inputfile_path.to_str().unwrap(), None);
-    assert!(encrypt_result.is_ok());
-    assert!(ciphertext_path.exists());
-    assert!(key_path.exists());
-
-    let decrypt_result = decrypt(ciphertext_path.to_str().unwrap(), None);
-    assert!(decrypt_result.is_ok());
-    assert!(decrypted_path.exists());
+    assert!(encrypt(inputfile_path.to_str().unwrap(), None).is_ok());
+    assert!(decrypt(ciphertext_path.to_str().unwrap(), None).is_ok());
     assert!(key_path.exists());
 
     let text = decrypted_text(decrypted_path.to_str().unwrap());
@@ -76,29 +98,43 @@ fn verify_encrypt_default_key() {
 fn verify_encrypt_with_key() {
     let dir = tempdir().unwrap();
     let ciphertext_path = dir.path().join("input.".to_owned() + CIPHERTEXT_EXT);
+    let key_path = dir.path().join("keyfile.".to_owned() + KEYFILE_EXT);
+
+    //Create test input file
+    let test_file_path = plaintext_input(dir.path()).ok().unwrap();
+
+    //generate key
+    let result = recover_or_generate_encryption_key(&key_path);
+    let aes = result.ok().unwrap();
+
+    //encrypt
+    assert!(encrypt(test_file_path.to_str().unwrap(), Some(aes.clone())).is_ok());
+    assert!(ciphertext_path.exists());
+
+    dir.close();
+}
+
+#[test]
+fn verify_decrypt_with_key() {
+    let dir = tempdir().unwrap();
+    let ciphertext_path = dir.path().join("input.".to_owned() + CIPHERTEXT_EXT);
     let decrypted_path = dir.path().join("input.".to_owned() + DECRYPTED_EXT);
     let key_path = dir.path().join("keyfile.".to_owned() + KEYFILE_EXT);
 
     //Create test input file
     let test_file_path = plaintext_input(dir.path()).ok().unwrap();
-    assert!(test_file_path.exists());
 
     //generate key
     let result = recover_or_generate_encryption_key(&key_path);
-    assert!(result.is_ok());
-    assert!(key_path.exists());
     let aes = result.ok().unwrap();
 
     //encrypt
-    let encrypt_result = encrypt(test_file_path.to_str().unwrap(), Some(aes.clone()));
-    assert!(encrypt_result.is_ok());
-    assert!(ciphertext_path.exists());
+    assert!(encrypt(test_file_path.to_str().unwrap(), Some(aes.clone())).is_ok());
 
-    let decrypt_result = decrypt(ciphertext_path.to_str().unwrap(), Some(aes));
-    assert!(decrypt_result.is_ok());
+    assert!(decrypt(ciphertext_path.to_str().unwrap(), Some(aes)).is_ok());
     assert!(decrypted_path.exists());
 
-    //Decrypted file
+    //Check content
     let text = decrypted_text(decrypted_path.to_str().unwrap());
     assert_eq!(text, TEST_TEXT);
 
@@ -125,7 +161,7 @@ fn verify_decrypt_fails_without_keyfile() {
 }
 
 #[test]
-fn verify_error_encrypt_decrypt_diff_keys() {
+fn verify_decrypt_fails_with_diff_key() {
     let dir = tempdir().unwrap();
     let ciphertext_path = dir.path().join("input.".to_owned() + CIPHERTEXT_EXT);
     let decrypted_path = dir.path().join("input.".to_owned() + DECRYPTED_EXT);
@@ -134,27 +170,20 @@ fn verify_error_encrypt_decrypt_diff_keys() {
 
     //Create test input file
     let test_file_path = plaintext_input(dir.path()).ok().unwrap();
-    assert!(test_file_path.exists());
 
     //generate 1. key
     let result = recover_or_generate_encryption_key(&key_path);
-    assert!(result.is_ok());
-    assert!(key_path.exists());
     let aes = result.ok().unwrap();
 
     //encrypt
-    let encrypt_result = encrypt(test_file_path.to_str().unwrap(), Some(aes));
-    assert!(encrypt_result.is_ok());
+    assert!(encrypt(test_file_path.to_str().unwrap(), Some(aes)).is_ok());
     assert!(ciphertext_path.exists());
 
     //generate 2. key
     let result_key2 = recover_or_generate_encryption_key(&other_key_path);
-    assert!(result_key2.is_ok());
-    assert!(other_key_path.exists());
     let other_aes = result_key2.ok().unwrap();
 
-    let decrypt_result = decrypt(ciphertext_path.to_str().unwrap(), Some(other_aes));
-    assert!(decrypt_result.is_ok());
+    assert!(decrypt(ciphertext_path.to_str().unwrap(), Some(other_aes)).is_ok());
     assert!(decrypted_path.exists());
 
     //Decrypted file isn't valid
