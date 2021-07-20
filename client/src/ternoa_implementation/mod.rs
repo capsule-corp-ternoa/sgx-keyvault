@@ -15,7 +15,6 @@
 
 */
 
-pub mod LinesStorageHandler;
 pub mod cipher;
 pub mod decrypt;
 pub mod keyvault;
