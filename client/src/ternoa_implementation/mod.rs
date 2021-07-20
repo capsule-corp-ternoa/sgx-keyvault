@@ -1,6 +1,5 @@
-pub mod LinesStorageHandler;
 pub mod cipher;
-pub mod decrypt;
+pub mod local_storage_handler;
 
 #[cfg(test)]
 mod tests;

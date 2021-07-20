@@ -85,11 +85,11 @@ pub fn decrypt_cmd() -> Command<'static, str> {
                         "entering decrypt shamir function, received filepaths: {},{}",
                         path, keysharesfile
                     );
+                    cipher::decrypt(path, keysharesfile).unwrap();
                 }
                 None => {
                     debug!("entering decrypt function, received filepath: {}", path);
-                    //TODO: For debug. To check when implement issue #5: decryption.
-                    cipher::decrypt(path, None).unwrap();
+                    cipher::decrypt_with_key(path, None).unwrap();
                 }
             };
             Ok(())
