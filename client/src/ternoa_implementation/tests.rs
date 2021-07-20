@@ -57,11 +57,25 @@ fn verify_generate_encryption_key() {
 }
 
 #[test]
-fn verify_encrypt_with_default_key() {
+fn verify_encrypt_generate_key_when_no_key_passed() {
+    //Given
+    let dir = tempdir().unwrap();
+    let key_path = dir.path().join("input.".to_owned() + KEYFILE_EXT);
+    let inputfile_path = plaintext_input(dir.path()).ok().unwrap();
+
+    //When
+    encrypt(inputfile_path.to_str().unwrap(), None).unwrap();
+
+    // Then
+    assert!(key_path.exists()); //A key has been generated
+    dir.close();
+}
+
+#[test]
+fn verify_encrypt_without_passing_key() {
     //Given
     let dir = tempdir().unwrap();
     let ciphertext_path = dir.path().join("input.".to_owned() + CIPHERTEXT_EXT);
-    let key_path = dir.path().join("input.".to_owned() + KEYFILE_EXT);
     //Create test input file
     let inputfile_path = plaintext_input(dir.path()).ok().unwrap();
 
@@ -71,17 +85,15 @@ fn verify_encrypt_with_default_key() {
     // Then
     assert!(result.is_ok());
     assert!(ciphertext_path.exists());
-    assert!(key_path.exists());
     dir.close();
 }
 
 #[test]
-fn verify_decrypt_with_default_key() {
+fn verify_decrypt_without_passing_key() {
     //Given
     let dir = tempdir().unwrap();
     let ciphertext_path = dir.path().join("input.".to_owned() + CIPHERTEXT_EXT);
     let decrypted_path = dir.path().join("input.".to_owned() + DECRYPTED_EXT);
-    let key_path = dir.path().join("input.".to_owned() + KEYFILE_EXT);
     //Create test input file
     let inputfile_path = plaintext_input(dir.path()).ok().unwrap();
     encrypt(inputfile_path.to_str().unwrap(), None).unwrap();
@@ -91,7 +103,6 @@ fn verify_decrypt_with_default_key() {
 
     //Then
     assert!(result.is_ok());
-    assert!(key_path.exists());
     let text = decrypted_text(decrypted_path.to_str().unwrap());
     assert_eq!(text, TEST_TEXT);
 
@@ -99,7 +110,7 @@ fn verify_decrypt_with_default_key() {
 }
 
 #[test]
-fn verify_encrypt_with_key() {
+fn verify_encrypt_passing_key() {
     //Given
     let dir = tempdir().unwrap();
     let ciphertext_path = dir.path().join("input.".to_owned() + CIPHERTEXT_EXT);
@@ -119,7 +130,7 @@ fn verify_encrypt_with_key() {
 }
 
 #[test]
-fn verify_decrypt_with_key() {
+fn verify_decrypt_passing_key() {
     //Given
     let dir = tempdir().unwrap();
     let ciphertext_path = dir.path().join("input.".to_owned() + CIPHERTEXT_EXT);
@@ -193,5 +204,25 @@ fn verify_decrypt_fails_with_diff_key() {
     let decrypted_read_result = fs::read_to_string(decrypted_path.to_str().unwrap());
     assert!(decrypted_read_result.is_err());
 
+    dir.close();
+}
+
+#[test]
+fn verify_decrypt_without_passing_key_fails_when_encrypt_passing_key() {
+    //Given
+    let dir = tempdir().unwrap();
+    let ciphertext_path = dir.path().join("input.".to_owned() + CIPHERTEXT_EXT);
+    let key_path = dir.path().join("keyfile.".to_owned() + KEYFILE_EXT);
+    //Create test input file
+    let inputfile_path = plaintext_input(dir.path()).ok().unwrap();
+    //encrypt with one key
+    let aes = recover_or_generate_encryption_key(&key_path).unwrap();
+    encrypt(inputfile_path.to_str().unwrap(), Some(aes)).unwrap();
+
+    //When
+    let result = decrypt(ciphertext_path.to_str().unwrap(), None);
+
+    //Then
+    assert!(result.is_err());
     dir.close();
 }
