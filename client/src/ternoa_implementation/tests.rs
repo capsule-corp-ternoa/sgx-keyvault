@@ -30,13 +30,12 @@ fn verify_recover_encryption_key() {
     let dir = tempdir().unwrap();
     let key_path = dir.path().join("keyfile.".to_owned() + KEYFILE_EXT);
     //When
-    recover_or_generate_encryption_key(&key_path).unwrap();
-    assert!(key_path.exists());
-    let aes = recover_or_generate_encryption_key(&key_path).unwrap();
+    let key = recover_or_generate_encryption_key(&key_path).unwrap();
+    let recovered_key = recover_or_generate_encryption_key(&key_path).unwrap();
     //Then
-    assert_eq!(aes.0.len(), 32);
-    assert_eq!(aes.1.len(), 16);
     assert!(key_path.exists());
+    assert_eq!(recovered_key.0, key.0);
+    assert_eq!(recovered_key.1, key.1);
     //Clean
     dir.close();
 }
@@ -110,7 +109,7 @@ fn verify_decrypt_without_passing_key() {
 }
 
 #[test]
-fn verify_encrypt_passing_key() {
+fn verify_encrypt_by_passing_key() {
     //Given
     let dir = tempdir().unwrap();
     let ciphertext_path = dir.path().join("input.".to_owned() + CIPHERTEXT_EXT);
@@ -130,7 +129,7 @@ fn verify_encrypt_passing_key() {
 }
 
 #[test]
-fn verify_decrypt_passing_key() {
+fn verify_decrypt_by_passing_key() {
     //Given
     let dir = tempdir().unwrap();
     let ciphertext_path = dir.path().join("input.".to_owned() + CIPHERTEXT_EXT);
@@ -208,7 +207,7 @@ fn verify_decrypt_fails_with_diff_key() {
 }
 
 #[test]
-fn verify_decrypt_without_passing_key_fails_when_encrypt_passing_key() {
+fn verify_decrypt_without_passing_key_fails_when_encrypt_by_passing_key() {
     //Given
     let dir = tempdir().unwrap();
     let ciphertext_path = dir.path().join("input.".to_owned() + CIPHERTEXT_EXT);
