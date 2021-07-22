@@ -18,23 +18,23 @@
 //! substratee_client 127.0.0.1:9944 transfer //Alice 5G9RtsTbiYJYQYMHbWfyPoeuuxNaCbC16tZ2JGrZ4gRKwz14 1000
 //!
 #![feature(rustc_private)]
+
 #[macro_use]
 extern crate clap;
 extern crate env_logger;
 extern crate log;
 
 extern crate chrono;
-use chrono::{DateTime, Utc};
+
+use std::convert::TryFrom;
+use std::path::PathBuf;
+use std::result::Result as StdResult;
+use std::sync::mpsc::channel;
+use std::thread;
 use std::time::{Duration, UNIX_EPOCH};
 
-use sgx_crypto_helper::rsa3072::Rsa3072PubKey;
-
-use sp_application_crypto::{ed25519, sr25519};
-use sp_keyring::AccountKeyring;
-use std::path::PathBuf;
-
 use base58::{FromBase58, ToBase58};
-
+use chrono::{DateTime, Utc};
 use clap::{AppSettings, Arg, ArgMatches};
 use clap_nested::{Command, Commander};
 use codec::{Decode, Encode};
@@ -44,15 +44,14 @@ use my_node_runtime::{
     substratee_registry::{Enclave, Request},
     BalancesCall, Call, Event,
 };
+use sgx_crypto_helper::rsa3072::Rsa3072PubKey;
+use sp_application_crypto::{ed25519, sr25519};
 use sp_core::{crypto::Ss58Codec, sr25519 as sr25519_core, Pair, H256};
+use sp_keyring::AccountKeyring;
 use sp_runtime::{
     traits::{IdentifyAccount, Verify},
     MultiSignature,
 };
-use std::convert::TryFrom;
-use std::result::Result as StdResult;
-use std::sync::mpsc::channel;
-use std::thread;
 use substrate_api_client::{
     compose_extrinsic, compose_extrinsic_offline,
     events::EventsDecoder,
@@ -61,13 +60,14 @@ use substrate_api_client::{
     utils::FromHexString,
     Api, XtStatus,
 };
-
 use substrate_client_keystore::LocalKeystore;
+
 use substratee_stf::{ShardIdentifier, TrustedCallSigned, TrustedOperation};
 use substratee_worker_api::direct_client::DirectApi as DirectWorkerApi;
 use substratee_worker_primitives::{DirectRequestStatus, RpcRequest, RpcResponse, RpcReturnValue};
 
 pub mod ternoa_commands;
+pub mod ternoa_implementation;
 
 type AccountPublic = <Signature as Verify>::Signer;
 const KEYSTORE_PATH: &str = "my_keystore";
