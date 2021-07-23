@@ -166,7 +166,6 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                         owner_ss58, filename, nft_id
                     );
                     mutate(owner_ss58, nft_id, filename, chain_api);
-                    info!("NFT was mutated {}", nft_id);
                     Ok(())
                 }),
         )
@@ -193,7 +192,6 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                         from, to, nft_id
                     );
                     transfer(from, to, nft_id, chain_api);
-                    info!("NFT was transferred {} to {}", nft_id, to);
                     Ok(())
                 }),
         )
