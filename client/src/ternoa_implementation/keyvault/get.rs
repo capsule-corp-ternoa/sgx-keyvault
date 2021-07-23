@@ -15,8 +15,7 @@
 
 */
 
-use my_node_primitives::AccountId;
-use ternoa_primitives::NFTId;
+use my_node_primitives::{AccountId, NFTId};
 
 /// Prints all registered keyvaults and stores all url within a file (one url per line)
 pub fn get(_nft_id: NFTId, _owner: AccountId, _url: &str) -> Result<(), String> {

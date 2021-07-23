@@ -24,7 +24,7 @@ use crate::ternoa_implementation::nft::create::create;
 use crate::ternoa_implementation::nft::mutate::mutate;
 use crate::ternoa_implementation::nft::transfer::transfer;
 
-use ternoa_primitives::NFTId;
+use my_node_primitives::NFTId;
 use crate::get_chain_api;
 
 use crate::VERSION;
@@ -245,10 +245,6 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     let nft_id = get_nft_id_from_matches(matches);
                     let owner = crate::get_accountid_from_str(matches.value_of(OWNER).unwrap());
                     let url: &str = matches.value_of(URL_ARG_NAME).unwrap();
-                    debug!(
-                        "entering keyvault get funtciotn, nftid: {}, owner: {}, urll: {}",
-                        nftid, owner_ss58, url
-                    );
                     // KEYVAULT GET CODE HERE
                     keyvault::get::get(nft_id, owner, url).unwrap();
                     Ok(())

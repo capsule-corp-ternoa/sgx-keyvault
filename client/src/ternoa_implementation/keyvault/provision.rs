@@ -16,7 +16,7 @@
 */
 use super::url_storage_handler::UrlStorageHandler;
 use sharks::{Share, Sharks};
-use ternoa_primitives::NFTId;
+use my_node_primitives::NFTId;
 
 pub fn provision(
     keyvault_selection_file: &str,
