@@ -15,10 +15,11 @@
 
 */
 
-pub mod cipher;
-pub mod keyvault;
-pub mod local_storage_handler;
-pub mod nft;
+use my_node_primitives::{AccountId, NFTId};
 
-#[cfg(test)]
-mod tests;
+/// Prints all registered keyvaults and stores all url within a file (one url per line)
+pub fn get(_nft_id: NFTId, _owner: AccountId, _url: &str) -> Result<(), String> {
+    // TODO: Task #6, create trusted call
+    // TODO: save response (= shamir shard) in file storage. This function call will be implemented in issue #5
+    Ok(())
+}

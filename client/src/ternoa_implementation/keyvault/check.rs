@@ -15,10 +15,10 @@
 
 */
 
-pub mod cipher;
-pub mod keyvault;
-pub mod local_storage_handler;
-pub mod nft;
+use my_node_primitives::NFTId;
 
-#[cfg(test)]
-mod tests;
+/// Prints all registered keyvaults and stores all url within a file (one url per line)
+pub fn check(_nft_id: NFTId, _url: &str) -> Result<(), String> {
+    // TODO: Task #6, create trusted call
+    Ok(())
+}
