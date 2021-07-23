@@ -1270,35 +1270,31 @@ source: External, requires: [03,02], provides: [04], data: [4]}"
 }
 
 pub fn test_transaction_propagation() {
-    assert!(
-        TrustedOperation {
-            data: vec![4u8],
-            bytes: 1,
-            hash: 4,
-            priority: 1_000u64,
-            valid_till: 64u64,
-            requires: vec![vec![3], vec![2]],
-            provides: vec![vec![4]],
-            propagate: true,
-            source: Source::External,
-        }
-        .is_propagable()
-    );
+    assert!(TrustedOperation {
+        data: vec![4u8],
+        bytes: 1,
+        hash: 4,
+        priority: 1_000u64,
+        valid_till: 64u64,
+        requires: vec![vec![3], vec![2]],
+        provides: vec![vec![4]],
+        propagate: true,
+        source: Source::External,
+    }
+    .is_propagable());
 
-    assert!(
-        !TrustedOperation {
-            data: vec![4u8],
-            bytes: 1,
-            hash: 4,
-            priority: 1_000u64,
-            valid_till: 64u64,
-            requires: vec![vec![3], vec![2]],
-            provides: vec![vec![4]],
-            propagate: false,
-            source: Source::External,
-        }
-        .is_propagable()
-    );
+    assert!(!TrustedOperation {
+        data: vec![4u8],
+        bytes: 1,
+        hash: 4,
+        priority: 1_000u64,
+        valid_till: 64u64,
+        requires: vec![vec![3], vec![2]],
+        provides: vec![vec![4]],
+        propagate: false,
+        source: Source::External,
+    }
+    .is_propagable());
 }
 
 pub fn test_should_reject_future_transactions() {
