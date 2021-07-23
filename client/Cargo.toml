@@ -95,5 +95,9 @@ version = "3.0.0"
 [dev-dependencies]
 tempfile = "3.2.0"
 
+[dependencies.ternoa-pallet-nfts]
+git = "https://github.com/capsule-corp-ternoa/chain"
+package = "ternoa-nfts"
+
 #[patch.crates-io]
 #ed25519-dalek = { git = "https://github.com/scs/ed25519-dalek.git", branch = "no_std_sgx"}
