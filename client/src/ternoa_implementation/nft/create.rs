@@ -12,6 +12,8 @@ use sp_core::H256 as Hash;
 use std::sync::mpsc::channel;
 use ternoa_pallet_nfts::Event as NFTEvent;
 
+//TODO: import it from ternoa chain instead
+//use my_node_primitives::nfts::NFTSeriesId;
 pub type NFTSeriesId = u32;
 pub type NFTIdOf = NFTId;
 
