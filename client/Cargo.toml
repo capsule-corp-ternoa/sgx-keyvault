@@ -25,6 +25,7 @@ aes               = { version = "0.3.2" }
 ofb               = { version = "0.1.1" }
 rand              = { version = "0.8.4" }
 derive_more       = { version = "0.99.5" }
+sharks = "0.5"
 
 [dependencies.substrate-api-client]
 git = "https://github.com/scs/substrate-api-client"

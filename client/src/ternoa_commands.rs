@@ -19,9 +19,13 @@ use sp_application_crypto::sr25519;
 use substrate_api_client::Api;
 
 use crate::ternoa_implementation::cipher;
+use crate::ternoa_implementation::keyvault;
 use crate::ternoa_implementation::nft::create::create;
 use crate::ternoa_implementation::nft::mutate::mutate;
 use crate::ternoa_implementation::nft::transfer::transfer;
+
+use crate::get_chain_api;
+use my_node_primitives::NFTId;
 
 use crate::VERSION;
 
@@ -219,14 +223,9 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     // check if the key share for NFTId is stored in the keyvault with <url>. exit code 1 if negative
                     // INPUT:  NFTId (u32)
                     //         url
-                    let nftid = get_nft_id_from_matches(matches);
+                    let nft_id = get_nft_id_from_matches(matches);
                     let url: &str = matches.value_of(URL_ARG_NAME).unwrap();
-                    debug!(
-                        "entering keyvault check function, nftid: {}, urll: {}",
-                        nftid, url
-                    );
-                    // KEYVAULT CHECK CODE HERE
-
+                    keyvault::check::check(nft_id, url).unwrap();
                     Ok(())
                 }),
         )
@@ -243,24 +242,21 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     // INPUT:  NFTId (u32)
                     //         owner
                     //         enclave url
-                    let nftid = get_nft_id_from_matches(matches);
-                    let owner_ss58: &str = matches.value_of(OWNER).unwrap();
+                    let nft_id = get_nft_id_from_matches(matches);
+                    let owner = crate::get_accountid_from_str(matches.value_of(OWNER).unwrap());
                     let url: &str = matches.value_of(URL_ARG_NAME).unwrap();
-                    debug!(
-                        "entering keyvault get funtciotn, nftid: {}, owner: {}, urll: {}",
-                        nftid, owner_ss58, url
-                    );
                     // KEYVAULT GET CODE HERE
+                    keyvault::get::get(nft_id, owner, url).unwrap();
                     Ok(())
                 }),
         )
         .add_cmd(
             Command::new("list")
                 .description("lists urls of registered enclaves, one per line")
-                .runner(|_args: &str, _matches: &ArgMatches<'_>| {
+                .runner(|_args: &str, matches: &ArgMatches<'_>| {
+                    let api = get_chain_api(matches);
                     // Lists urls of registered enclaves, one per line
-                    debug!("entering keyvault list commands");
-                    // LIST IMPLEMENATION HERE :
+                    keyvault::list::list(api).unwrap();
                     Ok(())
                 }),
         )
@@ -291,26 +287,31 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     // INPUT:  NFTId (u32)
                     //         urllist ("[...]")
                     //         N
-                    let nftid = get_nft_id_from_matches(matches);
+                    let nft_id = get_nft_id_from_matches(matches);
                     let urllist: &str = matches.value_of("urllist").unwrap();
-                    let needed_keys: &str = matches.value_of("needed_keys").unwrap();
-                    debug!(
-                        "entering keyvault provision, nftid: {}, urllist: {}, N: {:?}",
-                        nftid, urllist, needed_keys
-                    );
-                    // KEYVAULT PROVISION CODE HERE
+                    let needed_keys = get_u8_from_str(matches.value_of("needed_keys").unwrap());
+                    match keyvault::provision::provision(urllist, needed_keys, nft_id) {
+                        Ok(_) => println!("success!"),
+                        Err(msg) => println!("[Error]: {}", msg),
+                    };
+
                     Ok(())
                 }),
         )
         .into_cmd("keyvault")
 }
 
-pub fn get_nft_id_from_matches(matches: &ArgMatches<'_>) -> u32 {
-    get_u32_from_str(matches.value_of(NFTID_ARG_NAME).unwrap())
+fn get_u8_from_str(arg: &str) -> u8 {
+    arg.parse::<u8>()
+        .unwrap_or_else(|_| panic!("failed to convert {} into an integer", arg))
 }
 
-fn get_u32_from_str(arg: &str) -> u32 {
-    arg.parse::<u32>()
+pub fn get_nft_id_from_matches(matches: &ArgMatches<'_>) -> NFTId {
+    get_nftid_from_str(matches.value_of(NFTID_ARG_NAME).unwrap())
+}
+
+fn get_nftid_from_str(arg: &str) -> NFTId {
+    arg.parse::<NFTId>()
         .unwrap_or_else(|_| panic!("failed to convert {} into an integer", arg))
 }
 
