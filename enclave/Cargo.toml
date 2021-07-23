@@ -142,6 +142,11 @@ git = "https://github.com/scs/sgx-runtime"
 branch = "version-update-e5437e"
 default-features = false
 
+[dependencies.my-node-primitives]
+git = "https://github.com/capsule-corp-ternoa/chain"
+package = "ternoa-primitives"
+default-features = false
+
 [dependencies.substratee-node-primitives]
 path = "../substratee-node-primitives"
 default-features = false
