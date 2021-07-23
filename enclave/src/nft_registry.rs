@@ -13,19 +13,18 @@
 use std::vec::Vec;
 use std::collections::HashMap;
 use ternoa_primitives::{NFTId, BlockNumber, AccountId};
-//use ternoa_primitives::nfts::{NFTDetails, NFTData};
+use ternoa_primitives::nfts::{NFTDetails, NFTData as NFTDataPrimitives, NFTSeriesId};
 use codec::{Encode, Decode};
 use log::*;
 
 use crate::io as SgxIo;
 use crate::constants::NFT_REGISTRY_DB;
 
-/// How the NFT series id is encoded.
-/// FIXME: Copy pasted from chain - maybe solvable with import?
-type NFTSeriesId = u32;
+pub type NFTData = NFTDataPrimitives<AccountId>;
 
 
-/// Data related to an NFT, such as who is its owner.
+
+/* /// Data related to an NFT, such as who is its owner.
 /// FIXME: Copy pasted from chain - maybe solvable with import?
 #[derive(Encode, Decode, Clone, PartialEq, Eq, Default)]
 pub struct NFTData {
@@ -48,7 +47,7 @@ pub struct NFTDetails {
     /// Capsule flag.
     pub is_capsule: bool,
 }
-
+ */
 
 pub struct NFTRegistry {
     block_number: BlockNumber,
@@ -77,7 +76,7 @@ impl NFTRegistry {
                 "[Enclave] NFT Registry DB not found, creating new! {}",
                 NFT_REGISTRY_DB
             );
-            return init_validator(header, auth, proof);
+            //return init_validator(header, auth, proof);
         }
         /*if SgxFile::open(CHAIN_RELAY_DB).is_err() {
             info!(
