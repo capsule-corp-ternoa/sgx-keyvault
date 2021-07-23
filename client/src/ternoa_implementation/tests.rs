@@ -129,7 +129,7 @@ fn verify_decrypt_without_passing_key() {
     encrypt(inputfile_path.to_str().unwrap(), None).unwrap();
 
     //When
-    let result = decrypt(ciphertext_path.to_str().unwrap(), None);
+    let result = decrypt_with_key(ciphertext_path.to_str().unwrap(), None);
 
     //Then
     assert!(result.is_ok());
@@ -174,7 +174,7 @@ fn verify_decrypt_by_passing_key() {
     encrypt(test_file_path.to_str().unwrap(), Some(aes.clone())).unwrap();
 
     //When
-    let result = decrypt(ciphertext_path.to_str().unwrap(), Some(aes));
+    let result = decrypt_with_key(ciphertext_path.to_str().unwrap(), Some(aes));
 
     //Then
     assert!(result.is_ok());
@@ -202,7 +202,7 @@ fn verify_decrypt_fails_without_keyfile() {
     fs::remove_file(key_path);
 
     //When
-    let result = decrypt(ciphertext_path.to_str().unwrap(), None);
+    let result = decrypt_with_key(ciphertext_path.to_str().unwrap(), None);
 
     //Then
     assert!(result.is_err());
@@ -226,7 +226,7 @@ fn verify_decrypt_fails_with_diff_key() {
     //When
     //decrypt with another key
     let other_aes = recover_or_generate_encryption_key(&other_key_path).unwrap();
-    decrypt(ciphertext_path.to_str().unwrap(), Some(other_aes)).unwrap();
+    decrypt_with_key(ciphertext_path.to_str().unwrap(), Some(other_aes)).unwrap();
 
     //Then
     assert!(decrypted_path.exists());
@@ -250,7 +250,7 @@ fn verify_decrypt_without_passing_key_fails_when_encrypt_by_passing_key() {
     encrypt(inputfile_path.to_str().unwrap(), Some(aes)).unwrap();
 
     //When
-    let result = decrypt(ciphertext_path.to_str().unwrap(), None);
+    let result = decrypt_with_key(ciphertext_path.to_str().unwrap(), None);
 
     //Then
     assert!(result.is_err());
