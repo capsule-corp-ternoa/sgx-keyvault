@@ -17,6 +17,7 @@
 use crate::aes;
 use crate::attestation;
 use crate::ed25519;
+use crate::keyvault;
 use crate::rpc;
 use crate::rsa3072;
 use crate::state;
@@ -119,6 +120,15 @@ pub extern "C" fn test_main_entrance() -> size_t {
         //ipfs::test_verification_ok_for_correct_content,
         //ipfs::test_verification_fails_for_incorrect_content,
         //test_ocall_read_write_ipfs,
+        keyvault::ensure_dir_exists_creates_new_if_not_existing,
+        keyvault::test_sealed_file_encode_nftid,
+        keyvault::test_share_saved_in_sealed_file,
+        keyvault::test_seal_override_existing_sealed_file,
+        keyvault::test_provision_store_share_in_sealed_file,
+        keyvault::test_check_is_true_when_sealed_file,
+        keyvault::test_check_is_false_when_no_sealed_file,
+        keyvault::test_get_fails_when_nft_not_in_store,
+        keyvault::test_get_the_valid_stored_share,
     )
 }
 
