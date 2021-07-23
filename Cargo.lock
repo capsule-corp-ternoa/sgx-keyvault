@@ -5687,6 +5687,7 @@ dependencies = [
  "substratee-worker-api",
  "substratee-worker-primitives",
  "tempfile",
+ "ternoa-nfts",
  "ternoa-primitives",
  "ternoa-runtime",
  "tiny-bip39 0.6.2",

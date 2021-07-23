@@ -15,8 +15,13 @@
 use clap::{App, AppSettings, Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 use log::*;
+use sp_application_crypto::sr25519;
+use substrate_api_client::Api;
 
 use crate::ternoa_implementation::cipher;
+use crate::ternoa_implementation::nft::create::create;
+use crate::ternoa_implementation::nft::mutate::mutate;
+use crate::ternoa_implementation::nft::transfer::transfer;
 
 use crate::VERSION;
 
@@ -114,6 +119,7 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                     add_filename_arg(app_with_owner)
                 })
                 .runner(|_args: &str, matches: &ArgMatches<'_>| {
+                    let chain_api = get_ternoa_chain_api(matches);
                     // Create a new NFT with the provided details. An ID will be auto
                     // generated and logged as an event, The caller of this function
                     // will become the owner of the new NFT.
@@ -125,7 +131,14 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                         "entering nft create function, owner: {}, filename: {}",
                         owner_ss58, filename
                     );
-                    // NFT CREATE FUNCTION HERE
+                    match create(owner_ss58, filename, chain_api) {
+                        Some(id) => {
+                            info!("NFT was created {}", id);
+                        }
+                        None => {
+                            info!("NFT couldn't be created !");
+                        }
+                    };
 
                     Ok(())
                 }),
@@ -144,15 +157,15 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                     // INPUT:  AccountId (owner)
                     //         NFTId
                     //         Filename
+                    let chain_api = get_ternoa_chain_api(matches);
                     let owner_ss58: &str = matches.value_of(OWNER).unwrap();
-                    let nftid = get_nft_id_from_matches(matches);
+                    let nft_id = get_nft_id_from_matches(matches);
                     let filename: &str = matches.value_of("filename").unwrap();
                     debug!(
                         "entering nft mutate function, owner: {}, filename: {}, id: {:?}",
-                        owner_ss58, filename, nftid
+                        owner_ss58, filename, nft_id
                     );
-                    // NFT MUTATE FUNCTION HERE
-
+                    mutate(owner_ss58, nft_id, filename, chain_api);
                     Ok(())
                 }),
         )
@@ -170,14 +183,15 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                     // INPUT:  AccountId (current owner)
                     //         AccountId (new owner)
                     //         NFTId
+                    let chain_api = get_ternoa_chain_api(matches);
                     let from: &str = matches.value_of(FROM).unwrap();
                     let to: &str = matches.value_of(TO).unwrap();
-                    let nftid = get_nft_id_from_matches(matches);
+                    let nft_id = get_nft_id_from_matches(matches);
                     debug!(
                         "entering nft transfer function, owner: {}, new owner: {}, id: {:?}",
-                        from, to, nftid
+                        from, to, nft_id
                     );
-                    // TRANFER FUNCTION HERE
+                    transfer(from, to, nft_id, chain_api);
                     Ok(())
                 }),
         )
@@ -338,4 +352,15 @@ pub fn add_url_arg<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
             .value_name("STRING")
             .help("url of sgx keyvault enclave"),
     )
+}
+
+//Duplicate code. See get_chain_api in main.rs.
+fn get_ternoa_chain_api(matches: &ArgMatches<'_>) -> Api<sr25519::Pair> {
+    let url = format!(
+        "{}:{}",
+        matches.value_of("node-url").unwrap(),
+        matches.value_of("node-port").unwrap()
+    );
+    info!("connecting to {}", url);
+    Api::<sr25519::Pair>::new(url).unwrap()
 }
