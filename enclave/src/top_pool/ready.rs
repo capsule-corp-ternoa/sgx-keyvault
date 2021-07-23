@@ -568,13 +568,15 @@ impl<Hash: hash::Hash + Member + Ord, Ex> ReadyOperations<Hash, Ex> {
     /// Returns number of operations in this queue.
     #[allow(clippy::len_without_is_empty)]
     pub fn len(&self, shard: ShardIdentifier) -> usize {
-        self.ready.get(&shard)
+        self.ready
+            .get(&shard)
             .map_or(0, |ready_map| ready_map.len())
     }
 
     /// Returns sum of encoding lengths of all operations in this queue.
     pub fn bytes(&self, shard: ShardIdentifier) -> usize {
-        self.ready.get(&shard)
+        self.ready
+            .get(&shard)
             .map_or(0, |ready_map| ready_map.bytes())
     }
 }
@@ -634,7 +636,10 @@ impl<Hash: hash::Hash + Member + Ord, Ex> Iterator for BestIterator<Hash, Ex> {
                     Some((satisfied, tx_ref))
                 // then get from the pool
                 } else {
-                    self.all.read().get(hash).map(|next| (next.requires_offset + 1, next.operation.clone()))
+                    self.all
+                        .read()
+                        .get(hash)
+                        .map(|next| (next.requires_offset + 1, next.operation.clone()))
                 };
 
                 if let Some((satisfied, tx_ref)) = res {
