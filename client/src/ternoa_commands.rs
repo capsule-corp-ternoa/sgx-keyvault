@@ -24,8 +24,8 @@ use crate::ternoa_implementation::nft::create::create;
 use crate::ternoa_implementation::nft::mutate::mutate;
 use crate::ternoa_implementation::nft::transfer::transfer;
 
-use my_node_primitives::NFTId;
 use crate::get_chain_api;
+use my_node_primitives::NFTId;
 
 use crate::VERSION;
 
@@ -300,8 +300,6 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
         )
         .into_cmd("keyvault")
 }
-
-
 
 fn get_u8_from_str(arg: &str) -> u8 {
     arg.parse::<u8>()

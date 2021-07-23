@@ -16,8 +16,8 @@
 */
 
 pub mod cipher;
-pub mod nft;
 pub mod keyvault;
+pub mod nft;
 
 #[cfg(test)]
 mod tests;
