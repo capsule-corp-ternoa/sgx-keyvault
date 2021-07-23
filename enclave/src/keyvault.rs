@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::prelude::v1::*;
 use std::vec::Vec;
 
-pub const STORAGE_PATH: &str = "keyvault";
+pub const STORAGE_PATH: &str = "keyshare";
 
 //owner for test
 const ALICE_ENCODED: [u8; 32] = [
@@ -173,7 +173,7 @@ pub fn test_provision_store_share_in_sealed_file() {
     }
 
     //Clean-up
-    fs::remove_file(file_name).unwrap();
+    //  fs::remove_file(file_name).unwrap();
 }
 
 pub fn test_check_is_true_when_sealed_file() {
