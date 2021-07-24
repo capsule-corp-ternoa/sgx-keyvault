@@ -117,7 +117,7 @@ fn decrypted_path(ciphertext_filename: &str) -> PathBuf {
     path
 }
 
-fn keyfile_path(plaintext_filename: &str) -> PathBuf {
+pub fn keyfile_path(plaintext_filename: &str) -> PathBuf {
     let mut path = PathBuf::from(plaintext_filename);
     path.set_extension("aes256");
     path

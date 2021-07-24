@@ -15,6 +15,7 @@
 
 */
 use super::url_storage_handler::UrlStorageHandler;
+use crate::ternoa_implementation::cipher;
 use my_node_primitives::NFTId;
 use sharks::{Share, Sharks};
 
@@ -22,9 +23,10 @@ pub fn provision(
     keyvault_selection_file: &str,
     recovery_threshold: u8,
     _nft_id: NFTId,
+    key_file: &str,
 ) -> Result<(), String> {
-    // TODO: how / from where to read aes256 key -> wait for PR of issue #1?
-    let secret = &[0u8, 4];
+    // retrieve encryption key that is to be shamir shared to the keyvaults
+    let encryption_key = get_key_from_file(key_file)?;
     // read urllist from file
     let url_handler = UrlStorageHandler::new().set_filename(keyvault_selection_file);
     let urls = url_handler
@@ -32,7 +34,8 @@ pub fn provision(
         .map_err(|e| format!("Could not read urls: {}", e))?;
 
     // create shamir shares
-    let shamir_shares = create_shamir_shares(urls.len() as usize, recovery_threshold, secret)?;
+    let shamir_shares =
+        create_shamir_shares(urls.len() as usize, recovery_threshold, &encryption_key)?;
 
     // for all urls in list (= # of shares):
     //    a. send ith share to url_i
@@ -44,6 +47,16 @@ pub fn provision(
 
     // TODO: create file NFT urllist NFT File
     Ok(())
+}
+
+/// Reads a key from a given file and concacenates the key to a single vector
+fn get_key_from_file(key_file: &str) -> Result<Vec<u8>, String> {
+    let key = cipher::recover_encryption_key(&cipher::keyfile_path(key_file))
+        .map_err(|e| format!("Could not read key from file: {}", e))?;
+    let mut concatenated = Vec::with_capacity(48);
+    concatenated.extend_from_slice(&key.0);
+    concatenated.extend_from_slice(&key.1);
+    Ok(concatenated)
 }
 
 /// shamir split aes256 key into M shares, of which any N are needed for key recovery
@@ -72,6 +85,7 @@ fn create_shamir_shares(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     // Tests for create shamir shares
     #[test]
@@ -136,5 +150,23 @@ mod tests {
 
         // then
         assert!(shares.is_err());
+    }
+
+    #[test]
+    fn get_key_from_file_concats_correctly() {
+        // given
+        let dir = tempdir().unwrap();
+        let key_path = dir.path().join("keyfile.aes256".to_owned());
+        // generate key
+        let key = cipher::recover_or_generate_encryption_key(&key_path).unwrap();
+
+        // when
+        let mut concat_key = get_key_from_file(key_path.to_str().unwrap()).unwrap();
+
+        // then
+        let iv: Vec<u8> = concat_key.drain(32..).collect();
+
+        assert_eq!(key.0, concat_key);
+        assert_eq!(key.1, iv);
     }
 }
