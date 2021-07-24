@@ -4533,6 +4533,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sharks"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "902b1e955f8a2e429fb1bad49f83fb952e6195d3c360ac547ff00fb826388753"
+dependencies = [
+ "hashbrown 0.9.1",
+ "rand 0.8.4",
+ "zeroize",
+]
+
+[[package]]
 name = "signal-hook"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5639,7 +5650,7 @@ dependencies = [
 [[package]]
 name = "ternoa-account-store"
 version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain#2a98100ded324d31e9e57d31a8fd06f6c02f7e6a"
+source = "git+https://github.com/capsule-corp-ternoa/chain#5ed166ae3f38b57c52dd4955d6b22c60347eddd2"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -5676,6 +5687,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sgx_crypto_helper",
+ "sharks",
  "sp-application-crypto",
  "sp-core",
  "sp-keyring",
@@ -5697,7 +5709,7 @@ dependencies = [
 [[package]]
 name = "ternoa-common"
 version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain#2a98100ded324d31e9e57d31a8fd06f6c02f7e6a"
+source = "git+https://github.com/capsule-corp-ternoa/chain#5ed166ae3f38b57c52dd4955d6b22c60347eddd2"
 dependencies = [
  "frame-support",
  "sp-runtime",
@@ -5707,7 +5719,7 @@ dependencies = [
 [[package]]
 name = "ternoa-marketplace"
 version = "0.3.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain#2a98100ded324d31e9e57d31a8fd06f6c02f7e6a"
+source = "git+https://github.com/capsule-corp-ternoa/chain#5ed166ae3f38b57c52dd4955d6b22c60347eddd2"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -5717,12 +5729,13 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "ternoa-common",
+ "ternoa-primitives",
 ]
 
 [[package]]
 name = "ternoa-nfts"
 version = "0.3.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain#2a98100ded324d31e9e57d31a8fd06f6c02f7e6a"
+source = "git+https://github.com/capsule-corp-ternoa/chain#5ed166ae3f38b57c52dd4955d6b22c60347eddd2"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -5732,12 +5745,13 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "ternoa-common",
+ "ternoa-primitives",
 ]
 
 [[package]]
 name = "ternoa-primitives"
 version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain#2a98100ded324d31e9e57d31a8fd06f6c02f7e6a"
+source = "git+https://github.com/capsule-corp-ternoa/chain#5ed166ae3f38b57c52dd4955d6b22c60347eddd2"
 dependencies = [
  "frame-system",
  "parity-scale-codec 2.1.3",
@@ -5751,7 +5765,7 @@ dependencies = [
 [[package]]
 name = "ternoa-runtime"
 version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain#2a98100ded324d31e9e57d31a8fd06f6c02f7e6a"
+source = "git+https://github.com/capsule-corp-ternoa/chain#5ed166ae3f38b57c52dd4955d6b22c60347eddd2"
 dependencies = [
  "frame-executive",
  "frame-support",
@@ -5807,7 +5821,7 @@ dependencies = [
 [[package]]
 name = "ternoa-timed-escrow"
 version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain#2a98100ded324d31e9e57d31a8fd06f6c02f7e6a"
+source = "git+https://github.com/capsule-corp-ternoa/chain#5ed166ae3f38b57c52dd4955d6b22c60347eddd2"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
