@@ -7,6 +7,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::prelude::v1::*;
 use std::vec::Vec;
+use sharks::Share;
 
 pub const STORAGE_PATH: &str = "keyshare";
 
