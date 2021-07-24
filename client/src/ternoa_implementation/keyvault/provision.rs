@@ -168,5 +168,7 @@ mod tests {
 
         assert_eq!(key.0, concat_key);
         assert_eq!(key.1, iv);
+
+        dir.close().unwrap();
     }
 }
