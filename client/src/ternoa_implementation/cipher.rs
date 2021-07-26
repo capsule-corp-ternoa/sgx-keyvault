@@ -13,7 +13,7 @@
 //  limitations under the License.
 
 use crate::ternoa_implementation::cipher::Error::ShamirError;
-use crate::ternoa_implementation::local_storage_handler::{FileLocalStorage, StorageHandler};
+use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
 ///A module to encrypt or decrypt file with AES256
 use aes::Aes256;
 use derive_more::{Display, From};
@@ -103,7 +103,7 @@ pub fn shamir_shares_from_file(shamir_share_filename: PathBuf) -> Result<Vec<Sha
     });
 
     //read shamir shares from file -> return Vec(String) ?
-    let shares_handler = FileLocalStorage::new(
+    let shares_handler = LocalFileStorage::new(
         PathBuf::from(dir.unwrap()),
         PathBuf::from(filename.unwrap()),
     );
@@ -119,13 +119,21 @@ pub fn shamir_shares_from_file(shamir_share_filename: PathBuf) -> Result<Vec<Sha
 pub fn aes256key_from_shamir_shares(shares: Vec<Share>, threshold_shares_num: u8) -> Result<Key> {
     let m_shares = shares.len() as usize;
     if m_shares < (threshold_shares_num as usize) {
-        return Err(ShamirError(format!("The threshold of shamir shards necessary for secret recovery (N = {:?}) must be smaller than the number of found shares (M = {:?})", threshold_shares_num, m_shares)));
+        return Err(
+            ShamirError(
+                format!("The threshold of shamir shards necessary for secret recovery (N = {:?}) must be smaller than the number of found shares (M = {:?})", threshold_shares_num, m_shares)
+            )
+        );
     }
 
     let sharks = Sharks(threshold_shares_num);
     let mut secret = sharks.recover(shares.as_slice()).unwrap();
     if secret.len() != 48 {
-        return Err(ShamirError(format!("The recovered secret size doesn't correspond to the size of a Aes256 key (Found {:?} != (Aes256 {:?})", secret.len(), 48)));
+        return Err(
+            ShamirError(
+                format!("The recovered secret size doesn't correspond to the size of a Aes256 key (Found {:?} != (Aes256 {:?})", secret.len(), 48)
+            )
+        );
     }
     let iv = secret.drain(32..).collect();
     debug!("Found secret : {:?},{:?}", secret, iv);

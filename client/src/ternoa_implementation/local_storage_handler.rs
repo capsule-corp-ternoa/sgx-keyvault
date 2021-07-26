@@ -5,19 +5,19 @@ use std::io::Result;
 use std::io::Write;
 use std::path::PathBuf;
 
-pub trait StorageHandler<T> {
+pub trait VecToLinesConverter<T> {
     fn write(&self, lines: Vec<T>) -> Result<()>;
     fn read(&self) -> Result<Vec<T>>;
 }
 
-pub struct FileLocalStorage {
+pub struct LocalFileStorage {
     path: PathBuf,
     filename: PathBuf,
 }
 
-impl FileLocalStorage {
+impl LocalFileStorage {
     pub fn new(path: PathBuf, filename: PathBuf) -> Self {
-        FileLocalStorage { path, filename }
+        LocalFileStorage { path, filename }
     }
     pub fn set_path(mut self, path: PathBuf) -> Self {
         self.path = path;
@@ -42,7 +42,7 @@ impl FileLocalStorage {
     }
 }
 
-impl StorageHandler<String> for FileLocalStorage {
+impl VecToLinesConverter<String> for LocalFileStorage {
     fn write(&self, lines: Vec<String>) -> Result<()> {
         self.ensure_dir_exists()?;
 
@@ -60,7 +60,7 @@ impl StorageHandler<String> for FileLocalStorage {
     }
 }
 
-impl StorageHandler<Share> for FileLocalStorage {
+impl VecToLinesConverter<Share> for LocalFileStorage {
     fn write(&self, shares: Vec<Share>) -> Result<()> {
         self.ensure_dir_exists()?;
         let mut file = fs::File::create(&self.filepath())?;
@@ -93,7 +93,7 @@ mod tests {
         let filename = PathBuf::from("name.txt");
 
         // when
-        let handler = FileLocalStorage::new(path.clone(), filename.clone());
+        let handler = LocalFileStorage::new(path.clone(), filename.clone());
 
         // then
         assert_eq!(handler.filename, filename);
@@ -101,13 +101,13 @@ mod tests {
     }
 
     #[test]
-    fn set_filepath_works() {
+    fn set_filename_and_path_works() {
         // when
         let path = "hello";
         let filename = "name.txt";
         let file_path = PathBuf::from(path).join(filename);
 
-        let handler = FileLocalStorage::new(PathBuf::from(""), PathBuf::from(""))
+        let handler = LocalFileStorage::new(PathBuf::from(""), PathBuf::from(""))
             .set_path(PathBuf::from(path))
             .set_filename(PathBuf::from(filename));
 
@@ -120,7 +120,7 @@ mod tests {
     #[test]
     fn filepath_concat_works() {
         // when
-        let handler = FileLocalStorage::new(PathBuf::from("hello"), PathBuf::from("name.txt"));
+        let handler = LocalFileStorage::new(PathBuf::from("hello"), PathBuf::from("name.txt"));
 
         // then
         assert_eq!(handler.filepath(), PathBuf::from("hello/name.txt"));
@@ -131,7 +131,8 @@ mod tests {
         // given
         let path = PathBuf::from("hello_create");
         let filename = PathBuf::from("hello_world.txt");
-        let handler = FileLocalStorage::new(path.clone(), filename.clone());
+        let handler = LocalFileStorage::new(path.clone(), filename.clone());
+        assert!(!path.is_dir());
 
         // when
         handler.ensure_dir_exists().unwrap();
@@ -148,8 +149,8 @@ mod tests {
         // given
         let path = PathBuf::from("hello_already_there");
         let filename = PathBuf::from("hello_world.txt");
-        let handler = FileLocalStorage::new(path.clone(), filename.clone());
-        let handler_two = FileLocalStorage::new(path.clone(), filename.clone());
+        let handler = LocalFileStorage::new(path.clone(), filename.clone());
+        let handler_two = LocalFileStorage::new(path.clone(), filename.clone());
         // when
         handler.ensure_dir_exists().unwrap();
         handler_two.ensure_dir_exists().unwrap();
@@ -170,7 +171,7 @@ mod tests {
         let line2 = "kfjak.a-lasa";
         let line3 = "hellolee";
         let text = format! {"{}\n{}\n{}\n", line1, line2, line3};
-        let handler = FileLocalStorage::new(PathBuf::from(path), PathBuf::from(filename));
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // create file
         fs::create_dir_all(path).unwrap();
@@ -198,7 +199,7 @@ mod tests {
         let line2 = "kfjak.a-lasa";
         let line3 = "hellolee";
         let text = format! {"{}\n{}\n{}", line1, line2, line3};
-        let handler = FileLocalStorage::new(PathBuf::from(path), PathBuf::from(filename));
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
         // create file
         fs::create_dir_all(path).unwrap();
         let mut file = fs::File::create(PathBuf::from(path).join(filename)).unwrap();
@@ -222,7 +223,7 @@ mod tests {
         let path = "test_empty";
         let filename = "empty_file.txt";
         let url: Vec<String> = vec![];
-        let handler = FileLocalStorage::new(PathBuf::from(path), PathBuf::from(filename));
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
         handler.write(url).unwrap();
@@ -240,7 +241,7 @@ mod tests {
         let path = "test_one_line";
         let filename = "one_line_file.txt";
         let url = vec!["hello_there".to_owned()];
-        let handler = FileLocalStorage::new(PathBuf::from(path), PathBuf::from(filename));
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
         handler.write(url.clone()).unwrap();
@@ -262,7 +263,7 @@ mod tests {
         let url2 = "ohhh_hi".to_owned();
         let url3 = "who are you?".to_owned();
         let urls = vec![url1, url2, url3];
-        let handler = FileLocalStorage::new(PathBuf::from(path), PathBuf::from(filename));
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
         handler.write(urls.clone()).unwrap();
@@ -289,7 +290,7 @@ mod tests {
         let share3 = Share::try_from(&*hex::decode(line3).unwrap()).unwrap();
 
         let text = format! {"{}\n{}\n{}\n", line1, line2, line3};
-        let handler = FileLocalStorage::new(PathBuf::from(path), PathBuf::from(filename));
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // create file
         fs::create_dir_all(path).unwrap();
@@ -324,13 +325,12 @@ mod tests {
         let share3 = Share::try_from(&*hex::decode(line3).unwrap()).unwrap();
 
         let text = format! {"{}\n{}\n{}", line1, line2, line3};
-        let handler = FileLocalStorage::new(PathBuf::from(path), PathBuf::from(filename));
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
         // create file
         fs::create_dir_all(path).unwrap();
         let mut file = fs::File::create(PathBuf::from(path).join(filename)).unwrap();
         file.write_all(text.as_bytes()).unwrap();
 
-        // when
         // when
         let read_lines: Vec<Share> = handler.read().unwrap();
 
@@ -352,7 +352,7 @@ mod tests {
         let path = "test_shamir_empty";
         let filename = "empty_file.txt";
         let shares: Vec<Share> = vec![];
-        let handler = FileLocalStorage::new(PathBuf::from(path), PathBuf::from(filename));
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
         handler.write(shares).unwrap();
@@ -374,7 +374,7 @@ mod tests {
         let share = Share::try_from(&*hex::decode(share_hex_text).unwrap()).unwrap();
         let shares: Vec<Share> = vec![share];
 
-        let handler = FileLocalStorage::new(PathBuf::from(path), PathBuf::from(filename));
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
         handler.write(shares.clone()).unwrap();
@@ -400,7 +400,7 @@ mod tests {
         let share3 = Share::try_from(&*hex::decode("0548ec12a8a643012b780022da1c4a8c1c4bf36f74942ba2c4c3b11b3df412920be5ec1fc07d72f836dd4916fefabd4434").unwrap()).unwrap();
         let shares: Vec<Share> = vec![share1, share2, share3];
 
-        let handler = FileLocalStorage::new(PathBuf::from(path), PathBuf::from(filename));
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
         handler.write(shares.clone()).unwrap();
