@@ -37,8 +37,8 @@ impl KeyvaultStorage {
         if !is_authorized(owner, nft_id) {
             return false;
         }
-        let file_name = sealed_filepath(STORAGE_PATH, nft_id);
-        file_name.unwrap().is_file()
+        let file_name = nft_sealed_file_path(STORAGE_PATH, nft_id);
+        file_name.is_file()
     }
 
     ///Get the share from store for this NFTId
@@ -56,12 +56,12 @@ fn is_authorized(owner: AccountId32, nft_id: NFTId) -> bool {
 }
 
 ///Filename should encode the NFTId
-fn sealed_filepath(path: &str, nft_id: NFTId) -> SgxResult<PathBuf> {
+fn nft_sealed_file_path(dir: &str, nft_id: NFTId) -> PathBuf {
     let name = format!("{}_Nft", nft_id);
-    let mut p = PathBuf::from(path);
+    let mut p = PathBuf::from(dir);
     p.push(name);
     p.set_extension("bin");
-    Ok(p)
+    p
 }
 
 /// checks if the dir exists, and if not, creates a new one
@@ -69,7 +69,7 @@ fn ensure_dir_exists(dir: PathBuf) -> SgxResult<sgx_status_t> {
     if !dir.is_dir() {
         fs::create_dir_all(&dir).sgx_error_with_log(&format!(
             "[Enclave] Keyvault, creating dir '{}' failed",
-            dir.to_str().unwrap()
+            dir.to_string_lossy()
         ))?
     }
     Ok(sgx_status_t::SGX_SUCCESS)
@@ -77,156 +77,183 @@ fn ensure_dir_exists(dir: PathBuf) -> SgxResult<sgx_status_t> {
 
 ///Seal the share for NFTId
 fn seal(dir: &str, nft_id: NFTId, share: Share) -> SgxResult<sgx_status_t> {
-    let filepath = sealed_filepath(dir, nft_id)?;
+    let filepath = nft_sealed_file_path(dir, nft_id);
     //Directory will not be created by the seal method, so create it if it doesn't exist
     let p = PathBuf::from(dir);
     ensure_dir_exists(p)?;
-    io::seal(Vec::from(&share).as_slice(), filepath.to_str().unwrap())
+    io::seal(Vec::from(&share).as_slice(), &filepath.to_string_lossy())
 }
 
 ///Unseal the share for NFTId
 fn unseal(dir: &str, nft_id: NFTId) -> SgxResult<Share> {
-    let filepath = sealed_filepath(dir, nft_id)?;
-    let share_bytes = io::unseal(filepath.to_str().unwrap())?;
+    let filepath = nft_sealed_file_path(dir, nft_id);
+    let share_bytes = io::unseal(&filepath.to_string_lossy())?;
     let share = Share::try_from(share_bytes.as_slice())
         .sgx_error_with_log(&format!("Cannot unseal share'{}'!", nft_id))?;
     Ok(share)
 }
 
-///Tests
-pub fn ensure_dir_exists_creates_new_if_not_existing() {
-    let dir = PathBuf::from("test_creates_dir");
+pub mod test {
+    use super::*;
+    ///Tests
+    pub fn test_ensure_dir_exists_creates_new_if_not_existing() {
+        let dir = PathBuf::from("test_creates_dir");
 
-    ensure_dir_exists(dir.clone()).unwrap();
+        ensure_dir_exists(dir.clone()).unwrap();
 
-    assert!(dir.is_dir());
+        assert!(dir.is_dir());
 
-    //clean up
-    fs::remove_dir_all(dir).unwrap();
-}
-
-pub fn test_sealed_file_encode_nftid() {
-    let dir = "test_sealed_file_name";
-    let file = sealed_filepath(dir, 197).unwrap();
-    let name = file.file_name().unwrap().to_str().unwrap();
-
-    assert!(name.contains("197"));
-}
-
-pub fn test_share_saved_in_sealed_file() {
-    let dir = "test_share_saved";
-    let share_bytes = Vec::from("hello");
-    let share = Share::try_from(share_bytes.as_slice()).unwrap();
-    let nft_id = 365;
-    seal(dir, nft_id, share).unwrap();
-
-    let read_share = unseal(dir, nft_id).unwrap();
-    let read_share_bytes = Vec::from(&read_share);
-    for i in 1..5 {
-        assert_eq!(share_bytes[i], read_share_bytes[i]);
+        //clean up
+        fs::remove_dir_all(dir).unwrap();
     }
 
-    //clean up
-    fs::remove_dir_all(dir).unwrap();
-}
+    pub fn test_sealed_file_name_contains_nftid() {
+        let dir = "test_sealed_file_name";
+        let file = nft_sealed_file_path(dir, 197);
+        let name = file.file_name().unwrap().to_str().unwrap();
 
-///Can we override a seal file?
-pub fn test_seal_override_existing_sealed_file() {
-    let dir = "test_override_file";
-    let share = Share::try_from("hello".as_bytes()).unwrap();
-
-    let nft_id = 5870;
-    seal(dir, nft_id, share).unwrap();
-
-    let new_share_bytes = Vec::from("hello_world");
-    let new_share = Share::try_from(new_share_bytes.as_slice()).unwrap();
-    seal(dir, nft_id, new_share.clone()).unwrap();
-
-    let read_share = unseal(dir, nft_id).unwrap();
-    let read_share_bytes = Vec::from(&read_share);
-    for i in 1..11 {
-        assert_eq!(new_share_bytes[i], read_share_bytes[i]);
+        assert!(name.contains("197"));
     }
 
-    //clean up
-    fs::remove_dir_all(dir).unwrap();
-}
+    pub fn test_seal_create_file() {
+        let dir = "test_seal_create_file";
+        let share_bytes = Vec::from("hello");
+        let share = Share::try_from(share_bytes.as_slice()).unwrap();
+        let nft_id = 365;
+        seal(dir, nft_id, share).unwrap();
+        let file = PathBuf::from("test_seal_create_file/365_Nft.bin");
 
-pub fn test_provision_fails_when_no_nft_owner() {
-    //TODO
-}
+        assert!(file.is_file());
 
-pub fn test_check_is_false_when_no_nft_owner() {
-    //TODO
-}
-
-pub fn test_get_fails_when_no_nft_owner() {
-    //TODO
-}
-
-pub fn test_provision_store_share_in_sealed_file() {
-    let nft_id = 5880;
-    let author = AccountId32::from(ALICE_ENCODED);
-    let share_bytes = Vec::from("new_test_share_5875");
-    let share = Share::try_from(share_bytes.as_slice()).unwrap();
-
-    KeyvaultStorage::provision(author, nft_id, share.clone()).unwrap();
-
-    let file_name = sealed_filepath(STORAGE_PATH, nft_id).unwrap();
-    assert!(file_name.is_file());
-
-    let read_share = unseal(STORAGE_PATH, nft_id).unwrap();
-    let read_share_bytes = Vec::from(&read_share);
-    for i in 1..18 {
-        assert_eq!(share_bytes[i], read_share_bytes[i]);
+        //clean up
+        fs::remove_dir_all(dir).unwrap();
     }
 
-    //Clean-up
-    //  fs::remove_file(file_name).unwrap();
-}
+    pub fn test_share_saved_in_sealed_file() {
+        let dir = "test_share_saved";
+        let share_bytes = Vec::from("hello");
+        let share = Share::try_from(share_bytes.as_slice()).unwrap();
+        let nft_id = 365;
+        seal(dir, nft_id, share).unwrap();
 
-pub fn test_check_is_true_when_sealed_file() {
-    let nft_id = 5890;
-    let file_name = sealed_filepath(STORAGE_PATH, nft_id).unwrap();
-    let author = AccountId32::from(ALICE_ENCODED);
+        let read_share = unseal(dir, nft_id).unwrap();
+        let read_share_bytes = Vec::from(&read_share);
+        for i in 1..5 {
+            assert_eq!(share_bytes[i], read_share_bytes[i]);
+        }
 
-    let new_share = Share::try_from("hello_world".as_bytes()).unwrap();
-    seal(STORAGE_PATH, nft_id, new_share.clone()).unwrap();
-
-    assert!(KeyvaultStorage::check(author, nft_id));
-
-    //Clean-up
-    fs::remove_file(file_name).unwrap();
-}
-
-pub fn test_check_is_false_when_no_sealed_file() {
-    let nft_id = 6000;
-    let author = AccountId32::from(ALICE_ENCODED);
-
-    assert!(!KeyvaultStorage::check(author, nft_id));
-}
-
-pub fn test_get_fails_when_nft_not_in_store() {
-    let nft_id = 6010;
-    let author = AccountId32::from(ALICE_ENCODED);
-
-    assert! {KeyvaultStorage::get(author, nft_id).is_err()};
-}
-
-pub fn test_get_the_valid_stored_share() {
-    let nft_id = 6020;
-    let owner = AccountId32::from(ALICE_ENCODED);
-    let share_bytes = Vec::from("new_test_share_6020");
-    let share = Share::try_from(share_bytes.as_slice()).unwrap();
-    KeyvaultStorage::provision(owner.clone(), nft_id, share.clone()).unwrap();
-
-    let read_share = KeyvaultStorage::get(owner, nft_id).unwrap();
-    let read_share_bytes = Vec::from(&read_share);
-    for i in 1..18 {
-        assert_eq!(share_bytes[i], read_share_bytes[i]);
+        //clean up
+        fs::remove_dir_all(dir).unwrap();
     }
 
-    //Clean-up
-    let file_name = sealed_filepath(STORAGE_PATH, nft_id).unwrap();
-    fs::remove_file(file_name).unwrap();
+    ///Can we override a seal file?
+    pub fn test_seal_override_existing_sealed_file() {
+        let dir = "test_override_file";
+        let share = Share::try_from("hello".as_bytes()).unwrap();
+
+        let nft_id = 5870;
+        seal(dir, nft_id, share).unwrap();
+
+        let new_share_bytes = Vec::from("hello_world");
+        let new_share = Share::try_from(new_share_bytes.as_slice()).unwrap();
+        seal(dir, nft_id, new_share.clone()).unwrap();
+
+        let read_share = unseal(dir, nft_id).unwrap();
+        let read_share_bytes = Vec::from(&read_share);
+        for i in 1..11 {
+            assert_eq!(new_share_bytes[i], read_share_bytes[i]);
+        }
+
+        //clean up
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    pub fn test_unseal_fails_when_no_file_exists() {
+        let dir = "unseal_fails_no_file";
+
+        let file = PathBuf::from("test_seal_create_file/365_Nft.bin");
+
+        assert!(!file.is_file());
+
+        assert!(unseal(dir, 365).is_err());
+    }
+
+    pub fn test_provision_fails_when_no_nft_owner() {
+        //TODO
+    }
+
+    pub fn test_check_is_false_when_no_nft_owner() {
+        //TODO
+    }
+
+    pub fn test_get_fails_when_no_nft_owner() {
+        //TODO
+    }
+
+    pub fn test_provision_store_share_in_sealed_file() {
+        let nft_id = 5880;
+        let author = AccountId32::from(ALICE_ENCODED);
+        let share_bytes = Vec::from("new_test_share_5875");
+        let share = Share::try_from(share_bytes.as_slice()).unwrap();
+
+        KeyvaultStorage::provision(author, nft_id, share.clone()).unwrap();
+
+        let file_name = nft_sealed_file_path(STORAGE_PATH, nft_id);
+        assert!(file_name.is_file());
+
+        let read_share = unseal(STORAGE_PATH, nft_id).unwrap();
+        let read_share_bytes = Vec::from(&read_share);
+        for i in 1..18 {
+            assert_eq!(share_bytes[i], read_share_bytes[i]);
+        }
+
+        //Clean-up
+        //  fs::remove_file(file_name).unwrap();
+    }
+
+    pub fn test_check_is_true_when_sealed_file() {
+        let nft_id = 5890;
+        let file_name = nft_sealed_file_path(STORAGE_PATH, nft_id);
+        let author = AccountId32::from(ALICE_ENCODED);
+
+        let new_share = Share::try_from("hello_world".as_bytes()).unwrap();
+        seal(STORAGE_PATH, nft_id, new_share.clone()).unwrap();
+
+        assert!(KeyvaultStorage::check(author, nft_id));
+
+        //Clean-up
+        fs::remove_file(file_name).unwrap();
+    }
+
+    pub fn test_check_is_false_when_no_sealed_file() {
+        let nft_id = 6000;
+        let author = AccountId32::from(ALICE_ENCODED);
+
+        assert!(!KeyvaultStorage::check(author, nft_id));
+    }
+
+    pub fn test_get_fails_when_nft_not_in_store() {
+        let nft_id = 6010;
+        let author = AccountId32::from(ALICE_ENCODED);
+
+        assert! {KeyvaultStorage::get(author, nft_id).is_err()};
+    }
+
+    pub fn test_get_the_valid_stored_share() {
+        let nft_id = 6020;
+        let owner = AccountId32::from(ALICE_ENCODED);
+        let share_bytes = Vec::from("new_test_share_6020");
+        let share = Share::try_from(share_bytes.as_slice()).unwrap();
+        KeyvaultStorage::provision(owner.clone(), nft_id, share.clone()).unwrap();
+
+        let read_share = KeyvaultStorage::get(owner, nft_id).unwrap();
+        let read_share_bytes = Vec::from(&read_share);
+        for i in 1..18 {
+            assert_eq!(share_bytes[i], read_share_bytes[i]);
+        }
+
+        //Clean-up
+        let file_name = nft_sealed_file_path(STORAGE_PATH, nft_id);
+        fs::remove_file(file_name).unwrap();
+    }
 }
