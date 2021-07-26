@@ -14,9 +14,11 @@
     limitations under the License.
 
 */
-use super::url_storage_handler::UrlStorageHandler;
+use super::constants::KEYVAULT_DEFAULT_PATH;
+use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
 use my_node_primitives::NFTId;
 use sharks::{Share, Sharks};
+use std::path::PathBuf;
 
 pub fn provision(
     keyvault_selection_file: &str,
@@ -26,9 +28,12 @@ pub fn provision(
     // TODO: how / from where to read aes256 key -> wait for PR of issue #1?
     let secret = &[0u8, 4];
     // read urllist from file
-    let url_handler = UrlStorageHandler::new().set_filename(keyvault_selection_file);
-    let urls = url_handler
-        .read_urls_from_file()
+    let url_handler = LocalFileStorage::new(
+        PathBuf::from(KEYVAULT_DEFAULT_PATH),
+        PathBuf::from(keyvault_selection_file),
+    );
+    let urls: Vec<String> = url_handler
+        .read()
         .map_err(|e| format!("Could not read urls: {}", e))?;
 
     // create shamir shares

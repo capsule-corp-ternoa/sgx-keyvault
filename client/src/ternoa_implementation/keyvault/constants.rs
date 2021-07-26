@@ -14,9 +14,5 @@
     limitations under the License.
 
 */
-
-pub mod check;
-pub mod constants;
-pub mod get;
-pub mod list;
-pub mod provision;
+pub const KEYVAULT_DEFAULT_PATH: &str = "my_keyvaults";
+pub const KEYVAULT_DEFAULT_URLLIST_FILENAME: &str = "keyvault_pool.txt";
