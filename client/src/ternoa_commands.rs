@@ -280,6 +280,13 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                                 .value_name("u32")
                                 .help("specifies the minimum necessary recovery keys < #urllist"),
                         )
+                        .arg(
+                            Arg::with_name("keyfile")
+                                .takes_value(true)
+                                .required(false)
+                                .value_name("STRING")
+                                .help("filepath of the file containing the aes key"),
+                        )
                 })
                 .runner(|_args: &str, matches: &ArgMatches<'_>| {
                     // Will read aes256 key, shamir-split shares, provision all keyvaults and verify
@@ -290,7 +297,8 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     let nft_id = get_nft_id_from_matches(matches);
                     let urllist: &str = matches.value_of("urllist").unwrap();
                     let needed_keys = get_u8_from_str(matches.value_of("needed_keys").unwrap());
-                    match keyvault::provision::provision(urllist, needed_keys, nft_id) {
+                    let keyfile: &str = matches.value_of("keyfile").unwrap();
+                    match keyvault::provision::provision(urllist, needed_keys, nft_id, keyfile) {
                         Ok(_) => println!("success!"),
                         Err(msg) => println!("[Error]: {}", msg),
                     };
