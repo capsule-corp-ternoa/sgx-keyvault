@@ -18,18 +18,24 @@ use super::constants::KEYVAULT_DEFAULT_PATH;
 use crate::ternoa_implementation::cipher;
 use crate::ternoa_implementation::keyvault::constants::KEYVAULT_NFT_URLLIST_FILENAME_PREFIX;
 use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
-use my_node_primitives::NFTId;
+use my_node_primitives::{NFTId, AccountId};
 use sharks::{Share, Sharks};
 use std::path::PathBuf;
-use substratee_stf::ShardIdentifier;
+use substratee_stf::{TrustedOperation, TrustedCall, KeyPair};
+use crate::get_pair_from_str;
+use sp_core::{sr25519 as sr25519_core, Pair};
 
 pub fn provision(
+    signer_s58: &str,
     keyvault_selection_file: &str,
     recovery_threshold: u8,
     nft_id: NFTId,
     key_file: &str,
-    _mrenclave: ShardIdentifier,
+    mrenclave: [u8; 32],
 ) -> Result<(), String> {
+    // Create trusted call signed
+    let signer =  sr25519_core::Pair::from(get_pair_from_str(signer_s58));
+    let signer_public: AccountId = signer.public().into();
     // retrieve encryption key that is to be shamir shared to the keyvaults
     let encryption_key = get_key_from_file(key_file)?;
     // read urllist from file
@@ -49,9 +55,15 @@ pub fn provision(
     //    a. send ith share to url_i
     //    b. verify availability
     let nft_urls: Vec<String> = Vec::new();
-    for _shamir_share in shamir_shares.iter() {
+    for shamir_share in shamir_shares.iter() {
         // send to enclave:
-        // TODO: TASK of ISSUE #6
+        let provision_call: TrustedOperation = TrustedCall::keyvault_provision(
+            signer_public.clone(),
+            nft_id,
+            shamir_share.into()
+        )
+        .sign(&KeyPair::Sr25519(signer.clone()), 0, &mrenclave, &mrenclave.into())
+        .into_trusted_operation(true);
         //nft_urls.push()
     }
 

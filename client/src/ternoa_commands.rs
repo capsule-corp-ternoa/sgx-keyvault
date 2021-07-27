@@ -18,7 +18,6 @@ use log::*;
 use sp_application_crypto::sr25519;
 use substrate_api_client::Api;
 use base58::FromBase58;
-use substratee_stf::ShardIdentifier;
 
 use crate::ternoa_implementation::cipher;
 use crate::ternoa_implementation::keyvault;
@@ -218,6 +217,15 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                         .value_name("STRING")
                         .help("targeted worker MRENCLAVE"),
                 )
+                .arg(
+                    Arg::with_name("signer")
+                        .short("a")
+                        .long("signer")
+                        .global(true)
+                        .takes_value(true)
+                        .value_name("AccountId")
+                        .help("signer of keyvault request"),
+                )
                 .name("ternoa-client")
                 .version(VERSION)
                 .author("Supercomputing Systems AG <info@scs.ch>")
@@ -233,10 +241,10 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                 .runner(|_args: &str, matches: &ArgMatches<'_>| {
                     // check if the key share for NFTId is stored in the keyvault with <url>. exit code 1 if negative
                     // INPUT:  NFTId (u32)
-                    //         owner
+                    //         owner = signer
                     //         url
                     let nft_id = get_nft_id_from_matches(matches);
-                    let owner = crate::get_accountid_from_str(matches.value_of(OWNER).unwrap());
+                    let owner = matches.value_of("signer").unwrap();
                     let url: &str = matches.value_of(URL_ARG_NAME).unwrap();
                     let mrenclave = get_mrenclave(matches);
                     keyvault::check::check(nft_id, owner, url, mrenclave).unwrap();
@@ -248,16 +256,15 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                 .description("returns single key share")
                 .options(|app| {
                     let app_with_nftid = add_nft_id_arg(app);
-                    let app_with_owner = add_account_id_arg(app_with_nftid, OWNER);
-                    add_url_arg(app_with_owner)
+                    add_url_arg(app_with_nftid)
                 })
                 .runner(|_args: &str, matches: &ArgMatches<'_>| {
                     // returns single key share
                     // INPUT:  NFTId (u32)
-                    //         owner
+                    //         owner = signer
                     //         enclave url
                     let nft_id = get_nft_id_from_matches(matches);
-                    let owner = crate::get_accountid_from_str(matches.value_of(OWNER).unwrap());
+                    let owner = matches.value_of("signer").unwrap();
                     let url: &str = matches.value_of(URL_ARG_NAME).unwrap();
                     let mrenclave = get_mrenclave(matches);
                     // KEYVAULT GET CODE HERE
@@ -314,7 +321,8 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     let needed_keys = get_u8_from_str(matches.value_of("needed_keys").unwrap());
                     let keyfile: &str = matches.value_of("keyfile").unwrap();
                     let mrenclave = get_mrenclave(matches);
-                    match keyvault::provision::provision(urllist, needed_keys, nft_id, keyfile, mrenclave) {
+                    let signer:  &str = matches.value_of("signer").unwrap();
+                    match keyvault::provision::provision(signer, urllist, needed_keys, nft_id, keyfile, mrenclave) {
                         Ok(_) => println!("success!"),
                         Err(msg) => println!("[Error]: {}", msg),
                     };
@@ -391,7 +399,7 @@ fn get_ternoa_chain_api(matches: &ArgMatches<'_>) -> Api<sr25519::Pair> {
 }
 
 // simplified duplicate from stf/cli.rs get_identifiers
-pub fn get_mrenclave(matches: &ArgMatches<'_>) -> ShardIdentifier {
+pub fn get_mrenclave(matches: &ArgMatches<'_>) -> [u8; 32] {
     let mut mrenclave = [0u8; 32];
     if !matches.is_present("mrenclave") {
         panic!("--mrenclave must be provided");
@@ -403,5 +411,5 @@ pub fn get_mrenclave(matches: &ArgMatches<'_>) -> ShardIdentifier {
             .from_base58()
             .expect("mrenclave has to be base58 encoded"),
     );
-    mrenclave.into()
+    mrenclave
 }

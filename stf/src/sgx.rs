@@ -353,7 +353,7 @@ impl Stf {
                 _ => {
                     error!("Unexpected TrustedGetter");
                     None
-            }
+                }
             },
             Getter::public(g) => match g {
                 PublicGetter::some_value => Some(42u32.encode()),
