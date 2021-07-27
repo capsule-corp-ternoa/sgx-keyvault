@@ -20,15 +20,15 @@ use std::sync::mpsc::channel;
 use codec::{Decode, Encode};
 use my_node_runtime::substratee_registry::Request;
 use substratee_worker_api::direct_client::DirectApi as DirectWorkerApi;
-use substratee_stf::{ShardIdentifier, TrustedOperation, TrustedCall, TrustedGetter, Getter};
+use substratee_stf::{TrustedOperation, TrustedCall, TrustedGetter, Getter};
 use sgx_crypto_helper::rsa3072::Rsa3072PubKey;
 use substratee_worker_primitives::{DirectRequestStatus, RpcRequest, RpcResponse, RpcReturnValue};
 
 /// sends a rpc watch request to the worker api server
-fn send_direct_request_to_keyvault(
+pub fn send_direct_request_to_keyvault(
     url: &str,
     operation_call: TrustedOperation,
-    mrenclave: ShardIdentifier,
+    mrenclave: [u8; 32],
 ) -> Vec<u8> {
     let keyvault = DirectWorkerApi::new(url.to_string());
     // encrypt trusted operation
@@ -41,7 +41,7 @@ fn send_direct_request_to_keyvault(
         };
     // compose jsonrpc call
     let data = Request {
-        shard: mrenclave,
+        shard: mrenclave.into(),
         cyphertext: operation_call_encrypted,
     };
 

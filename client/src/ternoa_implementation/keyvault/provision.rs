@@ -24,6 +24,7 @@ use std::path::PathBuf;
 use substratee_stf::{TrustedOperation, TrustedCall, KeyPair};
 use crate::get_pair_from_str;
 use sp_core::{sr25519 as sr25519_core, Pair};
+use super::keyvault_interaction::send_direct_request_to_keyvault;
 
 pub fn provision(
     signer_s58: &str,
@@ -46,24 +47,26 @@ pub fn provision(
     let urls: Vec<String> = url_handler
         .read_lines()
         .map_err(|e| format!("Could not read urls: {}", e))?;
+    let number_of_keyvaults = urls.len();
 
     // create shamir shares
     let shamir_shares =
-        create_shamir_shares(urls.len() as usize, recovery_threshold, &encryption_key)?;
+        create_shamir_shares(number_of_keyvaults, recovery_threshold, &encryption_key)?;
 
     // for all urls in list (= # of shares):
     //    a. send ith share to url_i
     //    b. verify availability
     let nft_urls: Vec<String> = Vec::new();
-    for shamir_share in shamir_shares.iter() {
+    for i in 0..(number_of_keyvaults-1) {
         // send to enclave:
         let provision_call: TrustedOperation = TrustedCall::keyvault_provision(
             signer_public.clone(),
             nft_id,
-            shamir_share.into()
+            (&shamir_shares[i]).into()
         )
         .sign(&KeyPair::Sr25519(signer.clone()), 0, &mrenclave, &mrenclave.into())
         .into_trusted_operation(true);
+        let response = send_direct_request_to_keyvault(&urls[i], provision_call, mrenclave);
         //nft_urls.push()
     }
 

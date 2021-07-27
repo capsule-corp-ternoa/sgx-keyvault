@@ -19,17 +19,20 @@ use my_node_primitives::NFTId;
 use substratee_stf::{TrustedOperation, TrustedGetter, KeyPair};
 use crate::get_pair_from_str;
 use sp_core::{sr25519 as sr25519_core, Pair};
+use super::keyvault_interaction::send_direct_request_to_keyvault;
 
 /// Prints all registered keyvaults and stores all url within a file (one url per line)
 pub fn get(nft_id: NFTId, owner_s58: &str, url: &str, mrenclave: [u8; 32]) -> Result<(), String> {
     // Create trusted call signed
     let owner =  sr25519_core::Pair::from(get_pair_from_str(owner_s58));
-    let get_balance_top: TrustedOperation = TrustedGetter::keyvault_get(
+    let keyvault_get_top: TrustedOperation = TrustedGetter::keyvault_get(
         owner.public().into(),
         nft_id,
     )
     .sign(&KeyPair::Sr25519(owner))
     .into();
+    let response = send_direct_request_to_keyvault(url, keyvault_get_top, mrenclave);
+
     // TODO: save response (= shamir shard) in file storage. This function call will be implemented in issue #5
     Ok(())
 }
