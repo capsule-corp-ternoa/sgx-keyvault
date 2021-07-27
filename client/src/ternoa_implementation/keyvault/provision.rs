@@ -27,6 +27,7 @@ pub fn provision(
     recovery_threshold: u8,
     nft_id: NFTId,
     key_file: &str,
+    _mrenclave: [u8; 32],
 ) -> Result<(), String> {
     // retrieve encryption key that is to be shamir shared to the keyvaults
     let encryption_key = get_key_from_file(key_file)?;

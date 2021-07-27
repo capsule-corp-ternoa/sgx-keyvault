@@ -25,6 +25,8 @@
 
 extern crate alloc;
 
+use alloc::vec::Vec;
+
 #[cfg(feature = "std")]
 extern crate clap;
 
@@ -61,8 +63,8 @@ pub static UNSHIELD: u8 = 6u8;
 pub type ShardIdentifier = H256;
 //pub type Index = u32;
 
-pub use ternoa_primitives::NFTId;
-pub type ShamirKeyShare = String;
+pub use my_node_primitives::NFTId;
+pub type ShamirShard = Vec<u8>;
 
 #[derive(Clone)]
 pub enum KeyPair {
@@ -170,7 +172,7 @@ pub enum TrustedCall {
     balance_unshield(AccountId, AccountId, Balance, ShardIdentifier), // (AccountIncognito, BeneficiaryPublicAccount, Amount, Shard)
     balance_shield(AccountId, AccountId, Balance), // (Root, AccountIncognito, Amount)
     /// (Owner, NFTid, shamir keyshare)
-    keyvault_provision(AccountId, NFTId, ShamirKeyShare),
+    keyvault_provision(AccountId, NFTId, ShamirShard),
 }
 
 impl TrustedCall {
