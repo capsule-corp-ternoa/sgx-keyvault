@@ -15,6 +15,7 @@
 
 */
 use super::constants::KEYVAULT_DEFAULT_PATH;
+use crate::ternoa_implementation::keyvault::constants::KEYVAULT_NFT_URLLIST_FILENAME_PREFIX;
 use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
 use my_node_primitives::NFTId;
 use sharks::{Share, Sharks};
@@ -42,13 +43,27 @@ pub fn provision(
     // for all urls in list (= # of shares):
     //    a. send ith share to url_i
     //    b. verify availability
+    let nft_urls: Vec<String> = Vec::new();
     for _shamir_share in shamir_shares.iter() {
         // send to enclave:
         // TODO: TASK of ISSUE #6
+        //nft_urls.push()
     }
 
-    // TODO: create file NFT urllist NFT File
+    // Create file NFT urllist NFT File
+    save_nft_urls(nft_urls, _nft_id)?;
     Ok(())
+}
+
+fn save_nft_urls(nft_urls: Vec<String>, _nft_id: NFTId) -> Result<(), String> {
+    let nft_urls_filename = format! {"{}_{}.txt",KEYVAULT_NFT_URLLIST_FILENAME_PREFIX, _nft_id};
+    let nft_url_handler = LocalFileStorage::new(
+        PathBuf::from(KEYVAULT_DEFAULT_PATH),
+        PathBuf::from(nft_urls_filename),
+    );
+    nft_url_handler
+        .write(nft_urls)
+        .map_err(|e| format!("Could not write the nft urls: {}", e))
 }
 
 /// shamir split aes256 key into M shares, of which any N are needed for key recovery

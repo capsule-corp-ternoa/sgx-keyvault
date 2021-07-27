@@ -16,3 +16,4 @@
 */
 pub const KEYVAULT_DEFAULT_PATH: &str = "my_keyvaults";
 pub const KEYVAULT_DEFAULT_URLLIST_FILENAME: &str = "keyvault_pool.txt";
+pub const KEYVAULT_NFT_URLLIST_FILENAME_PREFIX: &str = "keyvault_nft_urls";
