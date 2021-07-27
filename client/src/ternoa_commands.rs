@@ -224,8 +224,9 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     // INPUT:  NFTId (u32)
                     //         url
                     let nft_id = get_nft_id_from_matches(matches);
+                    let owner = crate::get_accountid_from_str(matches.value_of(OWNER).unwrap());
                     let url: &str = matches.value_of(URL_ARG_NAME).unwrap();
-                    keyvault::check::check(nft_id, url).unwrap();
+                    keyvault::check::check(nft_id, owner, url).unwrap();
                     Ok(())
                 }),
         )

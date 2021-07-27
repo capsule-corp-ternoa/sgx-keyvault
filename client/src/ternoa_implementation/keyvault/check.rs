@@ -18,7 +18,7 @@
 use my_node_primitives::NFTId;
 
 /// Prints all registered keyvaults and stores all url within a file (one url per line)
-pub fn check(_nft_id: NFTId, _url: &str) -> Result<(), String> {
+pub fn check(_nft_id: NFTId, _owner: AccountId, _url: &str) -> Result<(), String> {
     // TODO: Task #6, create trusted call
     Ok(())
 }
