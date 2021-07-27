@@ -239,7 +239,7 @@ pub mod test {
         }
 
         //Clean-up
-        //  fs::remove_file(file_name).unwrap();
+        fs::remove_file(file_name).unwrap();
     }
 
     pub fn test_check_is_true_when_sealed_file() {
