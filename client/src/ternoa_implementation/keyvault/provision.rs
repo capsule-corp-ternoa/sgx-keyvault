@@ -18,6 +18,7 @@ use super::url_storage_handler::UrlStorageHandler;
 use crate::ternoa_implementation::cipher;
 use my_node_primitives::NFTId;
 use sharks::{Share, Sharks};
+use std::path::PathBuf;
 
 pub fn provision(
     keyvault_selection_file: &str,
@@ -51,7 +52,7 @@ pub fn provision(
 
 /// Reads a key from a given file and concacenates the key to a single vector
 fn get_key_from_file(key_file: &str) -> Result<Vec<u8>, String> {
-    let key = cipher::recover_encryption_key(&cipher::keyfile_path(key_file))
+    let key = cipher::recover_encryption_key(&PathBuf::from(key_file))
         .map_err(|e| format!("Could not read key from file: {}", e))?;
     let mut concatenated = Vec::with_capacity(48);
     concatenated.extend_from_slice(&key.0);
