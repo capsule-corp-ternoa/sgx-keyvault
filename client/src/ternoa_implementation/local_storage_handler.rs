@@ -6,8 +6,10 @@ use std::io::Write;
 use std::path::PathBuf;
 
 pub trait VecToLinesConverter<T> {
-    fn write(&self, lines: Vec<T>) -> Result<()>;
-    fn read(&self) -> Result<Vec<T>>;
+    fn writelines(&self, lines: Vec<T>) -> Result<()>;
+    fn readlines(&self) -> Result<Vec<T>>;
+    fn write(&self, line: T) -> Result<()>;
+    fn read(&self) -> Result<T>;
 }
 
 pub struct LocalFileStorage {
@@ -43,7 +45,13 @@ impl LocalFileStorage {
 }
 
 impl VecToLinesConverter<String> for LocalFileStorage {
-    fn write(&self, lines: Vec<String>) -> Result<()> {
+    fn write(&self, line: String) -> Result<()> {
+        self.ensure_dir_exists()?;
+        let mut file = fs::File::create(&self.filepath())?;
+        file.write_all(line.as_bytes())
+    }
+
+    fn writelines(&self, lines: Vec<String>) -> Result<()> {
         self.ensure_dir_exists()?;
 
         let mut text: String = lines.iter().map(|url| format!("{}\n", url)).collect();
@@ -52,16 +60,27 @@ impl VecToLinesConverter<String> for LocalFileStorage {
         file.write_all(text.as_bytes())
     }
 
-    fn read(&self) -> Result<Vec<String>> {
+    fn readlines(&self) -> Result<Vec<String>> {
         Ok(fs::read_to_string(&self.filepath())?
             .split('\n')
             .map(|str| str.to_owned())
             .collect())
     }
+
+    fn read(&self) -> Result<String> {
+        fs::read_to_string(&self.filepath())
+    }
 }
 
 impl VecToLinesConverter<Share> for LocalFileStorage {
-    fn write(&self, shares: Vec<Share>) -> Result<()> {
+    fn write(&self, line: Share) -> Result<()> {
+        self.ensure_dir_exists()?;
+        let mut file = fs::File::create(&self.filepath())?;
+        let text: String = hex::encode(Vec::from(&line));
+        file.write_all(text.as_bytes())
+    }
+
+    fn writelines(&self, shares: Vec<Share>) -> Result<()> {
         self.ensure_dir_exists()?;
         let mut file = fs::File::create(&self.filepath())?;
         let mut text: String = shares
@@ -73,12 +92,17 @@ impl VecToLinesConverter<Share> for LocalFileStorage {
         file.write_all(text.as_bytes())
     }
 
-    fn read(&self) -> Result<Vec<Share>> {
+    fn readlines(&self) -> Result<Vec<Share>> {
         Ok(fs::read_to_string(&self.filepath())?
             .split('\n')
             .take_while(|str| str.len() > 2)
             .map(|str| Share::try_from(&*hex::decode(str).unwrap()).unwrap())
             .collect())
+    }
+
+    fn read(&self) -> Result<Share> {
+        let str = fs::read_to_string(&self.filepath())?;
+        Ok(Share::try_from(&*hex::decode(str).unwrap()).unwrap())
     }
 }
 
@@ -179,7 +203,7 @@ mod tests {
         file.write_all(text.as_bytes()).unwrap();
 
         // when
-        let read_lines: Vec<String> = handler.read().unwrap();
+        let read_lines: Vec<String> = handler.readlines().unwrap();
 
         // then
         assert_eq!(read_lines[0], line1);
@@ -206,7 +230,7 @@ mod tests {
         file.write_all(text.as_bytes()).unwrap();
 
         // when
-        let read_lines: Vec<String> = handler.read().unwrap();
+        let read_lines: Vec<String> = handler.readlines().unwrap();
 
         // then
         assert_eq!(read_lines[0], line1);
@@ -226,9 +250,9 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.write(url).unwrap();
+        handler.writelines(url).unwrap();
         // then
-        let lines: Vec<String> = handler.read().unwrap();
+        let lines: Vec<String> = handler.readlines().unwrap();
         assert_eq!(lines, vec![""]);
 
         //clean up
@@ -236,7 +260,7 @@ mod tests {
     }
 
     #[test]
-    fn write_and_read_one_line_works_for_string() {
+    fn write_and_read_a_vector_of_size_one_works_for_string() {
         // given
         let path = "test_one_line";
         let filename = "one_line_file.txt";
@@ -244,10 +268,10 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.write(url.clone()).unwrap();
+        handler.writelines(url.clone()).unwrap();
 
         // then
-        let lines: Vec<String> = handler.read().unwrap();
+        let lines: Vec<String> = handler.readlines().unwrap();
         assert_eq!(lines, url);
 
         //clean up
@@ -266,10 +290,10 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.write(urls.clone()).unwrap();
+        handler.writelines(urls.clone()).unwrap();
 
         // then
-        let lines: Vec<String> = handler.read().unwrap();
+        let lines: Vec<String> = handler.readlines().unwrap();
         assert_eq!(lines, urls);
 
         //clean up
@@ -298,7 +322,7 @@ mod tests {
         file.write_all(text.as_bytes()).unwrap();
 
         // when
-        let read_lines: Vec<Share> = handler.read().unwrap();
+        let read_lines: Vec<Share> = handler.readlines().unwrap();
 
         // then
         assert_eq!(read_lines[0].x, share1.x);
@@ -332,7 +356,7 @@ mod tests {
         file.write_all(text.as_bytes()).unwrap();
 
         // when
-        let read_lines: Vec<Share> = handler.read().unwrap();
+        let read_lines: Vec<Share> = handler.readlines().unwrap();
 
         // then
         assert_eq!(read_lines[0].x, share1.x);
@@ -355,10 +379,10 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.write(shares).unwrap();
+        handler.writelines(shares).unwrap();
 
         // then
-        let lines: Vec<Share> = handler.read().unwrap();
+        let lines: Vec<Share> = handler.readlines().unwrap();
         assert_eq!(lines.len(), 0);
 
         //clean up
@@ -366,7 +390,7 @@ mod tests {
     }
 
     #[test]
-    fn write_and_read_one_line_works_for_shamir_shares() {
+    fn write_and_read_a_vector_of_size_one_works_for_shamir_shares() {
         // given
         let path = "test_shamir_one_line";
         let filename = "one_line_file.txt";
@@ -377,10 +401,10 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.write(shares.clone()).unwrap();
+        handler.writelines(shares.clone()).unwrap();
 
         // then
-        let lines: Vec<Share> = handler.read().unwrap();
+        let lines: Vec<Share> = handler.readlines().unwrap();
         assert_eq!(shares.len(), 1);
         assert_eq!(lines.len(), shares.len());
         assert_eq!(lines[0].x, shares[0].x);
@@ -403,10 +427,10 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.write(shares.clone()).unwrap();
+        handler.writelines(shares.clone()).unwrap();
 
         // then
-        let lines: Vec<Share> = handler.read().unwrap();
+        let lines: Vec<Share> = handler.readlines().unwrap();
         assert_eq!(lines.len(), shares.len());
         assert_eq!(lines[0].x, shares[0].x);
         assert_eq!(lines[0].y, shares[0].y);
@@ -414,6 +438,46 @@ mod tests {
         assert_eq!(lines[1].y, shares[1].y);
         assert_eq!(lines[2].x, shares[2].x);
         assert_eq!(lines[2].y, shares[2].y);
+
+        //clean up
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn writeline_and_readline_works_for_shamir_shares() {
+        // given
+        let path = "test_shamir_writeline";
+        let filename = "one_line_file.txt";
+        let share_hex_text = "016247cc9f4c161c7d8bb4ba34a66fab80b87353233a636dd1f08b13f70aa13b71168e9c265e5d41af2238065d6336a8e2";
+        let share = Share::try_from(&*hex::decode(share_hex_text).unwrap()).unwrap();
+
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
+
+        // when
+        handler.write(share.clone()).unwrap();
+
+        // then
+        let new_share: Share = handler.read().unwrap();
+        assert_eq!(new_share.x, share.x);
+        assert_eq!(new_share.y, share.y);
+
+        //clean up
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    fn writeline_and_readline_works_for_string() {
+        // given
+        let path = "test_string_writeline";
+        let filename = "one_line_file.txt";
+        let str = "hello_there".to_owned();
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
+
+        // when
+        handler.write(str.clone()).unwrap();
+
+        // then
+        let line: String = handler.read().unwrap();
+        assert_eq!(line, str);
 
         //clean up
         fs::remove_dir_all(path).unwrap();

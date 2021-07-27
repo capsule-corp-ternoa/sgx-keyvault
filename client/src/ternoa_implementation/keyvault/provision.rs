@@ -34,7 +34,7 @@ pub fn provision(
         PathBuf::from(keyvault_selection_file),
     );
     let urls: Vec<String> = url_handler
-        .read()
+        .readlines()
         .map_err(|e| format!("Could not read urls: {}", e))?;
 
     // create shamir shares
@@ -62,7 +62,7 @@ fn save_nft_urls(nft_urls: Vec<String>, _nft_id: NFTId) -> Result<(), String> {
         PathBuf::from(nft_urls_filename),
     );
     nft_url_handler
-        .write(nft_urls)
+        .writelines(nft_urls)
         .map_err(|e| format!("Could not write the nft urls: {}", e))
 }
 
