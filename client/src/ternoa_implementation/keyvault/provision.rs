@@ -25,7 +25,7 @@ use std::path::PathBuf;
 pub fn provision(
     keyvault_selection_file: &str,
     recovery_threshold: u8,
-    _nft_id: NFTId,
+    nft_id: NFTId,
     key_file: &str,
 ) -> Result<(), String> {
     // retrieve encryption key that is to be shamir shared to the keyvaults
@@ -36,7 +36,7 @@ pub fn provision(
         PathBuf::from(keyvault_selection_file),
     );
     let urls: Vec<String> = url_handler
-        .readlines()
+        .read_lines()
         .map_err(|e| format!("Could not read urls: {}", e))?;
 
     // create shamir shares
@@ -54,18 +54,18 @@ pub fn provision(
     }
 
     // Create file NFT urllist NFT File
-    save_nft_urls(nft_urls, _nft_id)?;
+    save_nft_urls(nft_urls, nft_id)?;
     Ok(())
 }
 
-fn save_nft_urls(nft_urls: Vec<String>, _nft_id: NFTId) -> Result<(), String> {
-    let nft_urls_filename = format! {"{}_{}.txt",KEYVAULT_NFT_URLLIST_FILENAME_PREFIX, _nft_id};
+fn save_nft_urls(nft_urls: Vec<String>, nft_id: NFTId) -> Result<(), String> {
+    let nft_urls_filename = format! {"{}_{}.txt",KEYVAULT_NFT_URLLIST_FILENAME_PREFIX, nft_id};
     let nft_url_handler = LocalFileStorage::new(
         PathBuf::from(KEYVAULT_DEFAULT_PATH),
         PathBuf::from(nft_urls_filename),
     );
     nft_url_handler
-        .writelines(nft_urls)
+        .write_lines(nft_urls)
         .map_err(|e| format!("Could not write the nft urls: {}", e))
 }
 

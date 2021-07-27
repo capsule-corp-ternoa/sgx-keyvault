@@ -59,5 +59,5 @@ fn save_urls(keyvault_urls: Vec<String>) -> Result<()> {
         PathBuf::from(KEYVAULT_DEFAULT_PATH),
         PathBuf::from(KEYVAULT_DEFAULT_URLLIST_FILENAME),
     );
-    url_handler.writelines(keyvault_urls)
+    url_handler.write_lines(keyvault_urls)
 }

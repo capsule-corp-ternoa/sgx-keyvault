@@ -6,8 +6,8 @@ use std::io::Write;
 use std::path::PathBuf;
 
 pub trait VecToLinesConverter<T> {
-    fn writelines(&self, lines: Vec<T>) -> Result<()>;
-    fn readlines(&self) -> Result<Vec<T>>;
+    fn write_lines(&self, lines: Vec<T>) -> Result<()>;
+    fn read_lines(&self) -> Result<Vec<T>>;
     fn write(&self, line: T) -> Result<()>;
     fn read(&self) -> Result<T>;
 }
@@ -51,7 +51,7 @@ impl VecToLinesConverter<String> for LocalFileStorage {
         file.write_all(line.as_bytes())
     }
 
-    fn writelines(&self, lines: Vec<String>) -> Result<()> {
+    fn write_lines(&self, lines: Vec<String>) -> Result<()> {
         self.ensure_dir_exists()?;
 
         let mut text: String = lines.iter().map(|url| format!("{}\n", url)).collect();
@@ -60,7 +60,7 @@ impl VecToLinesConverter<String> for LocalFileStorage {
         file.write_all(text.as_bytes())
     }
 
-    fn readlines(&self) -> Result<Vec<String>> {
+    fn read_lines(&self) -> Result<Vec<String>> {
         Ok(fs::read_to_string(&self.filepath())?
             .split('\n')
             .map(|str| str.to_owned())
@@ -80,7 +80,7 @@ impl VecToLinesConverter<Share> for LocalFileStorage {
         file.write_all(text.as_bytes())
     }
 
-    fn writelines(&self, shares: Vec<Share>) -> Result<()> {
+    fn write_lines(&self, shares: Vec<Share>) -> Result<()> {
         self.ensure_dir_exists()?;
         let mut file = fs::File::create(&self.filepath())?;
         let mut text: String = shares
@@ -92,7 +92,7 @@ impl VecToLinesConverter<Share> for LocalFileStorage {
         file.write_all(text.as_bytes())
     }
 
-    fn readlines(&self) -> Result<Vec<Share>> {
+    fn read_lines(&self) -> Result<Vec<Share>> {
         Ok(fs::read_to_string(&self.filepath())?
             .split('\n')
             .take_while(|str| str.len() > 2)
@@ -203,7 +203,7 @@ mod tests {
         file.write_all(text.as_bytes()).unwrap();
 
         // when
-        let read_lines: Vec<String> = handler.readlines().unwrap();
+        let read_lines: Vec<String> = handler.read_lines().unwrap();
 
         // then
         assert_eq!(read_lines[0], line1);
@@ -230,7 +230,7 @@ mod tests {
         file.write_all(text.as_bytes()).unwrap();
 
         // when
-        let read_lines: Vec<String> = handler.readlines().unwrap();
+        let read_lines: Vec<String> = handler.read_lines().unwrap();
 
         // then
         assert_eq!(read_lines[0], line1);
@@ -250,9 +250,9 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.writelines(url).unwrap();
+        handler.write_lines(url).unwrap();
         // then
-        let lines: Vec<String> = handler.readlines().unwrap();
+        let lines: Vec<String> = handler.read_lines().unwrap();
         assert_eq!(lines, vec![""]);
 
         //clean up
@@ -268,10 +268,10 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.writelines(url.clone()).unwrap();
+        handler.write_lines(url.clone()).unwrap();
 
         // then
-        let lines: Vec<String> = handler.readlines().unwrap();
+        let lines: Vec<String> = handler.read_lines().unwrap();
         assert_eq!(lines, url);
 
         //clean up
@@ -290,10 +290,10 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.writelines(urls.clone()).unwrap();
+        handler.write_lines(urls.clone()).unwrap();
 
         // then
-        let lines: Vec<String> = handler.readlines().unwrap();
+        let lines: Vec<String> = handler.read_lines().unwrap();
         assert_eq!(lines, urls);
 
         //clean up
@@ -322,7 +322,7 @@ mod tests {
         file.write_all(text.as_bytes()).unwrap();
 
         // when
-        let read_lines: Vec<Share> = handler.readlines().unwrap();
+        let read_lines: Vec<Share> = handler.read_lines().unwrap();
 
         // then
         assert_eq!(read_lines[0].x, share1.x);
@@ -356,7 +356,7 @@ mod tests {
         file.write_all(text.as_bytes()).unwrap();
 
         // when
-        let read_lines: Vec<Share> = handler.readlines().unwrap();
+        let read_lines: Vec<Share> = handler.read_lines().unwrap();
 
         // then
         assert_eq!(read_lines[0].x, share1.x);
@@ -379,10 +379,10 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.writelines(shares).unwrap();
+        handler.write_lines(shares).unwrap();
 
         // then
-        let lines: Vec<Share> = handler.readlines().unwrap();
+        let lines: Vec<Share> = handler.read_lines().unwrap();
         assert_eq!(lines.len(), 0);
 
         //clean up
@@ -401,10 +401,10 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.writelines(shares.clone()).unwrap();
+        handler.write_lines(shares.clone()).unwrap();
 
         // then
-        let lines: Vec<Share> = handler.readlines().unwrap();
+        let lines: Vec<Share> = handler.read_lines().unwrap();
         assert_eq!(shares.len(), 1);
         assert_eq!(lines.len(), shares.len());
         assert_eq!(lines[0].x, shares[0].x);
@@ -427,10 +427,10 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.writelines(shares.clone()).unwrap();
+        handler.write_lines(shares.clone()).unwrap();
 
         // then
-        let lines: Vec<Share> = handler.readlines().unwrap();
+        let lines: Vec<Share> = handler.read_lines().unwrap();
         assert_eq!(lines.len(), shares.len());
         assert_eq!(lines[0].x, shares[0].x);
         assert_eq!(lines[0].y, shares[0].y);

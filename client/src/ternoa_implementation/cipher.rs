@@ -111,7 +111,7 @@ pub fn shamir_shares_from_file(shamir_share_filename: PathBuf) -> Result<Vec<Sha
     let shares_handler = LocalFileStorage::new(PathBuf::from(dir), PathBuf::from(filename));
 
     shares_handler
-        .readlines()
+        .read_lines()
         .map_err(|e| ShamirError(format!("Could not read shares: {}", e)))
 }
 
