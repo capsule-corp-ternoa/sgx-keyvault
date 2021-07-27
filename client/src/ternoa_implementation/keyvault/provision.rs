@@ -58,7 +58,7 @@ pub fn provision(
     //    b. verify availability
     let nft_urls: Vec<String> = Vec::new();
     for i in 0..(number_of_keyvaults-1) {
-        // send to enclave:
+        // create trusted call
         let provision_call: TrustedOperation = TrustedCall::keyvault_provision(
             signer_public.clone(),
             nft_id,
@@ -66,6 +66,7 @@ pub fn provision(
         )
         .sign(&KeyPair::Sr25519(signer.clone()), 0, &mrenclave, &mrenclave.into())
         .into_trusted_operation(true);
+        // send to enclave
         let response = send_direct_request_to_keyvault(&urls[i], provision_call, mrenclave);
         //nft_urls.push()
     }
