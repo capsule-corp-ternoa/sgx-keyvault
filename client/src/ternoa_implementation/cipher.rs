@@ -26,8 +26,6 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-const SHAMIR_SHARES_THRESHOLD: u8 = 10;
-
 #[derive(Debug, Display, From)]
 pub enum Error {
     /// Wrapping of io error to Aes Error
@@ -89,44 +87,43 @@ pub fn recover_encryption_key(key_filename: &Path) -> Result<Key> {
 
 ///Get the shamir shares from a file
 pub fn shamir_shares_from_file(shamir_share_filename: PathBuf) -> Result<Vec<Share>> {
-    let dir = shamir_share_filename.parent().ok_or_else(|| {
-        ShamirError(format!(
-            "The shamir share file is invalid. No parent directory : {}.",
-            shamir_share_filename.as_path().to_str().unwrap()
-        ))
-    });
-    let filename = shamir_share_filename.file_name().ok_or_else(|| {
-        ShamirError(format!(
-            "The shamir share file is invalid. No valid filename : {}.",
-            shamir_share_filename.as_path().to_str().unwrap()
-        ))
-    });
+    let dir = match shamir_share_filename.parent() {
+        Some(path) => path,
+        None => {
+            return Err(ShamirError(format!(
+                "The shamir share file is invalid. No parent directory : {}.",
+                shamir_share_filename.as_path().to_str().unwrap()
+            )))
+        }
+    };
+
+    let filename = match shamir_share_filename.file_name() {
+        Some(path) => path,
+        None => {
+            return Err(ShamirError(format!(
+                "The shamir share file is invalid. No valid filename : {}.",
+                shamir_share_filename.as_path().to_str().unwrap()
+            )))
+        }
+    };
 
     //read shamir shares from file -> return Vec(String) ?
-    let shares_handler = LocalFileStorage::new(
-        PathBuf::from(dir.unwrap()),
-        PathBuf::from(filename.unwrap()),
-    );
-    let shares: Vec<Share> = shares_handler
+    let shares_handler = LocalFileStorage::new(PathBuf::from(dir), PathBuf::from(filename));
+
+    shares_handler
         .read()
-        .map_err(|e| format!("Could not read shares: {}", e))?;
-    Ok(shares)
+        .map_err(|e| ShamirError(format!("Could not read shares: {}", e)))
 }
 
 ///Recover the encryption key from shamir shares
-///If the shamir_share_file provides an insufficient number of shares (less than threshold_shares_num)
-///throws an ShamirError
-pub fn aes256key_from_shamir_shares(shares: Vec<Share>, threshold_shares_num: u8) -> Result<Key> {
-    let m_shares = shares.len() as usize;
-    if m_shares < (threshold_shares_num as usize) {
-        return Err(
-            ShamirError(
-                format!("The threshold of shamir shards necessary for secret recovery (N = {:?}) must be smaller than the number of found shares (M = {:?})", threshold_shares_num, m_shares)
-            )
-        );
+pub fn aes256key_from_shamir_shares(shares: Vec<Share>) -> Result<Key> {
+    if shares.is_empty() {
+        return Err(ShamirError(
+            "No shamir shares to recover the encryption key ".to_string(),
+        ));
     }
-
-    let sharks = Sharks(threshold_shares_num);
+    //No need of threshold shares num to recover key
+    let sharks = Sharks(0);
     let mut secret = sharks.recover(shares.as_slice()).unwrap();
     if secret.len() != 48 {
         return Err(
@@ -218,7 +215,7 @@ pub fn decrypt_with_key(ciphertext_filename: &str, key: Option<Key>) -> Result<(
 ///Assume that the shamir_share_file provides the correct number of shares needed for recovery
 pub fn decrypt(ciphertext_filename: &str, shamir_share_file: &str) -> Result<()> {
     let shares = shamir_shares_from_file(PathBuf::from(shamir_share_file))?;
-    let encryption_key = aes256key_from_shamir_shares(shares, SHAMIR_SHARES_THRESHOLD)?;
+    let encryption_key = aes256key_from_shamir_shares(shares)?;
 
     de_or_encrypt_file(
         &Path::new(ciphertext_filename),

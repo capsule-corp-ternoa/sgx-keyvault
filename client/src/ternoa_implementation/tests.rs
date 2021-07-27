@@ -261,10 +261,10 @@ fn verify_decrypt_without_passing_key_fails_when_encrypt_by_passing_key() {
 fn verify_recover_key_from_shamir_with_threshold_number_shares() {
     // given
     let aes256_key: Key = aes256_key();
+    let shares = shamir_shares(aes256_key.clone(), THRESHOLD_SHAMIR_SHARE as usize);
 
     // when
-    let shares = shamir_shares(aes256_key.clone(), THRESHOLD_SHAMIR_SHARE as usize);
-    let encryption_key = aes256key_from_shamir_shares(shares, THRESHOLD_SHAMIR_SHARE).unwrap();
+    let encryption_key = aes256key_from_shamir_shares(shares).unwrap();
 
     // then
     assert_eq!(aes256_key.0, encryption_key.0);
@@ -275,10 +275,10 @@ fn verify_recover_key_from_shamir_with_threshold_number_shares() {
 fn verify_recover_key_from_shamir_with_more_shares_than_threshold() {
     // given
     let aes256_key: Key = aes256_key();
+    let shares = shamir_shares(aes256_key.clone(), (THRESHOLD_SHAMIR_SHARE + 1) as usize);
 
     // when
-    let shares = shamir_shares(aes256_key.clone(), (THRESHOLD_SHAMIR_SHARE + 1) as usize);
-    let encryption_key = aes256key_from_shamir_shares(shares, THRESHOLD_SHAMIR_SHARE).unwrap();
+    let encryption_key = aes256key_from_shamir_shares(shares).unwrap();
 
     //then
     assert_eq!(aes256_key.0, encryption_key.0);
@@ -286,35 +286,17 @@ fn verify_recover_key_from_shamir_with_more_shares_than_threshold() {
 }
 
 #[test]
-fn verify_recover_key_fails_from_shamir_with_less_shares_than_threshold() {
+fn verify_recover_wrong_key_from_shamir_with_less_shares_than_threshold() {
     // given
     let aes256_key: Key = aes256_key();
-    // when
     let shares = shamir_shares(aes256_key.clone(), (THRESHOLD_SHAMIR_SHARE - 1) as usize);
-    //then
-    assert!(aes256key_from_shamir_shares(shares, THRESHOLD_SHAMIR_SHARE).is_err());
-}
 
-#[test]
-fn verify_share_have_all_same_length() {
-    // given
-    let aes256_key: Key = aes256_key();
     // when
-    let shares = shamir_shares(aes256_key.clone(), (THRESHOLD_SHAMIR_SHARE - 1) as usize);
-    //then
-    for share in shares {
-        assert_eq!(share.y.len(), 48);
-    }
-}
+    let encryption_key = aes256key_from_shamir_shares(shares).unwrap();
 
-#[test]
-fn verify_number_of_created_shares() {
-    // given
-    let aes256_key: Key = aes256_key();
-    // when
-    let shares = shamir_shares(aes256_key.clone(), (THRESHOLD_SHAMIR_SHARE - 1) as usize);
-    //then
-    assert_eq!(shares.len(), (THRESHOLD_SHAMIR_SHARE - 1) as usize);
+    // then
+    assert_ne!(aes256_key.0, encryption_key.0);
+    assert_ne!(aes256_key.1, encryption_key.1);
 }
 
 #[test]
@@ -344,10 +326,10 @@ fn verify_recover_key_from_shamir_share_file() {
     fs::create_dir_all(path).unwrap();
     let mut file = fs::File::create(file_path.clone()).unwrap();
     file.write_all(text.as_bytes()).unwrap();
+    let shares = shamir_shares_from_file(file_path).unwrap();
 
     // when
-    let shares = shamir_shares_from_file(file_path).unwrap();
-    let encryption_key = aes256key_from_shamir_shares(shares, threshold).unwrap();
+    let encryption_key = aes256key_from_shamir_shares(shares).unwrap();
 
     // then
     assert_eq!(aes256_key.0, encryption_key.0);
@@ -372,7 +354,7 @@ fn verify_recover_key_fails_with_shamir_share_file_empty() {
     let shares = shamir_shares_from_file(file_path).unwrap();
 
     // then
-    assert!(aes256key_from_shamir_shares(shares, THRESHOLD_SHAMIR_SHARE).is_err());
+    assert!(aes256key_from_shamir_shares(shares).is_err());
 
     //clean up
     fs::remove_dir_all(path).unwrap();
@@ -395,10 +377,10 @@ fn verify_recover_diff_key_with_wrong_shamir_share_file() {
     fs::create_dir_all(path).unwrap();
     let mut file = fs::File::create(file_path.clone()).unwrap();
     file.write_all(text.as_bytes()).unwrap();
+    let shares = shamir_shares_from_file(file_path).unwrap();
 
     // when
-    let shares = shamir_shares_from_file(file_path).unwrap();
-    let encryption_key = aes256key_from_shamir_shares(shares, 2).unwrap();
+    let encryption_key = aes256key_from_shamir_shares(shares).unwrap();
 
     // then
     assert_ne!(aes256_key.0, encryption_key.0);
