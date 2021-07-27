@@ -14,8 +14,10 @@
     limitations under the License.
 
 */
-use super::url_storage_handler::UrlStorageHandler;
+use super::constants::KEYVAULT_DEFAULT_PATH;
 use crate::ternoa_implementation::cipher;
+use crate::ternoa_implementation::keyvault::constants::KEYVAULT_NFT_URLLIST_FILENAME_PREFIX;
+use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
 use my_node_primitives::NFTId;
 use sharks::{Share, Sharks};
 use std::path::PathBuf;
@@ -23,15 +25,18 @@ use std::path::PathBuf;
 pub fn provision(
     keyvault_selection_file: &str,
     recovery_threshold: u8,
-    _nft_id: NFTId,
+    nft_id: NFTId,
     key_file: &str,
 ) -> Result<(), String> {
     // retrieve encryption key that is to be shamir shared to the keyvaults
     let encryption_key = get_key_from_file(key_file)?;
     // read urllist from file
-    let url_handler = UrlStorageHandler::new().set_filename(keyvault_selection_file);
-    let urls = url_handler
-        .read_urls_from_file()
+    let url_handler = LocalFileStorage::new(
+        PathBuf::from(KEYVAULT_DEFAULT_PATH),
+        PathBuf::from(keyvault_selection_file),
+    );
+    let urls: Vec<String> = url_handler
+        .read_lines()
         .map_err(|e| format!("Could not read urls: {}", e))?;
 
     // create shamir shares
@@ -41,13 +46,27 @@ pub fn provision(
     // for all urls in list (= # of shares):
     //    a. send ith share to url_i
     //    b. verify availability
+    let nft_urls: Vec<String> = Vec::new();
     for _shamir_share in shamir_shares.iter() {
         // send to enclave:
         // TODO: TASK of ISSUE #6
+        //nft_urls.push()
     }
 
-    // TODO: create file NFT urllist NFT File
+    // Create file NFT urllist NFT File
+    save_nft_urls(nft_urls, nft_id)?;
     Ok(())
+}
+
+fn save_nft_urls(nft_urls: Vec<String>, nft_id: NFTId) -> Result<(), String> {
+    let nft_urls_filename = format! {"{}_{}.txt",KEYVAULT_NFT_URLLIST_FILENAME_PREFIX, nft_id};
+    let nft_url_handler = LocalFileStorage::new(
+        PathBuf::from(KEYVAULT_DEFAULT_PATH),
+        PathBuf::from(nft_urls_filename),
+    );
+    nft_url_handler
+        .write_lines(nft_urls)
+        .map_err(|e| format!("Could not write the nft urls: {}", e))
 }
 
 /// Reads a key from a given file and concacenates the key to a single vector

@@ -14,11 +14,6 @@
     limitations under the License.
 
 */
-
-pub mod cipher;
-pub mod keyvault;
-pub mod local_storage_handler;
-pub mod nft;
-
-#[cfg(test)]
-mod tests;
+pub const KEYVAULT_DEFAULT_PATH: &str = "my_keyvaults";
+pub const KEYVAULT_DEFAULT_URLLIST_FILENAME: &str = "keyvault_pool.txt";
+pub const KEYVAULT_NFT_URLLIST_FILENAME_PREFIX: &str = "keyvault_nft_urls";
