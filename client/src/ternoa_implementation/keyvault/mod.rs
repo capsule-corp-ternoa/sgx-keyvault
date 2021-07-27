@@ -21,4 +21,3 @@ pub mod get;
 pub mod list;
 pub mod provision;
 pub mod keyvault_interaction;
-pub mod url_storage_handler;
