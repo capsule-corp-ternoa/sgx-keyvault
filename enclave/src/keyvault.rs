@@ -1,14 +1,25 @@
 use crate::io;
-use crate::utils::UnwrapOrSgxErrorUnexpected;
+use crate::keyvault::Error::KeyvaultError;
 use core::convert::TryFrom;
+use derive_more::{Display, From};
+use log::warn;
 use my_node_primitives::NFTId;
-use sgx_types::{sgx_status_t, SgxResult};
 use sharks::Share;
 use sp_core::crypto::AccountId32;
 use std::fs;
 use std::path::PathBuf;
 use std::prelude::v1::*;
 use std::vec::Vec;
+
+#[derive(Debug, Display, From)]
+pub enum Error {
+    /// Wrapping of io error to keyvault error
+    IoError(std::io::Error),
+    ///Wrapping of Keyvault error
+    KeyvaultError(String),
+}
+
+pub type Result<T> = std::result::Result<T, Error>;
 
 pub const STORAGE_PATH: &str = "keyshare";
 
@@ -23,9 +34,12 @@ pub struct KeyvaultStorage {}
 //TODO: check if import of crate shark:share is possible. Wait for haerdib answer
 impl KeyvaultStorage {
     ///Store share on disk in sealed file
-    pub fn provision(owner: AccountId32, nft_id: NFTId, share: Share) -> SgxResult<()> {
-        if !is_authorized(owner, nft_id) {
-            return Err(sgx_status_t::SGX_ERROR_INVALID_SIGNATURE);
+    pub fn provision(owner: AccountId32, nft_id: NFTId, share: Share) -> Result<()> {
+        if !is_authorized(owner.clone(), nft_id) {
+            return Err(KeyvaultError(format!(
+                "Provision of {} is non authorized for this owner: {:?}.",
+                nft_id, owner
+            )));
         }
         seal(STORAGE_PATH, nft_id, share)?;
         Ok(())
@@ -42,10 +56,13 @@ impl KeyvaultStorage {
     }
 
     ///Get the share from store for this NFTId
-    pub fn get(owner: AccountId32, nft_id: NFTId) -> SgxResult<Share> {
+    pub fn get(owner: AccountId32, nft_id: NFTId) -> Result<Share> {
         //TODO Authorization owner
-        if !is_authorized(owner, nft_id) {
-            return Err(sgx_status_t::SGX_ERROR_INVALID_SIGNATURE);
+        if !is_authorized(owner.clone(), nft_id) {
+            return Err(KeyvaultError(format!(
+                "get of {} is non authorized for this owner: {:?}.",
+                nft_id, owner
+            )));
         }
         unseal(STORAGE_PATH, nft_id)
     }
@@ -65,32 +82,46 @@ fn nft_sealed_file_path(dir: &str, nft_id: NFTId) -> PathBuf {
 }
 
 /// checks if the dir exists, and if not, creates a new one
-fn ensure_dir_exists(dir: PathBuf) -> SgxResult<sgx_status_t> {
+fn ensure_dir_exists(dir: PathBuf) -> Result<()> {
     if !dir.is_dir() {
-        fs::create_dir_all(&dir).sgx_error_with_log(&format!(
-            "[Enclave] Keyvault, creating dir '{}' failed",
-            dir.to_string_lossy()
-        ))?
+        fs::create_dir_all(&dir)?;
     }
-    Ok(sgx_status_t::SGX_SUCCESS)
+    Ok(())
 }
 
 ///Seal the share for NFTId
-fn seal(dir: &str, nft_id: NFTId, share: Share) -> SgxResult<sgx_status_t> {
+fn seal(dir: &str, nft_id: NFTId, share: Share) -> Result<()> {
     let filepath = nft_sealed_file_path(dir, nft_id);
-    //Directory will not be created by the seal method, so create it if it doesn't exist
-    let p = PathBuf::from(dir);
-    ensure_dir_exists(p)?;
-    io::seal(Vec::from(&share).as_slice(), &filepath.to_string_lossy())
+    if filepath.is_file() {
+        warn!(
+            "You will override an already existing sealed for {}!",
+            nft_id
+        );
+    } else {
+        //Directory will not be created by the seal method, so create it if it doesn't exist
+        let p = PathBuf::from(dir);
+        ensure_dir_exists(p)?;
+    }
+
+    match io::seal(Vec::from(&share).as_slice(), &filepath.to_string_lossy()) {
+        Ok(_r) => Ok(()),
+        Err(e) => {
+            return Err(KeyvaultError(format!("Cannot seal {} : {:?}", nft_id, e)));
+        }
+    }
 }
 
 ///Unseal the share for NFTId
-fn unseal(dir: &str, nft_id: NFTId) -> SgxResult<Share> {
+fn unseal(dir: &str, nft_id: NFTId) -> Result<Share> {
     let filepath = nft_sealed_file_path(dir, nft_id);
-    let share_bytes = io::unseal(&filepath.to_string_lossy())?;
-    let share = Share::try_from(share_bytes.as_slice())
-        .sgx_error_with_log(&format!("Cannot unseal share'{}'!", nft_id))?;
-    Ok(share)
+    let share_bytes = match io::unseal(&filepath.to_string_lossy()) {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            return Err(KeyvaultError(format!("Cannot unseal {} : {:?}", nft_id, e)));
+        }
+    };
+    Share::try_from(share_bytes.as_slice())
+        .map_err(|e| KeyvaultError(format!("Cannot unseal share'{}' : error {}", nft_id, e)))
 }
 
 pub mod test {
