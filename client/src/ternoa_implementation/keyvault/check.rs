@@ -19,6 +19,7 @@ use substratee_stf::{TrustedOperation, TrustedGetter, KeyPair};
 use crate::get_pair_from_str;
 use sp_core::{sr25519 as sr25519_core, Pair};
 use super::keyvault_interaction::send_direct_request_to_keyvault;
+use codec::Decode;
 
 /// Prints all registered keyvaults and stores all url within a file (one url per line)
 pub fn check(nft_id: NFTId, owner_s58: &str, url: &str, mrenclave: [u8; 32]) -> Result<(), String> {
@@ -30,6 +31,8 @@ pub fn check(nft_id: NFTId, owner_s58: &str, url: &str, mrenclave: [u8; 32]) -> 
     )
     .sign(&KeyPair::Sr25519(owner))
     .into();
-    let response = send_direct_request_to_keyvault(url, keyvault_check_top, mrenclave);
+    let response_encoded = send_direct_request_to_keyvault(url, keyvault_check_top, mrenclave);
+    let response = bool::decode(&mut response_encoded.as_slice()).unwrap();
+    println!("Keyvault contains shamir shard of nft with id {:?}: {:?}", nft_id, response);
     Ok(())
 }

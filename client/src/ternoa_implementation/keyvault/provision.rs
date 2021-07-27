@@ -24,6 +24,7 @@ use std::path::PathBuf;
 use substratee_stf::{TrustedOperation, TrustedCall, KeyPair};
 use crate::get_pair_from_str;
 use sp_core::{sr25519 as sr25519_core, Pair};
+use codec::Decode;
 use super::keyvault_interaction::send_direct_request_to_keyvault;
 
 pub fn provision(
@@ -56,7 +57,7 @@ pub fn provision(
     // for all urls in list (= # of shares):
     //    a. send ith share to url_i
     //    b. verify availability
-    let nft_urls: Vec<String> = Vec::new();
+    let mut nft_urls: Vec<String> = Vec::new();
     for i in 0..(number_of_keyvaults-1) {
         // create trusted call
         let provision_call: TrustedOperation = TrustedCall::keyvault_provision(
@@ -67,8 +68,10 @@ pub fn provision(
         .sign(&KeyPair::Sr25519(signer.clone()), 0, &mrenclave, &mrenclave.into())
         .into_trusted_operation(true);
         // send to enclave
-        let response = send_direct_request_to_keyvault(&urls[i], provision_call, mrenclave);
-        //nft_urls.push()
+        let response_encoded = send_direct_request_to_keyvault(&urls[i], provision_call, mrenclave);
+        // only push to urls if successful
+        Result::<(), String>::decode(&mut response_encoded.as_slice()).unwrap()?;
+        nft_urls.push(urls[i].clone());
     }
 
     // Create file NFT urllist NFT File
