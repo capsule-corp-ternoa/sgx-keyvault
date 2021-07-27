@@ -305,9 +305,6 @@ fn verify_recover_key_from_shamir_share_file() {
     let path = "test_key_shamir_file";
     let filename = "shamir_shares.txt";
     let file_path = PathBuf::from(path).join(filename);
-    //smaller file generated with threshold 2 and shares number 5 -> 3 shares enough
-    let threshold = 2u8;
-
     let key: Vec<u8> = vec![
         215, 50, 27, 231, 182, 159, 175, 45, 147, 110, 99, 107, 133, 69, 225, 112, 5, 131, 148, 83,
         247, 123, 245, 81, 34, 239, 224, 91, 185, 117, 82, 204,

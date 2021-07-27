@@ -465,6 +465,7 @@ mod tests {
         fs::remove_dir_all(path).unwrap();
     }
 
+    #[test]
     fn writeline_and_readline_works_for_string() {
         // given
         let path = "test_string_writeline";
