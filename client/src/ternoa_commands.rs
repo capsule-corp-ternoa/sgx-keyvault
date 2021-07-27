@@ -18,6 +18,7 @@ use log::*;
 use sp_application_crypto::sr25519;
 use substrate_api_client::Api;
 use base58::FromBase58;
+use substratee_stf::ShardIdentifier;
 
 use crate::ternoa_implementation::cipher;
 use crate::ternoa_implementation::keyvault;
@@ -390,7 +391,7 @@ fn get_ternoa_chain_api(matches: &ArgMatches<'_>) -> Api<sr25519::Pair> {
 }
 
 // simplified duplicate from stf/cli.rs get_identifiers
-pub fn get_mrenclave(matches: &ArgMatches<'_>) -> [u8; 32] {
+pub fn get_mrenclave(matches: &ArgMatches<'_>) -> ShardIdentifier {
     let mut mrenclave = [0u8; 32];
     if !matches.is_present("mrenclave") {
         panic!("--mrenclave must be provided");
@@ -402,5 +403,5 @@ pub fn get_mrenclave(matches: &ArgMatches<'_>) -> [u8; 32] {
             .from_base58()
             .expect("mrenclave has to be base58 encoded"),
     );
-    mrenclave
+    mrenclave.into()
 }

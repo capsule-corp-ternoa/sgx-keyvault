@@ -16,9 +16,10 @@
 */
 
 use my_node_primitives::{AccountId, NFTId};
+use substratee_stf::ShardIdentifier;
 
 /// Prints all registered keyvaults and stores all url within a file (one url per line)
-pub fn check(_nft_id: NFTId, _owner: AccountId, _url: &str, mrenclave: [u8; 32]) -> Result<(), String> {
+pub fn check(_nft_id: NFTId, _owner: AccountId, _url: &str, mrenclave: ShardIdentifier) -> Result<(), String> {
     // TODO: Task #6, create trusted call
     Ok(())
 }

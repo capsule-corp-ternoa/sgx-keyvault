@@ -21,13 +21,14 @@ use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecT
 use my_node_primitives::NFTId;
 use sharks::{Share, Sharks};
 use std::path::PathBuf;
+use substratee_stf::ShardIdentifier;
 
 pub fn provision(
     keyvault_selection_file: &str,
     recovery_threshold: u8,
     nft_id: NFTId,
     key_file: &str,
-    _mrenclave: [u8; 32],
+    _mrenclave: ShardIdentifier,
 ) -> Result<(), String> {
     // retrieve encryption key that is to be shamir shared to the keyvaults
     let encryption_key = get_key_from_file(key_file)?;
