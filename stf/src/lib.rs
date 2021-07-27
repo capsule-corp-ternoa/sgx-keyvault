@@ -171,10 +171,6 @@ pub enum TrustedCall {
     balance_shield(AccountId, AccountId, Balance), // (Root, AccountIncognito, Amount)
     /// (Owner, NFTid, shamir keyshare)
     keyvault_provision(AccountId, NFTId, ShamirKeyShare),
-    /// (Owner, NFTid)
-    keyvault_check(AccountId, NFTId),
-    /// (Owner, NFTid)
-    keyvault_get(AccountId, NFTId),
 }
 
 impl TrustedCall {
@@ -185,8 +181,6 @@ impl TrustedCall {
             TrustedCall::balance_unshield(account, _, _, _) => account,
             TrustedCall::balance_shield(account, _, _) => account,
             TrustedCall::keyvault_provision(account, _, _) => account,
-            TrustedCall::keyvault_check(account, _) => account,
-            TrustedCall::keyvault_get(account, _) => account,
         }
     }
 
@@ -216,6 +210,10 @@ pub enum TrustedGetter {
     free_balance(AccountId),
     reserved_balance(AccountId),
     nonce(AccountId),
+    /// (Owner, NFTid)
+    keyvault_check(AccountId, NFTId),
+    /// (Owner, NFTid)
+    keyvault_get(AccountId, NFTId),
 }
 
 impl TrustedGetter {
@@ -224,6 +222,8 @@ impl TrustedGetter {
             TrustedGetter::free_balance(account) => account,
             TrustedGetter::reserved_balance(account) => account,
             TrustedGetter::nonce(account) => account,
+            TrustedGetter::keyvault_check(account, _) => account,
+            TrustedGetter::keyvault_get(account, _) => account,
         }
     }
 
