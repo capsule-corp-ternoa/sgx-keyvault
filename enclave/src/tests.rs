@@ -131,6 +131,9 @@ pub extern "C" fn test_main_entrance() -> size_t {
         keyvault::test::test_check_is_false_when_no_sealed_file,
         keyvault::test::test_get_none_when_nft_not_in_store,
         keyvault::test::test_get_the_valid_stored_share,
+        keyvault::test::test_provision_fails_when_no_nft_owner,
+        keyvault::test::test_check_is_false_when_no_nft_owner,
+        keyvault::test::test_get_none_when_no_nft_owner,
     )
 }
 
