@@ -18,6 +18,23 @@
 # TEST_BALANCE_RUN is either "first" or "second"
 # if -m file is set, the mrenclave will be read from file
 
+while getopts ":m:p:P:t:" opt; do
+    case $opt in
+        t)
+            TEST=$OPTARG
+            ;;
+        m)
+            READMRENCLAVE=$OPTARG
+            ;;
+        p)
+            NPORT=$OPTARG
+            ;;
+        P)
+            RPORT=$OPTARG
+            ;;
+    esac
+done
+
 # using default port if none given as arguments
 NPORT=${NPORT:-9944}
 RPORT=${RPORT:-2000}
@@ -28,68 +45,75 @@ echo "Using worker-rpc-port ${RPORT}"
 AMOUNTSHIELD=50000000000
 AMOUNTTRANSFER=40000000000
 
+CLIENT="../bin/ternoa-client -p ${NPORT} -P ${RPORT}"
 
-CLIENT="./ternoa-client -p ${NPORT} -P ${RPORT}"
+#echo "* Query on-chain enclave registry:"
+#${CLIENT} list-workers
+#echo ""
+#
+#if [ "$READMRENCLAVE" = "file" ]
+#then
+#    read MRENCLAVE <<< $(cat ~/mrenclave.b58)
+#    echo "Reading MRENCLAVE from file: ${MRENCLAVE}"
+#else
+#    # this will always take the first MRENCLAVE found in the registry !!
+#    read MRENCLAVE <<< $($CLIENT list-workers | awk '/  MRENCLAVE: / { print $2; exit }')
+#    echo "Reading MRENCLAVE from worker list: ${MRENCLAVE}"
+#fi
+#[[ -z $MRENCLAVE ]] && { echo "MRENCLAVE is empty. cannot continue" ; exit 1; }
+#
+#echo ""
 
-if [ "$READMRENCLAVE" = "file" ]
-then
-    read MRENCLAVE <<< $(cat ~/mrenclave.b58)
-    echo "Reading MRENCLAVE from file: ${MRENCLAVE}"
-else
-    # this will always take the first MRENCLAVE found in the registry !!
-    read MRENCLAVE <<< $($CLIENT list-workers | awk '/  MRENCLAVE: / { print $2; exit }')
-    echo "Reading MRENCLAVE from worker list: ${MRENCLAVE}"
-fi
-[[ -z $MRENCLAVE ]] && { echo "MRENCLAVE is empty. cannot continue" ; exit 1; }
-
-echo ""
 echo "* Create a new file to encrypt"
-INPUTFILENAME= input_file
-INPUTFILE = ${INPUTFILENAME}.txt
-touch  ${INPUTFILE}
-echo "These are very important data" > INPUTFILE
+INPUTFILENAME=input_file
+INPUTFILE=${INPUTFILENAME}.txt
+touch  $INPUTFILE
+echo "These are very important data" > $INPUTFILE
+text= cat ${INPUTFILE}
+echo "$text"
 echo ""
 
-echo ""
-echo "* Create a new incognito account for Alice"
-ICGACCOUNTALICE=//AliceIncognito
-echo "  Alice's incognito account = ${ICGACCOUNTALICE}"
-echo ""
+#echo ""
+#echo "* Create a new incognito account for Alice"
+#ICGACCOUNTALICE=//AliceIncognito
+#echo "  Alice's incognito account = ${ICGACCOUNTALICE}"
+#echo ""
+#
+#echo "* Create a new incognito account for Bob"
+#ICGACCOUNTBOB=$(${CLIENT} trusted new-account --mrenclave ${MRENCLAVE})
+#echo "  Bob's incognito account = ${ICGACCOUNTBOB}"
+#echo ""
+#
+#echo "* Shield ${AMOUNTSHIELD} tokens to Alice's incognito account"
+#${CLIENT} shield-funds //Alice ${ICGACCOUNTALICE} ${AMOUNTSHIELD} ${MRENCLAVE} ${WORKERPORT}
+#echo ""
+#
+#echo "* Shield ${AMOUNTSHIELD} tokens to Bob's incognito account"
+#${CLIENT} shield-funds //Bob ${ICGACCOUNTBOB} ${AMOUNTSHIELD} ${MRENCLAVE} ${WORKERPORT}
+#echo ""
+#
+#echo "* Waiting 10 seconds"
+#sleep 10
+#echo ""
+#
+#echo "Get balance of Alice's incognito account"
+#${CLIENT} trusted balance ${ICGACCOUNTALICE} --mrenclave ${MRENCLAVE}
+#echo ""
+#
+#echo "Get balance of Bob's incognito account"
+#${CLIENT} trusted balance ${ICGACCOUNTBOB} --mrenclave ${MRENCLAVE}
+#echo ""
 
-echo "* Create a new incognito account for Bob"
-ICGACCOUNTBOB=$(${CLIENT} trusted new-account --mrenclave ${MRENCLAVE})
-echo "  Bob's incognito account = ${ICGACCOUNTBOB}"
-echo ""
-
-echo "* Shield ${AMOUNTSHIELD} tokens to Alice's incognito account"
-${CLIENT} shield-funds //Alice ${ICGACCOUNTALICE} ${AMOUNTSHIELD} ${MRENCLAVE} ${WORKERPORT}
-echo ""
-
-echo "* Shield ${AMOUNTSHIELD} tokens to Bob's incognito account"
-${CLIENT} shield-funds //Bob ${ICGACCOUNTBOB} ${AMOUNTSHIELD} ${MRENCLAVE} ${WORKERPORT}
-echo ""
-
-echo "* Waiting 10 seconds"
-sleep 10
-echo ""
-
-echo "Get balance of Alice's incognito account"
-${CLIENT} trusted balance ${ICGACCOUNTALICE} --mrenclave ${MRENCLAVE}
-echo ""
-
-echo "Get balance of Bob's incognito account"
-${CLIENT} trusted balance ${ICGACCOUNTBOB} --mrenclave ${MRENCLAVE}
-echo ""
+CIPHERFILE=${INPUTFILENAME}.ciphertext
+KEYFILE=${INPUTFILENAME}.aes256
 
 echo "Alice creates a capsule"
 echo "Encrypt file with aes256"
 ${CLIENT} encrypt ${INPUTFILE}
 
-CIPHERFILE= ${INPUTFILENAME}.ciphertext
-KEYFILE=${INPUTFILENAME}.aes256
 
 echo "Create a new NFT "
-NFTID= $(${CLIENT} nft create ${ICGACCOUNTALICE} ${CIPHERFILE}
+NFTID=$(${CLIENT} nft create //Alice ${CIPHERFILE})
 echo "Alice NFT id = ${NFTID}"
 
 echo "All urls registered in the enclave registry"
@@ -98,21 +122,22 @@ URLSFILE="./bin/my_keyvaults/keyvault_pool.txt"
 
 # Load file into array URLS
 URLS=()
-readarray URLS < $URLSFILE
+readarray URLS < ${URLSFILE}
 
 echo "Urls found "
 let i= 0
-while (( ${#URLS[@]} > i )); do
+while [${#URLS[@]} -gt i ]; do
     echo "${URLS[i++]}\n"
 done
 echo " "
-URLSNUM = ${#URLS[@]}
-SHAMITHRESHOLD = $URLSNUM
-if [ URLSNUM = 0 ]
+URLSNUM=${#URLS[@]}
+SHAMITHRESHOLD=$URLSNUM
+
+if [ $URLSNUM -eq 0 ]
 then
     echo "No urls are registered. Cannot continue"; exit 1;
 else
-  $SHAMITHRESHOLD = $(((2*URLSNUM +1)/3))
+  $SHAMITHRESHOLD=$(((2*$URLSNUM +1)/3))
 fi
 echo "Threshold to recover secret : ${SHAMITHRESHOLD}"
 echo " "
@@ -120,8 +145,9 @@ echo " "
 echo "Keyvault provision"
 ${CLIENT} trusted keyvault provision ${ICGACCOUNTALICE} ${URLS} ${SHAMITHRESHOLD} ${NFTID} --mrenclave ${MRENCLAVE}
 URLSNFTFILE="./bin/my_keyvaults/keyvault_nft_urls_${NFTID}.txt"
-echo "NFT Urls "
-echo "$(<URLSNFTFILE)"
+echo "NFT Urls"
+value=`cat ${URLSNFTFILE}`
+echo "$value"
 echo " "
 
 echo "Get balance of Alice's incognito account"
@@ -136,12 +162,12 @@ echo "Bob open capsule"
 
 # Load file into array URLS
 URLSNFT=()
-readarray URLSNFT < URLSNFTFILE
+readarray URLSNFT < ${URLSNFTFILE}
 
 KEYSHAREFILE=""
 let i= 0
 while (( ${#URLSNFT[@]} > i )); do
-    CURRENTURL = ${URLSNFT[i++]}
+    CURRENTURL=${URLSNFT[i++]}
     echo "${CURRENTURL}\n"
     ${CLIENT} trusted keyvault check ${ICGACCOUNTBOB} ${NFTID} ${CURRENTURL}  --mrenclave ${MRENCLAVE}
     ${CLIENT} trusted keyvault get ${NFTID} ${ICGACCOUNTBOB}  ${CURRENTURL}  --mrenclave ${MRENCLAVE}
