@@ -198,7 +198,7 @@ pub mod tests {
 
         let malicious_signer = ed25519_core::Pair::from_seed(b"19857777701234567890123456789012");
 
-        let trusted_call = TrustedCall::keyvault_provision(account_id, 25 as NFTId, vec![]);
+        let trusted_call = TrustedCall::keyvault_provision(account_id, 25, vec![]);
 
         let trusted_call_signed = sign_trusted_call(trusted_call, malicious_signer);
 

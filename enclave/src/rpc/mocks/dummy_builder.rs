@@ -16,8 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use codec::Encode;
-use my_node_primitives::{AccountId, NFTId};
 use sp_core::{ed25519 as ed25519_core, Pair, H256};
 use substratee_node_primitives::Request;
 use substratee_stf::{KeyPair, TrustedCall, TrustedCallSigned};

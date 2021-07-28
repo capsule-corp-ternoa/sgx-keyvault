@@ -17,12 +17,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub extern crate alloc;
-use super::rpc_info::RpcCallStatus;
-use alloc::{string::String, string::ToString};
-use log::*;
+use alloc::string::String;
 use my_node_primitives::{AccountId, NFTId};
-use sgx_types::{sgx_status_t, SgxResult};
-use substratee_stf::{ShamirShare, TrustedCall, TrustedOperation};
+use substratee_stf::ShamirShare;
 
 /// Gateway trait from RPC API -> Ternoa gateway implementation
 pub trait RpcGateway: Send + Sync {
@@ -44,7 +41,7 @@ pub trait RpcGateway: Send + Sync {
 pub struct TernoaRpcGateway {}
 
 impl RpcGateway for TernoaRpcGateway {
-    fn keyvault_get(&self, owner: AccountId, nft_id: NFTId) -> Option<ShamirShare> {
+    fn keyvault_get(&self, _owner: AccountId, _nft_id: NFTId) -> Option<ShamirShare> {
         /* match lock_storage_and_get_balances(main_account, asset_id) {
             Ok(balance) => Ok(balance),
             Err(_) => Err(sgx_status_t::SGX_ERROR_UNEXPECTED),
@@ -52,7 +49,7 @@ impl RpcGateway for TernoaRpcGateway {
         None
     }
 
-    fn keyvault_check(&self, owner: AccountId, nft_id: NFTId) -> bool {
+    fn keyvault_check(&self, _owner: AccountId, _nft_id: NFTId) -> bool {
         /* let gateway = OpenfinexPolkaDexGateway::new(OpenFinexApiImpl::new(
             OpenFinexClientInterface::new(0), // FIXME: for now hardcoded 0, but we should change that to..?
         ));
@@ -62,9 +59,9 @@ impl RpcGateway for TernoaRpcGateway {
 
     fn keyvault_provision(
         &self,
-        owner: AccountId,
-        nft_id: NFTId,
-        share: ShamirShare,
+        _owner: AccountId,
+        _nft_id: NFTId,
+        _share: ShamirShare,
     ) -> Result<(), String> {
         /* match lock_storage_and_get_balances(main_account, asset_id) {
             Ok(balance) => Ok(balance),

@@ -21,26 +21,25 @@ use alloc::string::String;
 
 use crate::rpc::ternoa_rpc_gateway::RpcGateway;
 use my_node_primitives::{AccountId, NFTId};
-use sgx_types::{sgx_status_t, SgxResult};
-use substratee_stf::{ShamirShare, TrustedCall, TrustedOperation};
+use substratee_stf::ShamirShare;
 
 /// Mock implementation to be used in unit testing
 pub struct RpcGatewayMock {}
 
 impl RpcGateway for RpcGatewayMock {
-    fn keyvault_get(&self, owner: AccountId, nft_id: NFTId) -> Option<ShamirShare> {
+    fn keyvault_get(&self, _owner: AccountId, _nft_id: NFTId) -> Option<ShamirShare> {
         Some(vec![])
     }
 
-    fn keyvault_check(&self, owner: AccountId, nft_id: NFTId) -> bool {
+    fn keyvault_check(&self, _owner: AccountId, _nft_id: NFTId) -> bool {
         true
     }
 
     fn keyvault_provision(
         &self,
-        owner: AccountId,
-        nft_id: NFTId,
-        share: ShamirShare,
+        _owner: AccountId,
+        _nft_id: NFTId,
+        _share: ShamirShare,
     ) -> Result<(), String> {
         Ok(())
     }

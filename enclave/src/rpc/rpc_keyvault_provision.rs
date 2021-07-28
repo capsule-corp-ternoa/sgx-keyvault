@@ -26,7 +26,7 @@ use crate::rpc::trusted_operation_verifier::TrustedOperationExtractor;
 use jsonrpc_core::{BoxFuture, Params, Result as RpcResult, RpcMethodSync, Value};
 use log::*;
 use substratee_node_primitives::Request;
-use substratee_stf::{ShamirShare, TrustedCall, TrustedOperation};
+use substratee_stf::{TrustedCall, TrustedOperation};
 use substratee_worker_primitives::DirectRequestStatus;
 
 pub struct RpcProvision {
@@ -66,7 +66,7 @@ impl RpcProvision {
 
         match self.rpc_gateway.keyvault_provision(owner, nft_id, share) {
             Ok(()) => Ok(((), false, DirectRequestStatus::Ok)),
-            Err(e) => Err(e.to_string()),
+            Err(e) => Err(e),
         }
     }
 }
