@@ -557,6 +557,7 @@ fn get_ias_api_key() -> SgxResult<String> {
 
 pub fn create_ra_report_and_signature(
     sign_type: sgx_quote_sign_type_t,
+    skip_ra: bool
 ) -> SgxResult<(Vec<u8>, Vec<u8>)> {
     let chain_signer = ed25519::unseal_pair()?;
     info!(
@@ -572,22 +573,26 @@ pub fn create_ra_report_and_signature(
     debug!("     pubkey X is {:02x}", pub_k.gx.iter().format(""));
     debug!("     pubkey Y is {:02x}", pub_k.gy.iter().format(""));
 
-    info!("    [Enclave] Create attestation report");
-    let (attn_report, sig, cert) =
-        match create_attestation_report(&chain_signer.public().0, sign_type) {
-            Ok(r) => r,
-            Err(e) => {
-                error!("    [Enclave] Error in create_attestation_report: {:?}", e);
-                return Err(e);
-            }
-        };
-    println!("    [Enclave] Create attestation report successful");
-    debug!("              attn_report = {:?}", attn_report);
-    debug!("              sig         = {:?}", sig);
-    debug!("              cert        = {:?}", cert);
+    let payload = if !skip_ra {
+        info!("    [Enclave] Create attestation report");
+        let (attn_report, sig, cert) =
+            match create_attestation_report(&chain_signer.public().0, sign_type) {
+                Ok(r) => r,
+                Err(e) => {
+                    error!("    [Enclave] Error in create_attestation_report: {:?}", e);
+                    return Err(e);
+                }
+            };
+        println!("    [Enclave] Create attestation report successful");
+        debug!("              attn_report = {:?}", attn_report);
+        debug!("              sig         = {:?}", sig);
+        debug!("              cert        = {:?}", cert);
 
-    // concat the information
-    let payload = attn_report + "|" + &sig + "|" + &cert;
+        // concat the information
+       attn_report + "|" + &sig + "|" + &cert
+    } else {
+        Default::default()
+    };
 
     // generate an ECC certificate
     info!("    [Enclave] Generate ECC Certificate");
@@ -617,7 +622,7 @@ pub unsafe extern "C" fn perform_ra(
     // our certificate is unlinkable
     let sign_type = sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE;
 
-    let (_key_der, cert_der) = match create_ra_report_and_signature(sign_type) {
+    let (_key_der, cert_der) = match create_ra_report_and_signature(sign_type, false) {
         Ok(r) => r,
         Err(e) => return e,
     };
@@ -668,7 +673,7 @@ pub unsafe extern "C" fn dump_ra_to_disk() -> sgx_status_t {
     // our certificate is unlinkable
     let sign_type = sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE;
 
-    let (_key_der, cert_der) = match create_ra_report_and_signature(sign_type) {
+    let (_key_der, cert_der) = match create_ra_report_and_signature(sign_type, false) {
         Ok(r) => r,
         Err(e) => return e,
     };

@@ -19,11 +19,12 @@ use crate::utils::UnwrapOrSgxErrorUnexpected;
 
 struct ClientAuth {
     outdated_ok: bool,
+    skip_ra: bool,
 }
 
 impl ClientAuth {
-    fn new(outdated_ok: bool) -> ClientAuth {
-        ClientAuth { outdated_ok }
+    fn new(outdated_ok: bool, skip_ra: bool) -> ClientAuth {
+        ClientAuth { outdated_ok, skip_ra }
     }
 }
 
@@ -42,6 +43,11 @@ impl rustls::ClientCertVerifier for ClientAuth {
     ) -> Result<rustls::ClientCertVerified, rustls::TLSError> {
         debug!("client cert: {:?}", _certs);
         // This call will automatically verify cert is properly signed
+        if self.skip_ra {
+            warn!("Skip verifying ra-report");
+            return Ok(rustls::ClientCertVerified::assertion());
+        }
+
         match cert::verify_mra_cert(&_certs[0].0) {
             Ok(()) => Ok(rustls::ClientCertVerified::assertion()),
             Err(sgx_status_t::SGX_ERROR_UPDATE_NEEDED) => {
@@ -63,11 +69,12 @@ impl rustls::ClientCertVerifier for ClientAuth {
 
 struct ServerAuth {
     outdated_ok: bool,
+    skip_ra: bool
 }
 
 impl ServerAuth {
-    fn new(outdated_ok: bool) -> ServerAuth {
-        ServerAuth { outdated_ok }
+    fn new(outdated_ok: bool, skip_ra: bool) -> ServerAuth {
+        ServerAuth { outdated_ok, skip_ra }
     }
 }
 
@@ -80,6 +87,12 @@ impl rustls::ServerCertVerifier for ServerAuth {
         _ocsp: &[u8],
     ) -> Result<rustls::ServerCertVerified, rustls::TLSError> {
         debug!("server cert: {:?}", _certs);
+
+        if self.skip_ra {
+            warn!("Skip verifying ra-report");
+            return Ok(rustls::ServerCertVerified::assertion());
+        }
+
         // This call will automatically verify cert is properly signed
         match cert::verify_mra_cert(&_certs[0].0) {
             Ok(()) => Ok(rustls::ServerCertVerified::assertion()),
@@ -104,10 +117,11 @@ impl rustls::ServerCertVerifier for ServerAuth {
 pub unsafe extern "C" fn run_key_provisioning_server(
     socket_fd: c_int,
     sign_type: sgx_quote_sign_type_t,
+    skip_ra: c_int
 ) -> sgx_status_t {
     let _ = backtrace::enable_backtrace("enclave.signed.so", PrintFormat::Short);
 
-    let cfg = match tls_server_config(sign_type) {
+    let cfg = match tls_server_config(sign_type, skip_ra == 1) {
         Ok(cfg) => cfg,
         Err(e) => return e,
     };
@@ -142,10 +156,10 @@ fn tls_server_sesssion_stream(
     Ok((sess, conn))
 }
 
-fn tls_server_config(sign_type: sgx_quote_sign_type_t) -> SgxResult<ServerConfig> {
-    let (key_der, cert_der) = create_ra_report_and_signature(sign_type).sgx_error()?;
+fn tls_server_config(sign_type: sgx_quote_sign_type_t, skip_ra: bool) -> SgxResult<ServerConfig> {
+    let (key_der, cert_der) = create_ra_report_and_signature(sign_type, skip_ra).sgx_error()?;
 
-    let mut cfg = rustls::ServerConfig::new(Arc::new(ClientAuth::new(true)));
+    let mut cfg = rustls::ServerConfig::new(Arc::new(ClientAuth::new(true, skip_ra)));
     let certs = vec![rustls::Certificate(cert_der)];
     let privkey = rustls::PrivateKey(key_der);
     cfg.set_single_cert_with_ocsp_and_sct(certs, privkey, vec![], vec![])
@@ -181,10 +195,11 @@ fn send_files(
 pub extern "C" fn request_key_provisioning(
     socket_fd: c_int,
     sign_type: sgx_quote_sign_type_t,
+    skip_ra: c_int
 ) -> sgx_status_t {
     let _ = backtrace::enable_backtrace("enclave.signed.so", PrintFormat::Short);
 
-    let cfg = match tls_client_config(sign_type) {
+    let cfg = match tls_client_config(sign_type, skip_ra == 1) {
         Ok(cfg) => cfg,
         Err(e) => return e,
     };
@@ -259,8 +274,8 @@ fn tls_client_session_stream(
     Ok((sess, conn))
 }
 
-fn tls_client_config(sign_type: sgx_quote_sign_type_t) -> SgxResult<ClientConfig> {
-    let (key_der, cert_der) = create_ra_report_and_signature(sign_type).sgx_error()?;
+fn tls_client_config(sign_type: sgx_quote_sign_type_t, skip_ra: bool) -> SgxResult<ClientConfig> {
+    let (key_der, cert_der) = create_ra_report_and_signature(sign_type, skip_ra).sgx_error()?;
 
     let mut cfg = rustls::ClientConfig::new();
     let certs = vec![rustls::Certificate(cert_der)];
@@ -268,7 +283,7 @@ fn tls_client_config(sign_type: sgx_quote_sign_type_t) -> SgxResult<ClientConfig
 
     cfg.set_single_client_cert(certs, privkey).unwrap();
     cfg.dangerous()
-        .set_certificate_verifier(Arc::new(ServerAuth::new(true)));
+        .set_certificate_verifier(Arc::new(ServerAuth::new(true, skip_ra)));
     cfg.versions.clear();
     cfg.versions.push(rustls::ProtocolVersion::TLSv1_2);
     Ok(cfg)

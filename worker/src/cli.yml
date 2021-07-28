@@ -26,7 +26,7 @@ args:
         default_value: "9944"
     - ws-external:
         long: ws-external
-        help: let worker api listen to external requests too      
+        help: let worker api listen to external requests too
     - mu-ra-port:
         short: r
         long: mu-ra-port
@@ -39,7 +39,7 @@ args:
         help: Set the websocket port where the worker rpc direct invocations port listens
         takes_value: true
         default_value: "2000"
-    
+
 subcommands:
     - run:
         about: Start the substraTEE-worker
@@ -69,6 +69,10 @@ subcommands:
                 short: s
                 required: false
                 help: shard identifier base58 encoded. Defines the state that this worker shall operate on. Default is mrenclave
+            - skip-ra:
+                long: skip-ra
+                short: s
+                help: skip remote attestation. Set this flag if running enclave in SW mode
     - shielding-key:
         about: Get the public RSA3072 key from the TEE to be used to encrypt requests
     - signing-key:
