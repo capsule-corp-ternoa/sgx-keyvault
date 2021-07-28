@@ -12,6 +12,7 @@
 */
 use std::vec::Vec;
 use std::collections::HashMap;
+use sgx_types::sgx_status_t;
 use ternoa_primitives::{NFTId, BlockNumber, AccountId};
 use ternoa_primitives::nfts::{NFTDetails, NFTData as NFTDataPrimitives, NFTSeriesId};
 use codec::{Encode, Decode};
@@ -23,32 +24,15 @@ use crate::constants::NFT_REGISTRY_DB;
 pub type NFTData = NFTDataPrimitives<AccountId>;
 
 
-
-/* /// Data related to an NFT, such as who is its owner.
-/// FIXME: Copy pasted from chain - maybe solvable with import?
-#[derive(Encode, Decode, Clone, PartialEq, Eq, Default)]
-pub struct NFTData {
-    pub owner: AccountId,
-    pub details: NFTDetails,
-    /// Set to true to prevent further modifications to the details struct
-    //pub sealed: bool,
-    /// Set to true to prevent changes to the owner variable
-    //pub locked: bool,
+#[derive(Debug)]
+pub enum Error {
+    SgxIoUnsealError(sgx_status_t),
+    SgxIoSealError(sgx_status_t),
+    DecodeError,
 }
 
-/// Data related to NFTs on the Ternoa Chain.
-/// FIXME: Copy pasted from chain - maybe solvable with import?
-#[derive(Encode, Decode, Clone, PartialEq, Eq, Default, Debug)]
-pub struct NFTDetails {
-    /// ASCII encoded URI to fetch additional metadata.
-    pub offchain_uri: Vec<u8>,
-    /// The series id that this nft belongs to.
-    pub series_id: NFTSeriesId,
-    /// Capsule flag.
-    pub is_capsule: bool,
-}
- */
-
+pub type Result<T> = std::result::Result<T, Error>;
+#[derive(Debug, Decode, Encode)]
 pub struct NFTRegistry {
     block_number: BlockNumber,
     registry: HashMap<NFTId, NFTData>,
@@ -71,22 +55,15 @@ impl NFTRegistry {
     }
     /// load or create new if not in storage
     pub fn load_or_intialize() -> Self {
-        if SgxIo::unseal(NFT_REGISTRY_DB).is_err() {
-            info!(
-                "[Enclave] NFT Registry DB not found, creating new! {}",
-                NFT_REGISTRY_DB
-            );
-            //return init_validator(header, auth, proof);
-        }
-        /*if SgxFile::open(CHAIN_RELAY_DB).is_err() {
-            info!(
-                "[Enclave] ChainRelay DB not found, creating new! {}",
-                CHAIN_RELAY_DB
-            );
-            return init_validator(header, auth, proof);
-        }
-
-        let validator = unseal().sgx_error_with_log("Error reading validator")?;
+        let registry = NFTRegistry::unseal().unwrap_or_else( |_| {
+                info!(
+                    "[Enclave] NFT Registry DB not found, creating new! {}",
+                    NFT_REGISTRY_DB
+                );
+                NFTRegistry::default()
+            }
+        );
+        /*
 
         let genesis = validator.genesis_hash(validator.num_relays).unwrap();
         if genesis == header.hash() {
@@ -104,15 +81,20 @@ impl NFTRegistry {
         NFTRegistry::new(0, HashMap::new(), vec![])
     }
 
-    pub fn seal() {
+    /// save NFT Registry into SgxFs
+    pub fn seal() -> Result<()>{
         // save in SgxFs
+        Ok(())
+    }
+    /// load NFT Registry from SgxFs
+    pub fn unseal() -> Result<NFTRegistry> {
+        let encoded = SgxIo::unseal(NFT_REGISTRY_DB).map_err(|e| Error::SgxIoUnsealError(e))?;
+        NFTRegistry::decode(&mut encoded.as_slice()).map_err(|_| Error::DecodeError)
     }
 
-    pub fn unseal() {
-        // load from SgxFs
-    }
-
-    pub fn update(block_number: BlockNumber, id: NFTId, data: NFTData) {
+    /// udpate sealed NFT Registry in SgxFs
+    pub fn update(block_number: BlockNumber, id: NFTId, data: NFTData) ->  Result<()> {
         // update registry
+        Ok(())
     }
 }
