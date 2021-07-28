@@ -43,7 +43,7 @@ lazy_static       = { version = "1.1.0", features = ["spin_no_std"] }
 retain_mut        = { version = "0.1.2"}
 derive_more       = { version = "0.99.5" }
 byteorder         = { version = "1.4.2", default-features = false}
-
+sharks            = { version = "0.5", default-features = false }
 
 # for attestation
 chrono          = { git = "https://github.com/mesalock-linux/chrono-sgx" }
@@ -140,6 +140,11 @@ features = ["sgx"]
 [dependencies.sgx-externalities]
 git = "https://github.com/scs/sgx-runtime"
 branch = "version-update-e5437e"
+default-features = false
+
+[dependencies.my-node-primitives]
+git = "https://github.com/capsule-corp-ternoa/chain"
+package = "ternoa-primitives"
 default-features = false
 
 [dependencies.substratee-node-primitives]
