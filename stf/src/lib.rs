@@ -64,7 +64,7 @@ pub type ShardIdentifier = H256;
 //pub type Index = u32;
 
 pub use my_node_primitives::NFTId;
-pub type ShamirShard = Vec<u8>;
+pub type ShamirShare = Vec<u8>;
 
 #[derive(Clone)]
 pub enum KeyPair {
@@ -172,7 +172,7 @@ pub enum TrustedCall {
     balance_unshield(AccountId, AccountId, Balance, ShardIdentifier), // (AccountIncognito, BeneficiaryPublicAccount, Amount, Shard)
     balance_shield(AccountId, AccountId, Balance), // (Root, AccountIncognito, Amount)
     /// (Owner, NFTid, shamir keyshare)
-    keyvault_provision(AccountId, NFTId, ShamirShard),
+    keyvault_provision(AccountId, NFTId, ShamirShare),
 }
 
 impl TrustedCall {

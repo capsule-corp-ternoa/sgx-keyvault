@@ -29,7 +29,7 @@ pub struct RpcGatewayMock {}
 
 impl RpcGateway for RpcGatewayMock {
     fn keyvault_get(&self, owner: AccountId, nft_id: NFTId) -> Option<ShamirShare> {
-        None
+        Some(vec![])
     }
 
     fn keyvault_check(&self, owner: AccountId, nft_id: NFTId) -> bool {

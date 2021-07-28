@@ -52,39 +52,32 @@ impl RpcProvision {
             .top_extractor
             .decrypt_and_verify_trusted_operation(request)?;
 
-        let trusted_call = self
-            .rpc_gateway
-            .authorize_trusted_call(verified_trusted_operation)?;
+        let trusted_call = match verified_trusted_operation {
+            TrustedOperation::direct_call(tcs) => tcs.call,
+            _ => return Err(RpcCallStatus::operation_type_mismatch.to_string()),
+        };
 
         let owner = trusted_call.account().clone();
 
-        let nft_id = match trusted_call {
-            TrustedCall::keyvault_provision(_, nft_id, _) => Ok(nft_id),
-            _ => Err(RpcCallStatus::operation_type_mismatch.to_string()),
-        }?;
+        let (nft_id, share) = match trusted_call {
+            TrustedCall::keyvault_provision(_, nft_id, share) => (nft_id, share),
+            _ => return Err(RpcCallStatus::operation_type_mismatch.to_string()),
+        };
 
-        let share = match trusted_call {
-            TrustedCall::keyvault_provision(_, _, share) => Ok(share),
-            _ => Err(RpcCallStatus::operation_type_mismatch.to_string()),
-        }?;
-
-        match self
-            .rpc_gateway
-            .keyvault_provision(owner, nft_id, share)
-        {
+        match self.rpc_gateway.keyvault_provision(owner, nft_id, share) {
             Ok(()) => Ok(((), false, DirectRequestStatus::Ok)),
             Err(e) => Err(e.to_string()),
         }
     }
 }
 
-impl RpcCall for RpcCancelOrder {
+impl RpcCall for RpcProvision {
     fn name() -> String {
         "keyvault_provision".to_string()
     }
 }
 
-impl RpcMethodSync for RpcCancelOrder {
+impl RpcMethodSync for RpcProvision {
     fn call(&self, params: Params) -> BoxFuture<RpcResult<Value>> {
         JsonRpcCallEncoder::call(params, &|r: Request| self.method_impl(r))
     }
@@ -98,47 +91,21 @@ pub mod tests {
     };
     use crate::rpc::mocks::rpc_gateway_mock::RpcGatewayMock;
     use crate::rpc::mocks::trusted_operation_extractor_mock::TrustedOperationExtractorMock;
-    use codec::Encode;
     use sp_core::Pair;
     use substratee_stf::AccountId;
 
-    pub fn test_given_valid_order_id_return_success() {
-        let order_id = "lojoif93j2lngfa".encode();
-
+    pub fn test_given_valid_top_returns_ok() {
         let top_extractor = Box::new(TrustedOperationExtractorMock {
-            trusted_operation: Some(create_cancel_order_operation(order_id.clone())),
+            trusted_operation: Some(create_keyvault_provision_operation()),
         });
-
-        let rpc_gateway = Box::new(RpcGatewayMock::mock_cancel_order(Some(order_id), true));
+        let rpc_gateway = Box::new(RpcGatewayMock {});
 
         let request = create_dummy_request();
+        let rpc_keyvault_get = RpcProvision::new(top_extractor, rpc_gateway);
 
-        let rpc_cancel_order = RpcCancelOrder::new(top_extractor, rpc_gateway);
-
-        let result = rpc_cancel_order.method_impl(request).unwrap();
-
+        let result = rpc_keyvault_get.method_impl(request).unwrap();
         assert_eq!(result.2, DirectRequestStatus::Ok);
-    }
-
-    pub fn test_given_order_id_mismatch_then_fail() {
-        let order_id = "lojoif93j2lngfa".encode();
-
-        let top_extractor = Box::new(TrustedOperationExtractorMock {
-            trusted_operation: Some(create_cancel_order_operation(order_id)),
-        });
-
-        let rpc_gateway = Box::new(RpcGatewayMock::mock_cancel_order(
-            Some("other_id_that_doesnt_match".encode()),
-            true,
-        ));
-
-        let request = create_dummy_request();
-
-        let rpc_cancel_order = RpcCancelOrder::new(top_extractor, rpc_gateway);
-
-        let result = rpc_cancel_order.method_impl(request);
-
-        assert!(result.is_err());
+        assert!(!result.1); // do_watch is false
     }
 
     fn create_keyvault_provision_operation() -> TrustedOperation {

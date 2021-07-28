@@ -133,9 +133,9 @@ pub mod tests {
     use substratee_stf::{ShamirShare, TrustedCall};
 
     pub fn given_valid_operation_in_request_then_decrypt_succeeds() {
-        let nft_id = 10 as NFTId;
+        let nft_id: NFTId = 10;
         let share = vec![10, 20, 1, 0];
-        let input_trusted_operation = create_trusted_operation(nft_id, share);
+        let input_trusted_operation = create_trusted_operation(nft_id, share.clone());
         let request = Request {
             cyphertext: encrypt(input_trusted_operation),
             shard: H256::from([1u8; 32]),

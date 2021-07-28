@@ -20,7 +20,6 @@ use crate::get_pair_from_str;
 use crate::ternoa_implementation::cipher;
 use crate::ternoa_implementation::keyvault::constants::KEYVAULT_NFT_URLLIST_FILENAME_PREFIX;
 use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
-use codec::Decode;
 use my_node_primitives::{AccountId, NFTId};
 use sharks::{Share, Sharks};
 use sp_core::{sr25519 as sr25519_core, Pair};

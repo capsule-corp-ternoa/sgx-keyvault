@@ -56,74 +56,60 @@ impl RpcGet {
             .decrypt_and_verify_trusted_operation(request)?;
 
         let trusted_getter_signed = match verified_trusted_operation {
-            TrustedOperation::get(Getter::trusted(tgs)) => Ok(tgs),
-            _ => Err(RpcCallStatus::operation_type_mismatch.to_string()),
-        }?;
+            TrustedOperation::get(Getter::trusted(tgs)) => tgs,
+            _ => return Err(RpcCallStatus::operation_type_mismatch.to_string()),
+        };
 
         let owner = trusted_getter_signed.getter.account().clone();
 
         let nft_id = match trusted_getter_signed.getter {
-            TrustedGetter::keyvault_get(_, c) => Ok(c),
-            _ => Err(RpcCallStatus::operation_type_mismatch.to_string()),
-        }?;
+            TrustedGetter::keyvault_get(_, nft_id) => nft_id,
+            _ => return Err(RpcCallStatus::operation_type_mismatch.to_string()),
+        };
 
-        let share = match self.rpc_gateway.keyvault_get(main_account, nft_id) {
-            Ok(b) => Ok(b),
-            Err(e) => Err(String::from(e.as_str())),
-        }?;
+        let share = self.rpc_gateway.keyvault_get(owner, nft_id);
         debug!("Received share: {:?}", share);
 
         Ok((share, false, DirectRequestStatus::Ok))
     }
 }
 
-impl RpcCall for RpcGetBalance {
+impl RpcCall for RpcGet {
     fn name() -> String {
         "keyvault_get".to_string()
     }
 }
 
-impl RpcMethodSync for RpcGetBalance {
+impl RpcMethodSync for RpcGet {
     fn call(&self, params: Params) -> BoxFuture<RpcResult<Value>> {
         JsonRpcCallEncoder::call(params, &|r: Request| self.method_impl(r))
     }
 }
 
 pub mod tests {
-
-    pub extern crate alloc;
+    use super::*;
     use crate::rpc::mocks::dummy_builder::{create_dummy_account, create_dummy_request};
     use crate::rpc::mocks::{
         rpc_gateway_mock::RpcGatewayMock,
         trusted_operation_extractor_mock::TrustedOperationExtractorMock,
     };
-    use crate::rpc::rpc_keyvault_check::RpcCheck;
-    use alloc::boxed::Box;
     use sp_core::Pair;
     use substratee_stf::{Getter, KeyPair, TrustedGetter, TrustedOperation};
     use substratee_worker_primitives::DirectRequestStatus;
 
-    pub fn test_given_valid_top_return_balances() {
+    pub fn test_given_valid_top_returns_shares() {
         let top_extractor = Box::new(TrustedOperationExtractorMock {
-            trusted_operation: Some(create_get_balance_getter()),
+            trusted_operation: Some(create_keyvault_get_getter()),
         });
-
-        let free_balance = 500;
-        let reserved_balance = 1000;
-        let balances = Some(Balances {
-            free: free_balance,
-            reserved: reserved_balance,
-        });
-
-        let rpc_gateway = Box::new(RpcGatewayMock::mock_balances(balances, true));
+        let rpc_gateway = Box::new(RpcGatewayMock {});
 
         let request = create_dummy_request();
-        let rpc_get_balance = RpcGetBalance::new(top_extractor, rpc_gateway);
+        let rpc_keyvault_get = RpcGet::new(top_extractor, rpc_gateway);
 
-        let result = rpc_get_balance.method_impl(request).unwrap();
+        let result = rpc_keyvault_get.method_impl(request).unwrap();
         assert_eq!(result.2, DirectRequestStatus::Ok);
-        assert_eq!(result.0.free, free_balance);
-        assert_eq!(result.0.reserved, reserved_balance);
+        assert!(!result.1); // do_watch is false
+        assert!(result.0.is_some());
     }
 
     fn create_keyvault_get_getter() -> TrustedOperation {

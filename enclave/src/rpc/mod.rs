@@ -32,6 +32,6 @@ pub mod rpc_keyvault_check;
 pub mod rpc_keyvault_get;
 pub mod rpc_keyvault_provision;
 mod ternoa_rpc_gateway;
-pub mod rpc_helper_functions;
+pub mod trusted_operation_verifier;
 
 pub mod mocks;
