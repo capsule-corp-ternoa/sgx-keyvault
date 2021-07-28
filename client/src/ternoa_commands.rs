@@ -217,15 +217,6 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                         .value_name("STRING")
                         .help("targeted worker MRENCLAVE"),
                 )
-                .arg(
-                    Arg::with_name("signer")
-                        .short("a")
-                        .long("signer")
-                        .global(true)
-                        .takes_value(true)
-                        .value_name("AccountId")
-                        .help("signer of keyvault request"),
-                )
                 .name("ternoa-client")
                 .version(VERSION)
                 .author("Supercomputing Systems AG <info@scs.ch>")
@@ -235,16 +226,17 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
             Command::new("check")
                 .description("checks if keyshare for given nftid is stored in url keyvault")
                 .options(|app| {
-                    let app_with_nftid = add_nft_id_arg(app);
+                    let app_with_owner = add_account_id_arg(app, OWNER);
+                    let app_with_nftid = add_nft_id_arg(app_with_owner);
                     add_url_arg(app_with_nftid)
                 })
                 .runner(|_args: &str, matches: &ArgMatches<'_>| {
                     // check if the key share for NFTId is stored in the keyvault with <url>. exit code 1 if negative
-                    // INPUT:  NFTId (u32)
-                    //         owner = signer
+                    // INPUT:  owner
+                    //         NFTId (u32)
                     //         url
                     let nft_id = get_nft_id_from_matches(matches);
-                    let owner = matches.value_of("signer").unwrap();
+                    let owner = matches.value_of(OWNER).unwrap();
                     let url: &str = matches.value_of(URL_ARG_NAME).unwrap();
                     let mrenclave = get_mrenclave(matches);
                     keyvault::check::check(nft_id, owner, url, mrenclave).unwrap();
@@ -255,16 +247,17 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
             Command::new("get")
                 .description("returns single key share")
                 .options(|app| {
-                    let app_with_nftid = add_nft_id_arg(app);
+                    let app_with_owner = add_account_id_arg(app, OWNER);
+                    let app_with_nftid = add_nft_id_arg(app_with_owner);
                     add_url_arg(app_with_nftid)
                 })
                 .runner(|_args: &str, matches: &ArgMatches<'_>| {
                     // returns single key share
-                    // INPUT:  NFTId (u32)
-                    //         owner = signer
+                    // INPUT:  owner
+                    //         NFTId (u32)
                     //         enclave url
                     let nft_id = get_nft_id_from_matches(matches);
-                    let owner = matches.value_of("signer").unwrap();
+                    let owner = matches.value_of(OWNER).unwrap();
                     let url: &str = matches.value_of(URL_ARG_NAME).unwrap();
                     let mrenclave = get_mrenclave(matches);
                     // KEYVAULT GET CODE HERE
@@ -286,7 +279,8 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
             Command::new("provision")
                 .description("provisions all keyvaults and verifies")
                 .options(|app| {
-                    let app_with_nftid = add_nft_id_arg(app);
+                    let app_with_owner = add_account_id_arg(app, OWNER);
+                    let app_with_nftid = add_nft_id_arg(app_with_owner);
                     app_with_nftid
                         .arg(
                             Arg::with_name("urllist")
@@ -321,7 +315,7 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     let needed_keys = get_u8_from_str(matches.value_of("needed_keys").unwrap());
                     let keyfile: &str = matches.value_of("keyfile").unwrap();
                     let mrenclave = get_mrenclave(matches);
-                    let signer: &str = matches.value_of("signer").unwrap();
+                    let signer: &str = matches.value_of(OWNER).unwrap();
                     match keyvault::provision::provision(
                         signer,
                         urllist,
