@@ -42,12 +42,12 @@ pub struct TernoaRpcGateway {}
 
 impl RpcGateway for TernoaRpcGateway {
     fn keyvault_get(&self, _owner: AccountId, _nft_id: NFTId) -> Option<ShamirShare> {
-         // TODO: Add real function here (issue #8)
+        // TODO: Add real function here (issue #8)
         None
     }
 
     fn keyvault_check(&self, _owner: AccountId, _nft_id: NFTId) -> bool {
-         // TODO: Add real function here (issue #8)
+        // TODO: Add real function here (issue #8)
         true
     }
 
