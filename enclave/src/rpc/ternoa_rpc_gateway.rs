@@ -42,18 +42,12 @@ pub struct TernoaRpcGateway {}
 
 impl RpcGateway for TernoaRpcGateway {
     fn keyvault_get(&self, _owner: AccountId, _nft_id: NFTId) -> Option<ShamirShare> {
-        /* match lock_storage_and_get_balances(main_account, asset_id) {
-            Ok(balance) => Ok(balance),
-            Err(_) => Err(sgx_status_t::SGX_ERROR_UNEXPECTED),
-        } */
+         // TODO: Add real function here (issue #8)
         None
     }
 
     fn keyvault_check(&self, _owner: AccountId, _nft_id: NFTId) -> bool {
-        /* let gateway = OpenfinexPolkaDexGateway::new(OpenFinexApiImpl::new(
-            OpenFinexClientInterface::new(0), // FIXME: for now hardcoded 0, but we should change that to..?
-        ));
-        gateway.cancel_order(main_account, proxy_acc, order) */
+         // TODO: Add real function here (issue #8)
         true
     }
 
@@ -63,10 +57,7 @@ impl RpcGateway for TernoaRpcGateway {
         _nft_id: NFTId,
         _share: ShamirShare,
     ) -> Result<(), String> {
-        /* match lock_storage_and_get_balances(main_account, asset_id) {
-            Ok(balance) => Ok(balance),
-            Err(_) => Err(sgx_status_t::SGX_ERROR_UNEXPECTED),
-        } */
+        // TODO: Add real function here (issue #8)
         Ok(())
     }
 }
