@@ -96,7 +96,7 @@ pub mod tests {
 
     pub fn test_given_valid_top_returns_ok() {
         let top_extractor = Box::new(TrustedOperationExtractorMock {
-            trusted_operation: Some(create_keyvault_provision_operation()),
+            trusted_operation: Some(keyvault_provision_operation()),
         });
         let rpc_gateway = Box::new(RpcGatewayMock {});
 
@@ -108,11 +108,57 @@ pub mod tests {
         assert!(!result.1); // do_watch is false
     }
 
-    fn create_keyvault_provision_operation() -> TrustedOperation {
+    pub fn test_given_wrong_top_returns_error() {
+        let top_extractor = Box::new(TrustedOperationExtractorMock {
+            trusted_operation: Some(balance_shield_operation()),
+        });
+        let rpc_gateway = Box::new(RpcGatewayMock {});
+
+        let request = create_dummy_request();
+        let rpc_keyvault_get = RpcProvision::new(top_extractor, rpc_gateway);
+
+        let result = rpc_keyvault_get.method_impl(request);
+        assert!(result.is_err());
+    }
+
+    pub fn test_given_indirect_top_returns_error() {
+        let top_extractor = Box::new(TrustedOperationExtractorMock {
+            trusted_operation: Some(indirect_keyvault_provision_operation()),
+        });
+        let rpc_gateway = Box::new(RpcGatewayMock {});
+
+        let request = create_dummy_request();
+        let rpc_keyvault_get = RpcProvision::new(top_extractor, rpc_gateway);
+
+        let result = rpc_keyvault_get.method_impl(request);
+        assert!(result.is_err());
+    }
+
+    fn keyvault_provision_operation() -> TrustedOperation {
         let key_pair = create_dummy_account();
         let account_id: AccountId = key_pair.public().into();
 
         let trusted_call = TrustedCall::keyvault_provision(account_id, 22, vec![]);
+        let trusted_call_signed = sign_trusted_call(trusted_call, key_pair);
+
+        TrustedOperation::direct_call(trusted_call_signed)
+    }
+
+    fn indirect_keyvault_provision_operation() -> TrustedOperation {
+        let key_pair = create_dummy_account();
+        let account_id: AccountId = key_pair.public().into();
+
+        let trusted_call = TrustedCall::keyvault_provision(account_id, 22, vec![]);
+        let trusted_call_signed = sign_trusted_call(trusted_call, key_pair);
+
+        TrustedOperation::indirect_call(trusted_call_signed)
+    }
+
+    fn balance_shield_operation() -> TrustedOperation {
+        let key_pair = create_dummy_account();
+        let account_id: AccountId = key_pair.public().into();
+
+        let trusted_call = TrustedCall::balance_shield(account_id.clone(), account_id, 1000);
         let trusted_call_signed = sign_trusted_call(trusted_call, key_pair);
 
         TrustedOperation::direct_call(trusted_call_signed)

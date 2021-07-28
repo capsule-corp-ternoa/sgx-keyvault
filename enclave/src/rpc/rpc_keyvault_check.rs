@@ -85,35 +85,95 @@ impl RpcMethodSync for RpcCheck {
 
 pub mod tests {
     use super::*;
-    use crate::rpc::mocks::dummy_builder::{create_dummy_account, create_dummy_request};
+    use crate::rpc::mocks::dummy_builder::{
+        create_dummy_account, create_dummy_request, sign_trusted_call,
+    };
     use crate::rpc::mocks::{
         rpc_gateway_mock::RpcGatewayMock,
         trusted_operation_extractor_mock::TrustedOperationExtractorMock,
     };
     use alloc::boxed::Box;
     use sp_core::Pair;
-    use substratee_stf::{Getter, KeyPair, TrustedGetter, TrustedOperation};
+    use substratee_stf::AccountId;
+    use substratee_stf::{Getter, KeyPair, TrustedCall, TrustedGetter, TrustedOperation};
     use substratee_worker_primitives::DirectRequestStatus;
 
     pub fn test_given_valid_top_returns_true() {
+        // given
         let top_extractor = Box::new(TrustedOperationExtractorMock {
-            trusted_operation: Some(create_keyvault_check_getter()),
+            trusted_operation: Some(keyvault_check_getter_operation()),
         });
         let rpc_gateway = Box::new(RpcGatewayMock {});
 
         let request = create_dummy_request();
         let rpc_keyvault_get = RpcCheck::new(top_extractor, rpc_gateway);
 
+        // when
         let result = rpc_keyvault_get.method_impl(request).unwrap();
+
+        // then
         assert_eq!(result.2, DirectRequestStatus::Ok);
         assert!(!result.1); // do_watch is false
         assert!(result.0);
     }
 
-    fn create_keyvault_check_getter() -> TrustedOperation {
+    pub fn test_given_wrong_top_returns_error() {
+        // given
+        let top_extractor = Box::new(TrustedOperationExtractorMock {
+            trusted_operation: Some(keyvault_provision_operation()),
+        });
+        let rpc_gateway = Box::new(RpcGatewayMock {});
+
+        let request = create_dummy_request();
+        let rpc_keyvault_get = RpcCheck::new(top_extractor, rpc_gateway);
+
+        // when
+        let result = rpc_keyvault_get.method_impl(request);
+
+        // then
+        assert!(result.is_err());
+    }
+
+    pub fn test_given_wrong_getter_returns_error() {
+        // given
+        let top_extractor = Box::new(TrustedOperationExtractorMock {
+            trusted_operation: Some(keyvault_get_getter_operation()),
+        });
+        let rpc_gateway = Box::new(RpcGatewayMock {});
+
+        let request = create_dummy_request();
+        let rpc_keyvault_get = RpcCheck::new(top_extractor, rpc_gateway);
+
+        // when
+        let result = rpc_keyvault_get.method_impl(request);
+
+        // then
+        assert!(result.is_err());
+    }
+
+    fn keyvault_check_getter_operation() -> TrustedOperation {
         let key_pair = create_dummy_account();
 
         let trusted_getter = TrustedGetter::keyvault_check(key_pair.public().into(), 34);
+        let trusted_getter_signed = trusted_getter.sign(&KeyPair::Ed25519(key_pair));
+
+        TrustedOperation::get(Getter::trusted(trusted_getter_signed))
+    }
+
+    fn keyvault_provision_operation() -> TrustedOperation {
+        let key_pair = create_dummy_account();
+        let account_id: AccountId = key_pair.public().into();
+
+        let trusted_call = TrustedCall::keyvault_provision(account_id, 22, vec![]);
+        let trusted_call_signed = sign_trusted_call(trusted_call, key_pair);
+
+        TrustedOperation::direct_call(trusted_call_signed)
+    }
+
+    fn keyvault_get_getter_operation() -> TrustedOperation {
+        let key_pair = create_dummy_account();
+
+        let trusted_getter = TrustedGetter::keyvault_get(key_pair.public().into(), 10);
         let trusted_getter_signed = trusted_getter.sign(&KeyPair::Ed25519(key_pair));
 
         TrustedOperation::get(Getter::trusted(trusted_getter_signed))
