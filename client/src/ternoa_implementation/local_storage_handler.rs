@@ -5,10 +5,13 @@ use std::io::Result;
 use std::io::Write;
 use std::path::PathBuf;
 
+use std::fs::OpenOptions;
+use std::io::prelude::*;
+
 pub trait VecToLinesConverter<T> {
     fn write_lines(&self, lines: Vec<T>) -> Result<()>;
     fn read_lines(&self) -> Result<Vec<T>>;
-    fn write(&self, line: T) -> Result<()>;
+    fn write_line(&self, line: T) -> Result<()>;
     fn read(&self) -> Result<T>;
 }
 
@@ -45,10 +48,17 @@ impl LocalFileStorage {
 }
 
 impl VecToLinesConverter<String> for LocalFileStorage {
-    fn write(&self, line: String) -> Result<()> {
+    fn write_line(&self, line: String) -> Result<()> {
         self.ensure_dir_exists()?;
-        let mut file = fs::File::create(&self.filepath())?;
-        file.write_all(line.as_bytes())
+        let mut file = match OpenOptions::new()
+            .write(true)
+            .append(true)
+            .open(&self.filepath())
+        {
+            Err(_) => fs::File::create(&self.filepath())?,
+            Ok(file) => file,
+        };
+        writeln!(file, "{}", line)
     }
 
     fn write_lines(&self, lines: Vec<String>) -> Result<()> {
@@ -73,11 +83,20 @@ impl VecToLinesConverter<String> for LocalFileStorage {
 }
 
 impl VecToLinesConverter<Share> for LocalFileStorage {
-    fn write(&self, line: Share) -> Result<()> {
+    fn write_line(&self, line: Share) -> Result<()> {
         self.ensure_dir_exists()?;
-        let mut file = fs::File::create(&self.filepath())?;
+        // open file or create if it does not exist
+        let mut file = match OpenOptions::new()
+            .write(true)
+            .append(true)
+            .open(&self.filepath())
+        {
+            Err(_) => fs::File::create(&self.filepath())?,
+            Ok(file) => file,
+        };
+
         let text: String = hex::encode(Vec::from(&line));
-        file.write_all(text.as_bytes())
+        writeln!(file, "{}", text)
     }
 
     fn write_lines(&self, shares: Vec<Share>) -> Result<()> {
@@ -155,7 +174,7 @@ mod tests {
         // given
         let path = PathBuf::from("hello_create");
         let filename = PathBuf::from("hello_world.txt");
-        let handler = LocalFileStorage::new(path.clone(), filename.clone());
+        let handler = LocalFileStorage::new(path.clone(), filename);
         assert!(!path.is_dir());
 
         // when
@@ -174,7 +193,7 @@ mod tests {
         let path = PathBuf::from("hello_already_there");
         let filename = PathBuf::from("hello_world.txt");
         let handler = LocalFileStorage::new(path.clone(), filename.clone());
-        let handler_two = LocalFileStorage::new(path.clone(), filename.clone());
+        let handler_two = LocalFileStorage::new(path.clone(), filename);
         // when
         handler.ensure_dir_exists().unwrap();
         handler_two.ensure_dir_exists().unwrap();
@@ -444,7 +463,7 @@ mod tests {
     }
 
     #[test]
-    fn writeline_and_readline_works_for_shamir_shares() {
+    fn write_line_and_read_works_for_shamir_shares() {
         // given
         let path = "test_shamir_writeline";
         let filename = "one_line_file.txt";
@@ -454,19 +473,18 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.write(share.clone()).unwrap();
+        handler.write_line(share.clone()).unwrap();
 
         // then
-        let new_share: Share = handler.read().unwrap();
-        assert_eq!(new_share.x, share.x);
-        assert_eq!(new_share.y, share.y);
+        let new_share: Vec<Share> = handler.read_lines().unwrap();
+        assert_eq!(Vec::from(&new_share[0]), Vec::from(&share));
 
         //clean up
         fs::remove_dir_all(path).unwrap();
     }
 
     #[test]
-    fn writeline_and_readline_works_for_string() {
+    fn write_line_and_read_works_for_string() {
         // given
         let path = "test_string_writeline";
         let filename = "one_line_file.txt";
@@ -474,33 +492,57 @@ mod tests {
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.write(str.clone()).unwrap();
+        handler.write_line(str.clone()).unwrap();
 
         // then
-        let line: String = handler.read().unwrap();
-        assert_eq!(line, str);
+        let line: Vec<String> = handler.read_lines().unwrap();
+        assert_eq!(line[0], str);
 
         //clean up
         fs::remove_dir_all(path).unwrap();
     }
 
     #[test]
-    fn write_does_not_overwrite_existing() {
+    fn write_line_string_does_not_overwrite_existing() {
         // given
         let path = "write_does_not_overwrite";
         let filename = "not_overwritten.txt";
-        let str = "hello_there \n".to_owned();
-        let str_two = "hello_second \n".to_owned();
+        let str = "hello_there".to_owned();
+        let str_two = "hello_second".to_owned();
         let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
 
         // when
-        handler.write(str.clone()).unwrap();
-        handler.write(str_two.clone()).unwrap();
+        handler.write_line(str.clone()).unwrap();
+        handler.write_line(str_two.clone()).unwrap();
 
         // then
         let lines: Vec<String> = handler.read_lines().unwrap();
         assert_eq!(lines[0], str);
         assert_eq!(lines[1], str_two);
+
+        //clean up
+        fs::remove_dir_all(path).unwrap();
+    }
+
+    #[test]
+    fn write_line_shard_does_not_overwrite_existing() {
+        // given
+        let path = "write_shard_does_not_overwrite";
+        let filename = "not_overwritten.txt";
+        let share_hex_text = "016247cc9f4c161c7d8bb4ba34a66fab80b87353233a636dd1f08b13f70aa13b71168e9c265e5d41af2238065d6336a8e2";
+        let share = Share::try_from(&*hex::decode(share_hex_text).unwrap()).unwrap();
+        let share_hex_text_two = "016247cc9f4c161c7d8bb4ba34a66fab80b87353233a636dd1f08b13f70bb13b71168e9c265e5d41af2238065d6336a8e2";
+        let share_two = Share::try_from(&*hex::decode(share_hex_text_two).unwrap()).unwrap();
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
+
+        // when
+        handler.write_line(share.clone()).unwrap();
+        handler.write_line(share_two.clone()).unwrap();
+
+        // then
+        let lines: Vec<Share> = handler.read_lines().unwrap();
+        assert_eq!(Vec::from(&lines[0]), Vec::from(&share));
+        assert_eq!(Vec::from(&lines[1]), Vec::from(&share_two));
 
         //clean up
         fs::remove_dir_all(path).unwrap();
