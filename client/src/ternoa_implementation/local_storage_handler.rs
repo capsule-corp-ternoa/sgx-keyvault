@@ -483,4 +483,26 @@ mod tests {
         //clean up
         fs::remove_dir_all(path).unwrap();
     }
+
+    #[test]
+    fn write_does_not_overwrite_existing() {
+        // given
+        let path = "write_does_not_overwrite";
+        let filename = "not_overwritten.txt";
+        let str = "hello_there \n".to_owned();
+        let str_two = "hello_second \n".to_owned();
+        let handler = LocalFileStorage::new(PathBuf::from(path), PathBuf::from(filename));
+
+        // when
+        handler.write(str.clone()).unwrap();
+        handler.write(str_two.clone()).unwrap();
+
+        // then
+        let lines: Vec<String> = handler.read_lines().unwrap();
+        assert_eq!(lines[0], str);
+        assert_eq!(lines[1], str_two);
+
+        //clean up
+        fs::remove_dir_all(path).unwrap();
+    }
 }
