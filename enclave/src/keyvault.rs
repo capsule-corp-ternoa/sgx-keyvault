@@ -187,7 +187,7 @@ pub mod test {
 
         let new_share_bytes = Vec::from("hello_world");
         let new_share = Share::try_from(new_share_bytes.as_slice()).unwrap();
-        seal(dir, nft_id, new_share.clone()).unwrap();
+        seal(dir, nft_id, new_share).unwrap();
 
         let read_share = unseal(dir, nft_id).unwrap();
         let read_share_bytes = Vec::from(&read_share);
@@ -227,7 +227,7 @@ pub mod test {
         let share_bytes = Vec::from("new_test_share_5875");
         let share = Share::try_from(share_bytes.as_slice()).unwrap();
 
-        KeyvaultStorage::provision(author, nft_id, share.clone()).unwrap();
+        KeyvaultStorage::provision(author, nft_id, share).unwrap();
 
         let file_name = nft_sealed_file_path(STORAGE_PATH, nft_id);
         assert!(file_name.is_file());
@@ -248,7 +248,7 @@ pub mod test {
         let author = AccountId32::from(ALICE_ENCODED);
 
         let new_share = Share::try_from("hello_world".as_bytes()).unwrap();
-        seal(STORAGE_PATH, nft_id, new_share.clone()).unwrap();
+        seal(STORAGE_PATH, nft_id, new_share).unwrap();
 
         assert!(KeyvaultStorage::check(author, nft_id));
 
@@ -275,7 +275,7 @@ pub mod test {
         let owner = AccountId32::from(ALICE_ENCODED);
         let share_bytes = Vec::from("new_test_share_6020");
         let share = Share::try_from(share_bytes.as_slice()).unwrap();
-        KeyvaultStorage::provision(owner.clone(), nft_id, share.clone()).unwrap();
+        KeyvaultStorage::provision(owner.clone(), nft_id, share).unwrap();
 
         let read_share = KeyvaultStorage::get(owner, nft_id).unwrap();
         let read_share_bytes = Vec::from(&read_share);
