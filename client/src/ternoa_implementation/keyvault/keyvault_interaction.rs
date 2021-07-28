@@ -15,13 +15,13 @@
 
 */
 
-use log::*;
-use std::sync::mpsc::channel;
 use codec::{Decode, Encode};
+use log::*;
 use my_node_runtime::substratee_registry::Request;
-use substratee_worker_api::direct_client::DirectApi as DirectWorkerApi;
-use substratee_stf::{TrustedOperation, TrustedCall, TrustedGetter, Getter};
 use sgx_crypto_helper::rsa3072::Rsa3072PubKey;
+use std::sync::mpsc::channel;
+use substratee_stf::{Getter, TrustedCall, TrustedGetter, TrustedOperation};
+use substratee_worker_api::direct_client::DirectApi as DirectWorkerApi;
 use substratee_worker_primitives::{DirectRequestStatus, RpcRequest, RpcResponse, RpcReturnValue};
 
 /// sends a rpc watch request to the worker api server
@@ -29,16 +29,15 @@ pub fn send_direct_request_to_keyvault(
     url: &str,
     operation_call: TrustedOperation,
     mrenclave: [u8; 32],
-) -> Vec<u8> {
+) -> Result<Vec<u8>, String> {
     let keyvault = DirectWorkerApi::new(url.to_string());
     // encrypt trusted operation
-    let operation_call_encrypted =
-        match encrypt(keyvault.clone(), operation_call.clone()) {
-            Ok(encrypted) => encrypted,
-            Err(msg) => {
-                panic!("[Error] {}", msg);
-            }
-        };
+    let operation_call_encrypted = match encrypt(keyvault.clone(), operation_call.clone()) {
+        Ok(encrypted) => encrypted,
+        Err(msg) => {
+            panic!("[Error] {}", msg);
+        }
+    };
     // compose jsonrpc call
     let data = Request {
         shard: mrenclave.into(),
@@ -65,7 +64,7 @@ pub fn send_direct_request_to_keyvault(
     let (sender, receiver) = channel();
     match keyvault.watch(jsonrpc_call, sender) {
         Ok(_) => {}
-        Err(_) => panic!("Error when sending direct invocation call"),
+        Err(_) => return Err("Error sending direct invocation call".to_string()),
     }
 
     loop {
@@ -73,38 +72,40 @@ pub fn send_direct_request_to_keyvault(
             Ok(response) => {
                 let response: RpcResponse = serde_json::from_str(&response).unwrap();
                 if let Ok(return_value) = RpcReturnValue::decode(&mut response.result.as_slice()) {
-                    if return_value.status == DirectRequestStatus::Error {
-                        match String::decode(&mut return_value.value.as_slice()) {
-                            Ok(msg) => panic!("[Error] {}", msg),
-                            Err(_) => panic!("[Error] on enclave side")
-                        }
-                    }
                     if !return_value.do_watch {
-                        return return_value.value;
+                        match return_value.status {
+                            DirectRequestStatus::Error => {
+                                match String::decode(&mut return_value.value.as_slice()) {
+                                    Ok(msg) => return Err(format!("[Error] {}", msg)),
+                                    Err(_) => {
+                                        return Err(
+                                            "Could not decode response from enclave".to_string()
+                                        )
+                                    }
+                                }
+                            }
+                            DirectRequestStatus::Ok => return Ok(return_value.value),
+                            _ => return Err("Unexpected RequestStatus return value".to_string()),
+                        }
+                    } else {
+                        return Err("Unexpected watching status".to_string());
                     }
-                };
+                }
             }
-            Err(_) => panic!("Invalid return value"),
+            Err(_) => return Err("Invalid return value".to_string()),
         };
     }
 }
 
-fn encrypt<E: Encode>(
-    keyvault: DirectWorkerApi,
-    to_encrypt: E,
-) -> Result<Vec<u8>, String> {
+fn encrypt<E: Encode>(keyvault: DirectWorkerApi, to_encrypt: E) -> Result<Vec<u8>, String> {
     // request shielding key used for encryption
     let shielding_pubkey: Rsa3072PubKey = keyvault.get_rsa_pubkey()?;
     let mut encrypted: Vec<u8> = Vec::new();
-    if let Err(e) = shielding_pubkey
-        .encrypt_buffer(&to_encrypt.encode(), &mut encrypted)
-       {
-           return Err(format!("Could not retrieve shielding key: {:?}", e));
-        }
+    if let Err(e) = shielding_pubkey.encrypt_buffer(&to_encrypt.encode(), &mut encrypted) {
+        return Err(format!("Could not retrieve shielding key: {:?}", e));
+    }
     Ok(encrypted)
 }
-
-
 
 pub fn get_rpc_function_name_from_top(trusted_operation: &TrustedOperation) -> Option<String> {
     match trusted_operation {

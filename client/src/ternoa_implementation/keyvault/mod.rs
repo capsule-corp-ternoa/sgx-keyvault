@@ -18,6 +18,6 @@
 pub mod check;
 pub mod constants;
 pub mod get;
+pub mod keyvault_interaction;
 pub mod list;
 pub mod provision;
-pub mod keyvault_interaction;

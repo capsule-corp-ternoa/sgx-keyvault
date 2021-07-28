@@ -12,12 +12,12 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
+use base58::FromBase58;
 use clap::{App, AppSettings, Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 use log::*;
 use sp_application_crypto::sr25519;
 use substrate_api_client::Api;
-use base58::FromBase58;
 
 use crate::ternoa_implementation::cipher;
 use crate::ternoa_implementation::keyvault;
@@ -321,8 +321,15 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     let needed_keys = get_u8_from_str(matches.value_of("needed_keys").unwrap());
                     let keyfile: &str = matches.value_of("keyfile").unwrap();
                     let mrenclave = get_mrenclave(matches);
-                    let signer:  &str = matches.value_of("signer").unwrap();
-                    match keyvault::provision::provision(signer, urllist, needed_keys, nft_id, keyfile, mrenclave) {
+                    let signer: &str = matches.value_of("signer").unwrap();
+                    match keyvault::provision::provision(
+                        signer,
+                        urllist,
+                        needed_keys,
+                        nft_id,
+                        keyfile,
+                        mrenclave,
+                    ) {
                         Ok(_) => println!("success!"),
                         Err(msg) => println!("[Error]: {}", msg),
                     };
