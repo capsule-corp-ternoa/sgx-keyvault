@@ -67,7 +67,7 @@ impl KeyvaultStorage {
         unseal(STORAGE_PATH, nft_id)
     }
 }
-fn is_authorized(owner: AccountId32, nft_id: NFTId) -> bool {
+fn is_authorized(_owner: AccountId32, _nft_id: NFTId) -> bool {
     //TODO Authorization owner
     true
 }
