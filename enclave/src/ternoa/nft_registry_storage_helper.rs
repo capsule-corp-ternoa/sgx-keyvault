@@ -12,10 +12,10 @@
 */
 use codec::{Decode, Encode};
 use log::*;
+use my_node_primitives::{BlockNumber, NFTId};
 use std::collections::HashMap;
 use std::fs;
 use std::vec::Vec;
-use ternoa_primitives::{BlockNumber, NFTId};
 
 use super::nft_registry::{Error, NFTData, NFTRegistry, Result};
 

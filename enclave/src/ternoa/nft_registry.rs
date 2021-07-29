@@ -13,18 +13,26 @@
 use super::nft_registry_storage_helper::NFTRegistryStorageHelper;
 use codec::{Decode, Encode};
 use log::*;
+use my_node_primitives::nfts::{NFTData as NFTDataPrimitives, NFTDetails, NFTSeriesId};
+use my_node_primitives::{AccountId, BlockNumber, NFTId};
 use sgx_types::sgx_status_t;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::{Arc, SgxRwLock};
 use std::vec::Vec;
-use ternoa_primitives::nfts::{NFTData as NFTDataPrimitives, NFTDetails, NFTSeriesId};
-use ternoa_primitives::{AccountId, BlockNumber, NFTId};
 
 use crate::constants::NFT_REGISTRY_DB;
 
 pub type NFTData = NFTDataPrimitives<AccountId>;
-
+/* pub struct NFTData<AccountId> {
+    pub owner: AccountId,
+    pub details: NFTDetails,
+    /// Set to true to prevent further modifications to the details struct
+    pub sealed: bool,
+    /// Set to true to prevent changes to the owner variable
+    pub locked: bool,
+}
+ */
 // pointer to NFT Registry
 static NFT_REGISTRY_MEMORY: AtomicPtr<()> = AtomicPtr::new(0 as *mut ());
 
@@ -40,6 +48,7 @@ pub enum Error {
     DecodeError,
     InconsistentBlockNumber,
     LightValidationError,
+    NFTIdOverflow,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -103,10 +112,34 @@ impl NFTRegistry {
         }
     }
 
-    /// uddate in memory NFT Registry
-    pub fn update(&mut self, id: NFTId, data: NFTData) {
-        self.registry.insert(id, data);
-        self.nft_ids.push(id);
+    /// create new nft entry
+    pub fn create(&mut self, owner: AccountId, details: NFTDetails) -> Result<()> {
+        let nft_id = self
+            .nft_ids
+            .len()
+            .checked_add(1)
+            .ok_or(Error::NFTIdOverflow)? as NFTId;
+        let nft_data = NFTData {
+            owner,
+            details,
+            sealed: false,
+            locked: false,
+        };
+        self.registry.insert(nft_id, nft_data);
+        self.nft_ids.push(nft_id);
+        Ok(())
+    }
+
+    /// mutate nft details
+    pub fn mutate(&mut self, id: NFTId, new_details: NFTDetails) {
+        /* self.registry.insert(id, data);
+        self.nft_ids.push(id); */
+    }
+
+    /// tranfser ownership of nft
+    pub fn transfer(&mut self, id: NFTId, new_owner: AccountId) {
+        /* self.registry.insert(id, data);
+        self.nft_ids.push(id); */
     }
 
     /// uddate sealed and in memory NFT Registry in SgxFs

@@ -44,6 +44,14 @@ pub static CALL_CONFIRMED: u8 = 3u8;
 pub static BLOCK_CONFIRMED: u8 = 4u8;
 pub static SHIELD_FUNDS: u8 = 5u8;
 
+pub static NFT_REGISTRY_MODULE: u8 = 24u8;
+pub static CREATE: u8 = 0u8;
+pub static MUTATE: u8 = 1u8;
+pub static TRANSFER: u8 = 2u8;
+//pub static SEAL: u8 = 3u8;
+//pub static BURN: u8 = 4u8;
+//pub static TRANSFER_SERIES: u8 = 5u8;
+
 // bump this to be consistent with SubstraTEE-node runtime
 pub static RUNTIME_SPEC_VERSION: u32 = 19;
 pub static RUNTIME_TRANSACTION_VERSION: u32 = 1;

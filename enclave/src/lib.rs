@@ -35,7 +35,9 @@ use base58::ToBase58;
 use sgx_types::{sgx_epid_group_id_t, sgx_status_t, sgx_target_info_t, SgxResult};
 
 use substrate_api_client::compose_extrinsic_offline;
-use substratee_node_primitives::{CallWorkerFn, ShieldFundsFn};
+use substratee_node_primitives::{
+    CallWorkerFn, NFTCreateFn, NFTMutateFn, NFTTransferFn, ShieldFundsFn,
+};
 use substratee_worker_primitives::block::{
     Block as SidechainBlock, SignedBlock as SignedSidechainBlock, StatePayload,
 };
@@ -46,11 +48,13 @@ use sp_core::{blake2_256, crypto::Pair, H256};
 use sp_finality_grandpa::VersionedAuthorityList;
 
 use constants::{
-    BLOCK_CONFIRMED, CALLTIMEOUT, CALL_CONFIRMED, GETTERTIMEOUT, REGISTER_ENCLAVE,
-    RUNTIME_SPEC_VERSION, RUNTIME_TRANSACTION_VERSION, SUBSRATEE_REGISTRY_MODULE,
+    BLOCK_CONFIRMED, CALLTIMEOUT, CALL_CONFIRMED, CREATE, GETTERTIMEOUT, GETTERTIMEOUT, MUTATE,
+    NFT_REGISTRY_MODULE, REGISTER_ENCLAVE, RUNTIME_SPEC_VERSION, RUNTIME_TRANSACTION_VERSION,
+    SUBSRATEE_REGISTRY_MODULE, TRANSFER,
 };
 
 use std::slice;
+use std::string::{String, ToString};
 use std::vec::Vec;
 
 use core::ops::Deref;
@@ -67,9 +71,10 @@ use chain_relay::{
     storage_proof::{StorageProof, StorageProofChecker},
     Block, Header, LightValidation,
 };
-use sp_runtime::OpaqueExtrinsic;
+
 use sp_runtime::{generic::SignedBlock, traits::Header as HeaderT};
-use substrate_api_client::extrinsic::xt_primitives::UncheckedExtrinsicV4;
+use sp_runtime::{MultiAddress, MultiSignature, OpaqueExtrinsic};
+use substrate_api_client::extrinsic::xt_primitives::{GenericAddress, UncheckedExtrinsicV4};
 
 use sgx_externalities::SgxExternalitiesTypeTrait;
 use substratee_stf::sgx::{shards_key_hash, storage_hashes_to_update_per_shard, OpaqueCall};
@@ -82,7 +87,7 @@ use rpc::author::{hash::TrustedOperationOrHash, Author, AuthorApi};
 use rpc::worker_api_direct;
 use rpc::{api::SideChainApi, basic_pool::BasicPool};
 
-use ternoa_primitives::BlockNumber;
+use ternoa::nft_registry::NFTRegistry;
 
 mod aes;
 mod attestation;
@@ -393,10 +398,10 @@ pub unsafe extern "C" fn init_chain_relay(
     }
 
     // initialize nft registry memory pointer:
-    ternoa::nft_registry::NFTRegistry::initialize();
+    NFTRegistry::initialize();
 
     // ensure memory consistency of validator & nft registry:
-    let registry = match ternoa::nft_registry::NFTRegistry::load() {
+    let registry = match NFTRegistry::load() {
         Ok(rw_lock) => match rw_lock.read() {
             Ok(registry) => registry,
             Err(e) => {
@@ -855,6 +860,16 @@ pub fn scan_block_for_relevant_xt(block: &Block) -> SgxResult<Vec<OpaqueCall>> {
     let mut opaque_calls = Vec::<OpaqueCall>::new();
     for xt_opaque in block.extrinsics.iter() {
         if let Ok(xt) =
+            UncheckedExtrinsicV4::<NFTCreateFn>::decode(&mut xt_opaque.encode().as_slice())
+        {
+            // confirm call decodes successfully as well
+            if xt.function.0 == [NFT_REGISTRY_MODULE, CREATE] {
+                if let Err(e) = handle_nft_create(&mut opaque_calls, xt) {
+                    error!("Error performing nft create. Error: {:?}", e);
+                }
+            }
+        };
+        if let Ok(xt) =
             UncheckedExtrinsicV4::<ShieldFundsFn>::decode(&mut xt_opaque.encode().as_slice())
         {
             // confirm call decodes successfully as well
@@ -864,7 +879,6 @@ pub fn scan_block_for_relevant_xt(block: &Block) -> SgxResult<Vec<OpaqueCall>> {
                 }
             }
         };
-
         if let Ok(xt) =
             UncheckedExtrinsicV4::<CallWorkerFn>::decode(&mut xt_opaque.encode().as_slice())
         {
@@ -896,6 +910,36 @@ pub fn scan_block_for_relevant_xt(block: &Block) -> SgxResult<Vec<OpaqueCall>> {
     }
 
     Ok(opaque_calls)
+}
+
+fn handle_nft_create(
+    calls: &mut Vec<OpaqueCall>,
+    xt: UncheckedExtrinsicV4<NFTCreateFn>,
+) -> Result<(), String> {
+    let (_, nft_details) = xt.function;
+    let owner: AccountId = match xt.signature {
+        Some((multiaddr, _, _)) => match multiaddr {
+            MultiAddress::Id(acc) => acc,
+            MultiAddress::Address32(acc) => acc.into(),
+            _ => return Err("Unsupported acc id format".to_string()),
+        },
+        None => return Err("No signature found in extrinsic".to_string()),
+    };
+    let mut registry = match NFTRegistry::load() {
+        Ok(rw_lock) => match rw_lock.write() {
+            Ok(registry) => registry,
+            Err(e) => {
+                return Err(format!("Could not get write lock on nft registry: {:?}", e));
+            }
+        },
+        Err(e) => {
+            return Err(format!("could not load ternoa registry: {:?}", e));
+        }
+    };
+    registry
+        .create(owner, nft_details)
+        .map_err(|e| format!("Could not add new nft_id: {:?}", e));
+    Ok(())
 }
 
 fn handle_shield_funds_xt(

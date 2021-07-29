@@ -2542,6 +2542,7 @@ dependencies = [
  "primitive-types",
  "sgx_tstd",
  "sp-core",
+ "ternoa-primitives",
 ]
 
 [[package]]
@@ -2563,7 +2564,7 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "substratee-worker-primitives",
- "ternoa-primitives 0.2.0 (git+https://github.com/capsule-corp-ternoa/chain)",
+ "ternoa-primitives",
 ]
 
 [[package]]
@@ -2622,8 +2623,7 @@ dependencies = [
  "substratee-node-primitives",
  "substratee-stf",
  "substratee-worker-primitives",
- "ternoa-primitives 0.2.0 (git+https://github.com/capsule-corp-ternoa/chain?branch=main)",
- "ternoa-primitives 0.2.0 (git+https://github.com/capsule-corp-ternoa/chain)",
+ "ternoa-primitives",
  "webpki",
  "webpki-roots",
  "yasna",
@@ -2702,19 +2702,6 @@ version = "1.0.5"
 source = "git+https://github.com/mesalock-linux/termcolor-sgx#fee5ac79b4a90197d646f3df5e1b45ac56be718b"
 dependencies = [
  "sgx_tstd",
-]
-
-[[package]]
-name = "ternoa-primitives"
-version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?branch=main#c587f8757e76aeb33a090ad0d89c2568c99a136e"
-dependencies = [
- "frame-system",
- "parity-scale-codec",
- "sp-application-crypto",
- "sp-core",
- "sp-runtime",
- "sp-std",
 ]
 
 [[package]]
