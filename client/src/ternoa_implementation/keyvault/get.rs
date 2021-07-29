@@ -41,7 +41,7 @@ pub fn get(nft_id: NFTId, owner_s58: &str, url: &str, mrenclave: [u8; 32]) -> Re
         let url_handler =
             LocalFileStorage::new(PathBuf::from(SHARES_DEFAULT_PATH), PathBuf::from(filename));
         url_handler
-            .write(Share::try_from(key_share.as_slice()).unwrap())
+            .write_line(Share::try_from(key_share.as_slice()).unwrap())
             .unwrap();
     }
     Ok(())
