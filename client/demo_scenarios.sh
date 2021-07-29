@@ -45,26 +45,30 @@ echo "Using worker-rpc-port ${RPORT}"
 AMOUNTSHIELD=50000000000
 AMOUNTTRANSFER=40000000000
 
+ACCOUNTALICE=//Alice
+ACCOUNTBOB=//Bob
+
 CLIENT="../bin/ternoa-client -p ${NPORT} -P ${RPORT}"
 
-#echo "* Query on-chain enclave registry:"
-#${CLIENT} list-workers
-#echo ""
-#
-#if [ "$READMRENCLAVE" = "file" ]
-#then
-#    read MRENCLAVE <<< $(cat ~/mrenclave.b58)
-#    echo "Reading MRENCLAVE from file: ${MRENCLAVE}"
-#else
-#    # this will always take the first MRENCLAVE found in the registry !!
-#    read MRENCLAVE <<< $($CLIENT list-workers | awk '/  MRENCLAVE: / { print $2; exit }')
-#    echo "Reading MRENCLAVE from worker list: ${MRENCLAVE}"
-#fi
-#[[ -z $MRENCLAVE ]] && { echo "MRENCLAVE is empty. cannot continue" ; exit 1; }
-#
-#echo ""
+echo "* Query on-chain enclave registry:"
+${CLIENT} list-workers
+echo ""
 
-echo "* Create a new file to encrypt"
+if [ "$READMRENCLAVE" = "file" ]
+then
+    read MRENCLAVE <<< $(cat ~/mrenclave.b58)
+    echo "Reading MRENCLAVE from file: ${MRENCLAVE}"
+else
+    # this will always take the first MRENCLAVE found in the registry !!
+    read MRENCLAVE <<< $($CLIENT list-workers | awk '/  MRENCLAVE: / { print $2; exit }')
+    echo "Reading MRENCLAVE from worker list: ${MRENCLAVE}"
+fi
+[[ -z $MRENCLAVE ]] && { echo "MRENCLAVE is empty. cannot continue" ; exit 1; }
+
+echo ""
+
+#test file
+echo "* Test input file to encrypt"
 INPUTFILENAME=input_file
 INPUTFILE=${INPUTFILENAME}.txt
 touch  $INPUTFILE
@@ -73,106 +77,102 @@ text= cat ${INPUTFILE}
 echo "$text"
 echo ""
 
-#echo ""
-#echo "* Create a new incognito account for Alice"
-#ICGACCOUNTALICE=//AliceIncognito
-#echo "  Alice's incognito account = ${ICGACCOUNTALICE}"
-#echo ""
-#
-#echo "* Create a new incognito account for Bob"
-#ICGACCOUNTBOB=$(${CLIENT} trusted new-account --mrenclave ${MRENCLAVE})
-#echo "  Bob's incognito account = ${ICGACCOUNTBOB}"
-#echo ""
-#
-#echo "* Shield ${AMOUNTSHIELD} tokens to Alice's incognito account"
-#${CLIENT} shield-funds //Alice ${ICGACCOUNTALICE} ${AMOUNTSHIELD} ${MRENCLAVE} ${WORKERPORT}
-#echo ""
-#
-#echo "* Shield ${AMOUNTSHIELD} tokens to Bob's incognito account"
-#${CLIENT} shield-funds //Bob ${ICGACCOUNTBOB} ${AMOUNTSHIELD} ${MRENCLAVE} ${WORKERPORT}
-#echo ""
-#
-#echo "* Waiting 10 seconds"
-#sleep 10
-#echo ""
-#
-#echo "Get balance of Alice's incognito account"
-#${CLIENT} trusted balance ${ICGACCOUNTALICE} --mrenclave ${MRENCLAVE}
-#echo ""
-#
-#echo "Get balance of Bob's incognito account"
-#${CLIENT} trusted balance ${ICGACCOUNTBOB} --mrenclave ${MRENCLAVE}
-#echo ""
-
 CIPHERFILE=${INPUTFILENAME}.ciphertext
 KEYFILE=${INPUTFILENAME}.aes256
 
-echo "Alice creates a capsule"
+#function to register a NFT but stops before provisioning the shards to the keyvaults for Alice
+aliceCreatesACapsuleButNoProvision() {
 echo "Encrypt file with aes256"
 ${CLIENT} encrypt ${INPUTFILE}
-
-
-echo "Create a new NFT "
-NFTID=$(${CLIENT} nft create //Alice ${CIPHERFILE})
-echo "Alice NFT id = ${NFTID}"
-
-echo "All urls registered in the enclave registry"
-${CLIENT} trusted keyvault list ${ICGACCOUNTALICE} ${CIPHERFILE} --mrenclave ${MRENCLAVE}
-URLSFILE="./bin/my_keyvaults/keyvault_pool.txt"
-
+echo "Generate shamir shards"
+echo "All urls registered in the enclave registry:"
+read registered_keyvaults <<< $(${CLIENT} keyvault list)
+echo "found keyvaults ${registered_keyvaults}"
+URLSFILE="./my_keyvaults/keyvault_pool.txt"
 # Load file into array URLS
 URLS=()
 readarray URLS < ${URLSFILE}
-
-echo "Urls found "
-let i= 0
-while [${#URLS[@]} -gt i ]; do
-    echo "${URLS[i++]}\n"
+for ELEMENT in ${URLS[@]}
+do
+echo "URL $ELEMENT"
 done
-echo " "
 URLSNUM=${#URLS[@]}
-SHAMITHRESHOLD=$URLSNUM
 
 if [ $URLSNUM -eq 0 ]
 then
     echo "No urls are registered. Cannot continue"; exit 1;
 else
-  $SHAMITHRESHOLD=$(((2*$URLSNUM +1)/3))
+   SHAMITHRESHOLD=$(((2*${URLSNUM}+1)/3))
 fi
 echo "Threshold to recover secret : ${SHAMITHRESHOLD}"
 echo " "
 
-echo "Keyvault provision"
-${CLIENT} trusted keyvault provision ${ICGACCOUNTALICE} ${URLS} ${SHAMITHRESHOLD} ${NFTID} --mrenclave ${MRENCLAVE}
-URLSNFTFILE="./bin/my_keyvaults/keyvault_nft_urls_${NFTID}.txt"
-echo "NFT Urls"
-value=`cat ${URLSNFTFILE}`
-echo "$value"
+echo "Create a new NFT "
+read NFTID <<< $(${CLIENT} nft create ${ACCOUNTALICE} ${CIPHERFILE})
+echo "NFT id = ${NFTID}"
+}
+
+#function to create a capsule for Alice
+aliceCreatesACapsule() {
+echo "Alice creates a capsule"
+aliceCreatesACapsuleButNoProvision
 echo " "
+echo "Keyvault provision"
+read PROVISIONED <<< $(${CLIENT} keyvault provision ${ACCOUNTALICE} ${NFTID} "keyvault_pool.txt" ${SHAMITHRESHOLD} ${KEYFILE} --mrenclave ${MRENCLAVE})
+echo "Keyvault provision = ${PROVISIONED}"
 
-echo "Get balance of Alice's incognito account"
-${CLIENT} trusted balance ${ICGACCOUNTALICE} --mrenclave ${MRENCLAVE}
-echo ""
+URLSNFTFILE="./my_keyvaults/keyvault_nft_urls_${NFTID}.txt"
+echo "NFT Urls"
+text= cat ${URLSNFTFILE}
+echo "$text"
+echo " "
+}
 
-echo "Alice transfers ownership to Bob"
-${CLIENT} nft transfer ${ICGACCOUNTALICE} ${ICGACCOUNTBOB} ${NFTID}
-echo ""
-
-echo "Bob open capsule"
-
+#function to retrieve the key shares from keyvault, called by Bob
+bobRetrievesKeyShares() {
 # Load file into array URLS
 URLSNFT=()
 readarray URLSNFT < ${URLSNFTFILE}
-
-KEYSHAREFILE=""
-let i= 0
-while (( ${#URLSNFT[@]} > i )); do
-    CURRENTURL=${URLSNFT[i++]}
+text= cat ${URLSNFTFILE}
+echo "$text"
+echo " "
+for ELEMENT in ${URLSNFT[@]}
+do
+CURRENTURL=${URLSNFT[i++]}
     echo "${CURRENTURL}\n"
-    ${CLIENT} trusted keyvault check ${ICGACCOUNTBOB} ${NFTID} ${CURRENTURL}  --mrenclave ${MRENCLAVE}
-    ${CLIENT} trusted keyvault get ${NFTID} ${ICGACCOUNTBOB}  ${CURRENTURL}  --mrenclave ${MRENCLAVE}
+    read CHECKED <<< $(${CLIENT} keyvault check ${ACCOUNTBOB} ${NFTID} ${CURRENTURL}  --mrenclave ${MRENCLAVE})
+    ${CLIENT} keyvault get ${NFTID} ${ACCOUNTBOB}  ${CURRENTURL}  --mrenclave ${MRENCLAVE}
 done
+}
 
-${CLIENT} nft decrypt ${ICGACCOUNTBOB} ${CIPHERFILE} ${KEYSHAREFILE}
+
+#Success Scenario
+echo "------ Success senario -------------"
+aliceCreatesACapsule
+echo " "
+echo "Transfer capsule to Bob "
+${CLIENT} nft transfer ${ACCOUNTALICE} ${ACCOUNTBOB} ${NFTID}
+echo " "
+echo "Bob open capsule"
+bobRetrievesKeyShares
+echo " "
+KEYSHAREFILE="./my-shares/shares_nft_${NFTID}.txt"
+${CLIENT} decrypt ${CIPHERFILE} ${KEYSHAREFILE}
+echo " "
 
 #adversary scenario 1
+echo "------ Adversary scenario 1 -------------"
+aliceCreatesACapsule
+echo " "
+echo "Bob fails to retrieve the key shares"
+bobRetrievesKeyShares
+echo " "
+#adversary scenario 2
+echo "------ Adversary scenario 2 -------------"
+aliceCreatesACapsuleButNoProvision
+echo " "
+echo "Bob fails to provision key shards"
+read BOBPROVISIONED <<< $(${CLIENT} keyvault provision ${ACCOUNTBOB} ${NFTID} "keyvault_pool.txt" ${SHAMITHRESHOLD} ${KEYFILE} --mrenclave ${MRENCLAVE})
+echo "Keyvault provision = ${BOBPROVISIONED}"
+echo " "
+echo "All scenarios Done!"
