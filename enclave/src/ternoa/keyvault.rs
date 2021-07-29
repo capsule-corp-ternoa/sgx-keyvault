@@ -159,7 +159,7 @@ pub mod test {
     }
 
     impl NFTRegistryAuthorization for MockNftAccess {
-        fn is_authorized(&self, owner: AccountId, nft_id: NFTId) -> bool {
+        fn is_authorized(&self, _owner: AccountId, _nft_id: NFTId) -> bool {
             self.return_value
         }
     }
