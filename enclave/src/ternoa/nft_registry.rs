@@ -103,13 +103,16 @@ impl NFTRegistry {
         }
     }
 
-    /// uddate sealed and in memory NFT Registry in SgxFs
-    pub fn update(&mut self, block_number: BlockNumber, id: NFTId, data: NFTData) -> Result<()> {
-        // update registry
-        self.block_number = block_number;
+    /// uddate in memory NFT Registry
+    pub fn update(&mut self, id: NFTId, data: NFTData) {
         self.registry.insert(id, data);
         self.nft_ids.push(id);
+    }
 
+    /// uddate sealed and in memory NFT Registry in SgxFs
+    pub fn update_block_number_and_seal(&mut self, block_number: BlockNumber) -> Result<()> {
+        // update registry
+        self.block_number = block_number;
         // seal in permanent stoage
         self.seal()
     }
