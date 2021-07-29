@@ -53,6 +53,8 @@ bin/attestation_report.json
 bin/shards
 bin/*.der
 bin/enclave-shielding-pubkey.json
+bin/my_keystore
+bin/my_keyvaults
 
 # in order to have 2 workers run and exchange keys
 bin2/substratee-worker
@@ -65,6 +67,3 @@ bin2/enclave-shielding-pubkey.json
 client/my_keystore
 client/my_trusted_keystore
 bin/chain_relay_db.bin.1
-
-# keyvault
-my_keyvault/*

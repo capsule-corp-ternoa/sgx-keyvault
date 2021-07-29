@@ -276,6 +276,10 @@ impl Stf {
                     Self::shield_funds(who, value)?;
                     Ok(())
                 }
+                _ => {
+                    error!("Unexpected Trusted Call");
+                    Err(StfError::InvalidTrustedCall)
+                }
             }?;
             increment_nonce(&sender);
             Ok(())
@@ -346,6 +350,10 @@ impl Stf {
                         None
                     }
                 }
+                _ => {
+                    error!("Unexpected TrustedGetter");
+                    None
+                }
             },
             Getter::public(g) => match g {
                 PublicGetter::some_value => Some(42u32.encode()),
@@ -408,6 +416,7 @@ impl Stf {
             TrustedCall::balance_transfer(_, _, _) => debug!("No storage updates needed..."),
             TrustedCall::balance_unshield(_, _, _, _) => debug!("No storage updates needed..."),
             TrustedCall::balance_shield(_, _, _) => debug!("No storage updates needed..."),
+            TrustedCall::keyvault_provision(_, _, _) => debug!("No storage updates needed..."),
         };
         key_hashes
     }
@@ -560,4 +569,6 @@ pub enum StfError {
     InexistentAccount(AccountId),
     #[display(fmt = "Invalid Nonce {:?}", _0)]
     InvalidNonce(Index),
+    #[display(fmt = "Invalid TrustedCall")]
+    InvalidTrustedCall,
 }

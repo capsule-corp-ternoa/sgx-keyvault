@@ -2563,6 +2563,7 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "substratee-worker-primitives",
+ "ternoa-primitives",
 ]
 
 [[package]]

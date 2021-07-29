@@ -28,7 +28,6 @@ std = [
     "substrate-api-client",
     "substrate-client-keystore",
     "my-node-runtime",
-    "my-node-primitives",
 ]
 
 [dependencies]
@@ -115,7 +114,7 @@ optional = true
 [dependencies.my-node-primitives]
 git = "https://github.com/capsule-corp-ternoa/chain"
 package = "ternoa-primitives"
-optional = true
+default-features = false
 
 [dependencies.substrate-api-client]
 git = "https://github.com/scs/substrate-api-client"
