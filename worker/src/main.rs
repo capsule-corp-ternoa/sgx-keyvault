@@ -34,9 +34,7 @@ use codec::{Decode, Encode};
 use lazy_static::lazy_static;
 use log::*;
 use my_node_primitives::Hash;
-use my_node_runtime::{
-    substratee_registry::ShardIdentifier, Event, Header, SignedBlock,
-};
+use my_node_runtime::{substratee_registry::ShardIdentifier, Event, Header, SignedBlock};
 use sp_core::{
     crypto::{AccountId32, Ss58Codec},
     sr25519,
