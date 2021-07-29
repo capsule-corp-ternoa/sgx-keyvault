@@ -51,7 +51,7 @@ pub enum Error {
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct NFTRegistry {
     pub block_number: BlockNumber,
     pub registry: HashMap<NFTId, NFTData>,
@@ -76,7 +76,7 @@ impl NFTRegistryAuthorization for NFTRegistry {
 }
 
 impl NFTRegistry {
-    fn new(
+    pub fn new(
         block_number: BlockNumber,
         registry: HashMap<NFTId, NFTData>,
         nft_ids: Vec<NFTId>,
@@ -118,6 +118,7 @@ impl NFTRegistry {
 
     /// create new nft entry
     pub fn create(&mut self, owner: AccountId, details: NFTDetails) -> Result<()> {
+        error!("entering create");
         let nft_id = self
             .nft_ids
             .len()
@@ -136,6 +137,7 @@ impl NFTRegistry {
 
     /// mutate nft details
     pub fn mutate(&mut self, id: NFTId, new_details: NFTDetails) {
+        error!("entering mutate");
         if let Some(data) = self.registry.get_mut(&id) {
             data.details = new_details;
         } else {
@@ -145,6 +147,7 @@ impl NFTRegistry {
 
     /// tranfser ownership of nft
     pub fn transfer(&mut self, id: NFTId, new_owner: AccountId) {
+        error!("entering trasnfer");
         if let Some(data) = self.registry.get_mut(&id) {
             data.owner = new_owner;
         } else {
@@ -179,10 +182,10 @@ impl NFTRegistry {
 
     /// save NFT Registry into SgxFs
     fn seal(&self) -> Result<()> {
-        NFTRegistryStorageHelper::seal(self)
+        NFTRegistryStorageHelper::seal(NFT_REGISTRY_DB, self)
     }
     /// load NFT Registry from SgxFs
     fn unseal() -> Result<Self> {
-        NFTRegistryStorageHelper::unseal()
+        NFTRegistryStorageHelper::unseal(NFT_REGISTRY_DB)
     }
 }
