@@ -98,6 +98,18 @@ extern "C" {
         unchecked_extrinsic_size: u32,
     ) -> sgx_status_t;
 
+    fn mock_register_enclave_xt(
+        eid: sgx_enclave_id_t,
+        retval: *mut sgx_status_t,
+        genesis_hash: *const u8,
+        genesis_hash_size: u32,
+        nonce: *const u32,
+        w_url: *const u8,
+        w_url_size: u32,
+        unchecked_extrinsic: *mut u8,
+        unchecked_extrinsic_size: u32,
+    ) -> sgx_status_t;
+
     fn dump_ra_to_disk(eid: sgx_enclave_id_t, retval: *mut sgx_status_t) -> sgx_status_t;
 
     fn test_main_entrance(eid: sgx_enclave_id_t, retval: *mut sgx_status_t) -> sgx_status_t;
@@ -358,6 +370,38 @@ pub fn enclave_perform_ra(
     let mut status = sgx_status_t::SGX_SUCCESS;
     let result = unsafe {
         perform_ra(
+            eid,
+            &mut status,
+            genesis_hash.as_ptr(),
+            genesis_hash.len() as u32,
+            &nonce,
+            w_url.as_ptr(),
+            w_url.len() as u32,
+            unchecked_extrinsic.as_mut_ptr(),
+            unchecked_extrinsic_size as u32,
+        )
+    };
+    if status != sgx_status_t::SGX_SUCCESS {
+        return Err(status);
+    }
+    if result != sgx_status_t::SGX_SUCCESS {
+        return Err(result);
+    }
+    Ok(unchecked_extrinsic)
+}
+
+
+pub fn enclave_mock_register_xt(
+    eid: sgx_enclave_id_t,
+    genesis_hash: Vec<u8>,
+    nonce: u32,
+    w_url: Vec<u8>,
+) -> SgxResult<Vec<u8>> {
+    let unchecked_extrinsic_size = EXTRINSIC_MAX_SIZE;
+    let mut unchecked_extrinsic: Vec<u8> = vec![0u8; unchecked_extrinsic_size as usize];
+    let mut status = sgx_status_t::SGX_SUCCESS;
+    let result = unsafe {
+        mock_register_enclave_xt(
             eid,
             &mut status,
             genesis_hash.as_ptr(),

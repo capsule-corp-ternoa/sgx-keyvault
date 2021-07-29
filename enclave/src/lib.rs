@@ -47,7 +47,7 @@ use sp_finality_grandpa::VersionedAuthorityList;
 
 use constants::{
     BLOCK_CONFIRMED, CALLTIMEOUT, CALL_CONFIRMED, GETTERTIMEOUT, RUNTIME_SPEC_VERSION,
-    RUNTIME_TRANSACTION_VERSION, SUBSRATEE_REGISTRY_MODULE,
+    RUNTIME_TRANSACTION_VERSION, SUBSRATEE_REGISTRY_MODULE, REGISTER_ENCLAVE,
 };
 
 use std::slice;
@@ -59,7 +59,7 @@ use std::sync::Arc;
 use std::sync::{SgxMutex, SgxMutexGuard};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::untrusted::time::SystemTimeEx;
-use utils::write_slice_and_whitespace_pad;
+use utils::{write_slice_and_whitespace_pad, hash_from_slice};
 
 use crate::constants::{CALL_WORKER, SHIELD_FUNDS};
 use crate::utils::UnwrapOrSgxErrorUnexpected;
@@ -191,6 +191,49 @@ pub unsafe extern "C" fn get_ecc_signing_pubkey(pubkey: *mut u8, pubkey_size: u3
     let pubkey_slice = slice::from_raw_parts_mut(pubkey, pubkey_size as usize);
     pubkey_slice.clone_from_slice(&signer.public());
 
+    sgx_status_t::SGX_SUCCESS
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn mock_register_enclave_xt(
+    genesis_hash: *const u8,
+    genesis_hash_size: u32,
+    nonce: *const u32,
+    w_url: *const u8,
+    w_url_size: u32,
+    unchecked_extrinsic: *mut u8,
+    unchecked_extrinsic_size: u32,
+) -> sgx_status_t {
+    let genesis_hash_slice = slice::from_raw_parts(genesis_hash, genesis_hash_size as usize);
+    let genesis_hash = hash_from_slice(genesis_hash_slice);
+
+    let url_slice = slice::from_raw_parts(w_url, w_url_size as usize);
+    let url = codec::alloc::string::String::from_utf8(url_slice.to_vec()).unwrap();
+    let extrinsic_slice =
+        slice::from_raw_parts_mut(unchecked_extrinsic, unchecked_extrinsic_size as usize);
+
+    let signer = ed25519::unseal_pair().unwrap();
+
+    let call = (
+		[SUBSRATEE_REGISTRY_MODULE, REGISTER_ENCLAVE],
+		crate::attestation::get_mrenclave_of_self()
+			.map_or_else(|_| Vec::<u8>::new(), |m| m.m.encode()),
+		url,
+	);
+
+
+    let xt = compose_extrinsic_offline!(
+        signer,
+        call,
+        *nonce,
+        Era::Immortal,
+        genesis_hash,
+        genesis_hash,
+        RUNTIME_SPEC_VERSION,
+        RUNTIME_TRANSACTION_VERSION
+    ).encode();
+
+    write_slice_and_whitespace_pad(extrinsic_slice, xt);
     sgx_status_t::SGX_SUCCESS
 }
 
