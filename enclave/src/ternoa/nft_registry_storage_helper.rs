@@ -32,7 +32,8 @@ pub struct NFTRegistryStorageHelper {
 
 impl NFTRegistryStorageHelper {
     fn create_from_registry(hashmap_registry: &NFTRegistry) -> Self {
-        let vec_registry: Vec<(NFTId, NFTData)> = hashmap_registry.registry.clone().into_iter().collect();
+        let vec_registry: Vec<(NFTId, NFTData)> =
+            hashmap_registry.registry.clone().into_iter().collect();
         NFTRegistryStorageHelper {
             block_number: hashmap_registry.block_number,
             registry: vec_registry,

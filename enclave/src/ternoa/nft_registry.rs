@@ -15,14 +15,18 @@ use codec::{Decode, Encode};
 use log::*;
 use sgx_types::sgx_status_t;
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicPtr, Ordering};
+use std::sync::{Arc, SgxRwLock};
 use std::vec::Vec;
 use ternoa_primitives::nfts::{NFTData as NFTDataPrimitives, NFTDetails, NFTSeriesId};
 use ternoa_primitives::{AccountId, BlockNumber, NFTId};
 
 use crate::constants::NFT_REGISTRY_DB;
-use crate::io as SgxIo;
 
 pub type NFTData = NFTDataPrimitives<AccountId>;
+
+// pointer to NFT Registry
+static NFT_REGISTRY_MEMORY: AtomicPtr<()> = AtomicPtr::new(0 as *mut ());
 
 pub trait NFTRegistryAuthorization {
     fn is_authorized(&self, owner: AccountId, nft_id: NFTId) -> bool;
@@ -32,7 +36,10 @@ pub trait NFTRegistryAuthorization {
 pub enum Error {
     SgxIoUnsealError(sgx_status_t),
     SgxIoSealError(sgx_status_t),
+    CouldNotLoadFromMemory,
     DecodeError,
+    InconsistentBlockNumber,
+    LightValidationError,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -56,7 +63,7 @@ impl NFTRegistryAuthorization for NFTRegistry {
 }
 
 impl NFTRegistry {
-    pub fn new(
+    fn new(
         block_number: BlockNumber,
         registry: HashMap<NFTId, NFTData>,
         nft_ids: Vec<NFTId>,
@@ -67,8 +74,10 @@ impl NFTRegistry {
             nft_ids,
         }
     }
-    /// load or create new if not in storage
-    pub fn load_or_intialize() -> Self {
+
+    /// load registry from SgxFs into memory
+    pub fn initialize() {
+        // load or create registry
         let registry = NFTRegistry::unseal().unwrap_or_else(|_| {
             info!(
                 "[Enclave] NFT Registry DB not found, creating new! {}",
@@ -76,34 +85,25 @@ impl NFTRegistry {
             );
             NFTRegistry::default()
         });
-        /*
+        // initialize pointer
+        let storage_ptr = Arc::new(SgxRwLock::new(registry));
+        NFT_REGISTRY_MEMORY.store(Arc::into_raw(storage_ptr) as *mut (), Ordering::SeqCst);
+    }
 
-        let genesis = validator.genesis_hash(validator.num_relays).unwrap();
-        if genesis == header.hash() {
-            info!(
-                "Found already initialized chain relay with Genesis Hash: {:?}",
-                genesis
-            );
-            info!("Chain Relay state: {:?}", validator);
-            Ok(validator
-                .latest_finalized_header(validator.num_relays)
-                .unwrap())
+    /// load registry from memory
+    /// FIXME: Currently readers could block a write call forever if issued continuosly. One should probably
+    /// introduce a functionality that ensures write lock > new read lock. Mot part of PoC
+    pub fn load() -> Result<&'static SgxRwLock<Self>> {
+        let ptr = NFT_REGISTRY_MEMORY.load(Ordering::SeqCst) as *mut SgxRwLock<Self>;
+        if ptr.is_null() {
+            error!("Could not load create order cache");
+            Err(Error::CouldNotLoadFromMemory)
         } else {
-            init_validator(header, auth, proof)
-        } */
-        NFTRegistry::new(0, HashMap::new(), vec![])
+            Ok(unsafe { &*ptr })
+        }
     }
 
-    /// save NFT Registry into SgxFs
-    pub fn seal(&self) -> Result<()> {
-        NFTRegistryStorageHelper::seal(self)
-    }
-    /// load NFT Registry from SgxFs
-    pub fn unseal() -> Result<Self> {
-        NFTRegistryStorageHelper::unseal()
-    }
-
-    /// udpate sealed and in memory NFT Registry in SgxFs
+    /// uddate sealed and in memory NFT Registry in SgxFs
     pub fn update(&mut self, block_number: BlockNumber, id: NFTId, data: NFTData) -> Result<()> {
         // update registry
         self.block_number = block_number;
@@ -112,5 +112,31 @@ impl NFTRegistry {
 
         // seal in permanent stoage
         self.seal()
+    }
+
+    /// uddate sealed and in memory NFT Registry in SgxFs
+    pub fn ensure_chain_relay_consistency(&self) -> Result<bool> {
+        let validator = match crate::io::light_validation::unseal() {
+            Ok(v) => v,
+            Err(_) => return Err(Error::LightValidationError),
+        };
+
+        let latest_header = validator
+            .latest_finalized_header(validator.num_relays)
+            .map_err(|_| Error::LightValidationError)?;
+        if latest_header.number == self.block_number {
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
+    /// save NFT Registry into SgxFs
+    fn seal(&self) -> Result<()> {
+        NFTRegistryStorageHelper::seal(self)
+    }
+    /// load NFT Registry from SgxFs
+    fn unseal() -> Result<Self> {
+        NFTRegistryStorageHelper::unseal()
     }
 }

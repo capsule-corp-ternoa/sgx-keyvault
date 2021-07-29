@@ -82,6 +82,8 @@ use rpc::author::{hash::TrustedOperationOrHash, Author, AuthorApi};
 use rpc::worker_api_direct;
 use rpc::{api::SideChainApi, basic_pool::BasicPool};
 
+use ternoa_primitives::BlockNumber;
+
 mod aes;
 mod attestation;
 mod constants;
@@ -389,7 +391,36 @@ pub unsafe extern "C" fn init_chain_relay(
         Ok(header) => write_slice_and_whitespace_pad(latest_header_slice, header.encode()),
         Err(e) => return e,
     }
-    sgx_status_t::SGX_SUCCESS
+
+    // initialize nft registry memory pointer:
+    ternoa::nft_registry::NFTRegistry::initialize();
+
+    // ensure memory consistency of validator & nft registry:
+    let registry = match ternoa::nft_registry::NFTRegistry::load() {
+        Ok(rw_lock) => match rw_lock.read() {
+            Ok(registry) => registry,
+            Err(e) => {
+                error!("Could not get read lock on nft registry: {:?}", e);
+                return sgx_status_t::SGX_ERROR_UNEXPECTED;
+            }
+        },
+        Err(e) => {
+            error!("could not load ternoa registry: {:?}", e);
+            return sgx_status_t::SGX_ERROR_UNEXPECTED;
+        }
+    };
+
+    match registry.ensure_chain_relay_consistency() {
+        Ok(true) => sgx_status_t::SGX_SUCCESS,
+        Ok(false) => {
+            error!("mismatched block number of chain relay and nft registry");
+            sgx_status_t::SGX_ERROR_UNEXPECTED
+        }
+        Err(e) => {
+            error!("[Enclave] errror {:?}", e);
+            sgx_status_t::SGX_ERROR_UNEXPECTED
+        }
+    }
 }
 
 #[no_mangle]
