@@ -148,6 +148,12 @@ pub extern "C" fn test_main_entrance() -> size_t {
         ternoa::keyvault::test::test_provision_fails_when_no_nft_owner,
         ternoa::keyvault::test::test_check_is_false_when_no_nft_owner,
         ternoa::keyvault::test::test_get_none_when_no_nft_owner,
+        ternoa::nft_registry_storage_helper::test::test_recover_registry,
+        ternoa::nft_registry_storage_helper::test::test_create_from_registry,
+        ternoa::nft_registry_storage_helper::test::test_recover_from_create_from_registry,
+        ternoa::nft_registry_storage_helper::test::test_seal_creates_file,
+        ternoa::nft_registry_storage_helper::test::test_seal_creates_backup_file,
+        ternoa::nft_registry_storage_helper::test::test_unseal_works,
     )
 }
 

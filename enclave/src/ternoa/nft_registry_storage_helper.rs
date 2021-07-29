@@ -152,14 +152,16 @@ pub mod test {
         let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
         hash_map.insert(1, nft_data_one);
         hash_map.insert(2, nft_data_two);
-        let registry = NFTRegistry::new(100, hash_map, vec![10, 2, 10, 4]);
+        let registry = NFTRegistry::new(100, hash_map, vec![2, 1]);
         let helper = NFTRegistryStorageHelper::create_from_registry(&registry);
 
         // when
         let recovered_registry = NFTRegistryStorageHelper::recover_registry(&helper);
 
         // then
-        assert_eq!(registry, recovered_registry);
+        assert_eq!(registry.registry, recovered_registry.registry);
+        assert_eq!(registry.block_number, recovered_registry.block_number);
+        assert_eq!(registry.nft_ids.len(), recovered_registry.nft_ids.len());
     }
 
     pub fn test_seal_creates_file() {
@@ -173,20 +175,20 @@ pub mod test {
 
         // clean up
         fs::remove_file(path).unwrap();
-        fs::remove_file(format!("{}.1", path)).unwrap();
     }
 
     pub fn test_seal_creates_backup_file() {
         //given
         let path = "hello_sealed_backup_file";
         let backup_path = "hello_sealed_backup_file.1";
+        NFTRegistryStorageHelper::seal(path, &NFTRegistry::default()).unwrap();
+
         // when
         NFTRegistryStorageHelper::seal(path, &NFTRegistry::default()).unwrap();
 
         // then
-        let file = fs::read(path).unwrap();
-        let backup = fs::read(backup_path).unwrap();
-        assert_eq!(file, backup);
+        assert!(File::open(path).is_ok());
+        assert!(File::open(backup_path).is_ok());
 
         // clean up
         fs::remove_file(path).unwrap();
@@ -196,7 +198,7 @@ pub mod test {
     pub fn test_unseal_works() {
         // given
         let path = "hello_unseal";
-        let registry = NFTRegistry::new(3, HashMap::default(), vec![10, 20]);
+        let registry = NFTRegistry::new(3, HashMap::default(), vec![]);
         NFTRegistryStorageHelper::seal(path, &registry).unwrap();
 
         // when
@@ -207,7 +209,6 @@ pub mod test {
 
         // clean up
         fs::remove_file(path).unwrap();
-        fs::remove_file(format!("{}.1", path)).unwrap();
     }
 
     fn dummy_account() -> AccountId {
