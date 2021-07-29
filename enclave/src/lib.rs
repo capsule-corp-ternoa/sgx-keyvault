@@ -46,8 +46,8 @@ use sp_core::{blake2_256, crypto::Pair, H256};
 use sp_finality_grandpa::VersionedAuthorityList;
 
 use constants::{
-    BLOCK_CONFIRMED, CALLTIMEOUT, CALL_CONFIRMED, GETTERTIMEOUT, RUNTIME_SPEC_VERSION,
-    RUNTIME_TRANSACTION_VERSION, SUBSRATEE_REGISTRY_MODULE, REGISTER_ENCLAVE,
+    BLOCK_CONFIRMED, CALLTIMEOUT, CALL_CONFIRMED, GETTERTIMEOUT, REGISTER_ENCLAVE,
+    RUNTIME_SPEC_VERSION, RUNTIME_TRANSACTION_VERSION, SUBSRATEE_REGISTRY_MODULE,
 };
 
 use std::slice;
@@ -59,7 +59,7 @@ use std::sync::Arc;
 use std::sync::{SgxMutex, SgxMutexGuard};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::untrusted::time::SystemTimeEx;
-use utils::{write_slice_and_whitespace_pad, hash_from_slice};
+use utils::{hash_from_slice, write_slice_and_whitespace_pad};
 
 use crate::constants::{CALL_WORKER, SHIELD_FUNDS};
 use crate::utils::UnwrapOrSgxErrorUnexpected;
@@ -216,12 +216,11 @@ pub unsafe extern "C" fn mock_register_enclave_xt(
     let signer = ed25519::unseal_pair().unwrap();
 
     let call = (
-		[SUBSRATEE_REGISTRY_MODULE, REGISTER_ENCLAVE],
-		crate::attestation::get_mrenclave_of_self()
-			.map_or_else(|_| Vec::<u8>::new(), |m| m.m.encode()),
-		url,
-	);
-
+        [SUBSRATEE_REGISTRY_MODULE, REGISTER_ENCLAVE],
+        crate::attestation::get_mrenclave_of_self()
+            .map_or_else(|_| Vec::<u8>::new(), |m| m.m.encode()),
+        url,
+    );
 
     let xt = compose_extrinsic_offline!(
         signer,
@@ -232,7 +231,8 @@ pub unsafe extern "C" fn mock_register_enclave_xt(
         genesis_hash,
         RUNTIME_SPEC_VERSION,
         RUNTIME_TRANSACTION_VERSION
-    ).encode();
+    )
+    .encode();
 
     write_slice_and_whitespace_pad(extrinsic_slice, xt);
     sgx_status_t::SGX_SUCCESS
