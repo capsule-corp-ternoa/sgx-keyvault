@@ -48,8 +48,8 @@ use substrate_api_client::{utils::FromHexString, Api, GenericAddress, XtStatus};
 
 use crate::enclave::api::{enclave_init_chain_relay, enclave_sync_chain};
 use enclave::api::{
-    enclave_dump_ra, enclave_init, enclave_mrenclave, enclave_perform_ra, enclave_shielding_key,
-    enclave_signing_key, enclave_mock_register_xt,
+    enclave_dump_ra, enclave_init, enclave_mock_register_xt, enclave_mrenclave, enclave_perform_ra,
+    enclave_shielding_key, enclave_signing_key,
 };
 use enclave::tls_ra::{enclave_request_key_provisioning, enclave_run_key_provisioning_server};
 use enclave::worker_api_direct_server::start_worker_api_direct_server;
@@ -335,26 +335,25 @@ fn worker(
     } */
 
     // get enclaves's account nonce
-	let nonce = get_nonce(&api, &tee_accountid);
-	info!("Enclave nonce = {:?}", nonce);
+    let nonce = get_nonce(&api, &tee_accountid);
+    info!("Enclave nonce = {:?}", nonce);
 
-	let uxt = if skip_ra {
-		println!(
-			"[!] skipping remote attestation. Registering enclave without attestation report."
-		);
-        enclave_mock_register_xt(eid, genesis_hash, nonce, ext_api_url.as_bytes().to_vec())
-        .unwrap()
-	} else {
-		enclave_perform_ra(eid, genesis_hash, nonce, ext_api_url.as_bytes().to_vec()).unwrap()
-	};
+    let uxt = if skip_ra {
+        println!(
+            "[!] skipping remote attestation. Registering enclave without attestation report."
+        );
+        enclave_mock_register_xt(eid, genesis_hash, nonce, ext_api_url.as_bytes().to_vec()).unwrap()
+    } else {
+        enclave_perform_ra(eid, genesis_hash, nonce, ext_api_url.as_bytes().to_vec()).unwrap()
+    };
 
-	let mut xthex = hex::encode(uxt);
-	xthex.insert_str(0, "0x");
+    let mut xthex = hex::encode(uxt);
+    xthex.insert_str(0, "0x");
 
-	// send the extrinsic and wait for confirmation
-	println!("[>] Register the enclave (send the extrinsic)");
-	let tx_hash = api.send_extrinsic(xthex, XtStatus::InBlock).unwrap();
-	println!("[<] Extrinsic got finalized. Hash: {:?}\n", tx_hash);
+    // send the extrinsic and wait for confirmation
+    println!("[>] Register the enclave (send the extrinsic)");
+    let tx_hash = api.send_extrinsic(xthex, XtStatus::InBlock).unwrap();
+    println!("[<] Extrinsic got finalized. Hash: {:?}\n", tx_hash);
 
     let mut latest_head = init_chain_relay(eid, &api);
     println!("*** [+] Finished syncing chain relay\n");

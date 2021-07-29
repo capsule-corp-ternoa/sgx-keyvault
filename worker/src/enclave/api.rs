@@ -390,7 +390,6 @@ pub fn enclave_perform_ra(
     Ok(unchecked_extrinsic)
 }
 
-
 pub fn enclave_mock_register_xt(
     eid: sgx_enclave_id_t,
     genesis_hash: Vec<u8>,
