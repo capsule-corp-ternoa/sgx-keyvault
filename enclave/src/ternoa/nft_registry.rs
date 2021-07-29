@@ -11,9 +11,8 @@
     limitations under the License.
 */
 use super::nft_registry_storage_helper::NFTRegistryStorageHelper;
-use codec::{Decode, Encode};
 use log::*;
-use my_node_primitives::nfts::{NFTData as NFTDataPrimitives, NFTDetails, NFTSeriesId};
+use my_node_primitives::nfts::{NFTData as NFTDataPrimitives, NFTDetails};
 use my_node_primitives::{AccountId, BlockNumber, NFTId};
 use sgx_types::sgx_status_t;
 use std::collections::HashMap;
@@ -132,14 +131,20 @@ impl NFTRegistry {
 
     /// mutate nft details
     pub fn mutate(&mut self, id: NFTId, new_details: NFTDetails) {
-        /* self.registry.insert(id, data);
-        self.nft_ids.push(id); */
+        if let Some(data) = self.registry.get_mut(&id) {
+            data.details = new_details;
+        } else {
+            error!("Tried to mutate nonexistent nft id")
+        }
     }
 
     /// tranfser ownership of nft
     pub fn transfer(&mut self, id: NFTId, new_owner: AccountId) {
-        /* self.registry.insert(id, data);
-        self.nft_ids.push(id); */
+        if let Some(data) = self.registry.get_mut(&id) {
+            data.owner = new_owner;
+        } else {
+            error!("Tried to transfer nonexistent nft id")
+        }
     }
 
     /// uddate sealed and in memory NFT Registry in SgxFs

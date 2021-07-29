@@ -73,8 +73,8 @@ use chain_relay::{
 };
 
 use sp_runtime::{generic::SignedBlock, traits::Header as HeaderT};
-use sp_runtime::{MultiAddress, MultiSignature, OpaqueExtrinsic};
-use substrate_api_client::extrinsic::xt_primitives::{GenericAddress, UncheckedExtrinsicV4};
+use sp_runtime::{MultiAddress, OpaqueExtrinsic};
+use substrate_api_client::extrinsic::xt_primitives::UncheckedExtrinsicV4;
 
 use sgx_externalities::SgxExternalitiesTypeTrait;
 use substratee_stf::sgx::{shards_key_hash, storage_hashes_to_update_per_shard, OpaqueCall};
@@ -870,6 +870,26 @@ pub fn scan_block_for_relevant_xt(block: &Block) -> SgxResult<Vec<OpaqueCall>> {
             }
         };
         if let Ok(xt) =
+            UncheckedExtrinsicV4::<NFTMutateFn>::decode(&mut xt_opaque.encode().as_slice())
+        {
+            // confirm call decodes successfully as well
+            if xt.function.0 == [NFT_REGISTRY_MODULE, MUTATE] {
+                if let Err(e) = handle_nft_mutate(&mut opaque_calls, xt) {
+                    error!("Error performing nft mutate. Error: {:?}", e);
+                }
+            }
+        };
+        if let Ok(xt) =
+            UncheckedExtrinsicV4::<NFTTransferFn>::decode(&mut xt_opaque.encode().as_slice())
+        {
+            // confirm call decodes successfully as well
+            if xt.function.0 == [NFT_REGISTRY_MODULE, TRANSFER] {
+                if let Err(e) = handle_nft_transfer(&mut opaque_calls, xt) {
+                    error!("Error performing nft transfer. Error: {:?}", e);
+                }
+            }
+        };
+        if let Ok(xt) =
             UncheckedExtrinsicV4::<ShieldFundsFn>::decode(&mut xt_opaque.encode().as_slice())
         {
             // confirm call decodes successfully as well
@@ -913,7 +933,7 @@ pub fn scan_block_for_relevant_xt(block: &Block) -> SgxResult<Vec<OpaqueCall>> {
 }
 
 fn handle_nft_create(
-    calls: &mut Vec<OpaqueCall>,
+    _calls: &mut Vec<OpaqueCall>,
     xt: UncheckedExtrinsicV4<NFTCreateFn>,
 ) -> Result<(), String> {
     let (_, nft_details) = xt.function;
@@ -938,7 +958,46 @@ fn handle_nft_create(
     };
     registry
         .create(owner, nft_details)
-        .map_err(|e| format!("Could not add new nft_id: {:?}", e));
+        .map_err(|e| format!("Could not add new nft_id: {:?}", e))
+}
+
+fn handle_nft_mutate(
+    _calls: &mut Vec<OpaqueCall>,
+    xt: UncheckedExtrinsicV4<NFTMutateFn>,
+) -> Result<(), String> {
+    let (_, nft_id, nft_details) = xt.function;
+    let mut registry = match NFTRegistry::load() {
+        Ok(rw_lock) => match rw_lock.write() {
+            Ok(registry) => registry,
+            Err(e) => {
+                return Err(format!("Could not get write lock on nft registry: {:?}", e));
+            }
+        },
+        Err(e) => {
+            return Err(format!("could not load ternoa registry: {:?}", e));
+        }
+    };
+    registry.mutate(nft_id, nft_details);
+    Ok(())
+}
+
+fn handle_nft_transfer(
+    _calls: &mut Vec<OpaqueCall>,
+    xt: UncheckedExtrinsicV4<NFTTransferFn>,
+) -> Result<(), String> {
+    let (_, nft_id, account) = xt.function;
+    let mut registry = match NFTRegistry::load() {
+        Ok(rw_lock) => match rw_lock.write() {
+            Ok(registry) => registry,
+            Err(e) => {
+                return Err(format!("Could not get write lock on nft registry: {:?}", e));
+            }
+        },
+        Err(e) => {
+            return Err(format!("could not load ternoa registry: {:?}", e));
+        }
+    };
+    registry.transfer(nft_id, account);
     Ok(())
 }
 
