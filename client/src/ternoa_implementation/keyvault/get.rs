@@ -15,11 +15,34 @@
 
 */
 
-use my_node_primitives::{AccountId, NFTId};
+use super::constants::{SHARES_DEFAULT_PATH, SHARES_FILENAME_PREFIX};
+use super::keyvault_interaction::send_direct_request_to_keyvault;
+use crate::get_pair_from_str;
+use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
+use codec::Decode;
+use core::convert::TryFrom;
+use my_node_primitives::NFTId;
+use sharks::Share;
+use sp_core::{sr25519 as sr25519_core, Pair};
+use std::path::PathBuf;
+use substratee_stf::{KeyPair, TrustedGetter, TrustedOperation};
 
 /// Prints all registered keyvaults and stores all url within a file (one url per line)
-pub fn get(_nft_id: NFTId, _owner: AccountId, _url: &str) -> Result<(), String> {
-    // TODO: Task #6, create trusted call
-    // TODO: save response (= shamir shard) in file storage. This function call will be implemented in issue #5
+pub fn get(nft_id: NFTId, owner_s58: &str, url: &str, mrenclave: [u8; 32]) -> Result<(), String> {
+    // Create trusted operation
+    let owner = sr25519_core::Pair::from(get_pair_from_str(owner_s58));
+    let keyvault_get_top: TrustedOperation =
+        TrustedGetter::keyvault_get(owner.public().into(), nft_id)
+            .sign(&KeyPair::Sr25519(owner))
+            .into();
+    let response_encoded = send_direct_request_to_keyvault(url, keyvault_get_top, mrenclave)?;
+    if let Some(key_share) = Option::<Vec<u8>>::decode(&mut response_encoded.as_slice()).unwrap() {
+        let filename = format!("{}_{:?}.txt", SHARES_FILENAME_PREFIX, nft_id);
+        let url_handler =
+            LocalFileStorage::new(PathBuf::from(SHARES_DEFAULT_PATH), PathBuf::from(filename));
+        url_handler
+            .write_line(Share::try_from(key_share.as_slice()).unwrap())
+            .unwrap();
+    }
     Ok(())
 }

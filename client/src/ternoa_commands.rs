@@ -12,6 +12,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
+use base58::FromBase58;
 use clap::{App, AppSettings, Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 use log::*;
@@ -207,6 +208,15 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
     Commander::new()
         .options(|app| {
             app.setting(AppSettings::ColoredHelp)
+                .arg(
+                    Arg::with_name("mrenclave")
+                        .short("m")
+                        .long("mrenclave")
+                        .global(true)
+                        .takes_value(true)
+                        .value_name("STRING")
+                        .help("targeted worker MRENCLAVE"),
+                )
                 .name("ternoa-client")
                 .version(VERSION)
                 .author("Supercomputing Systems AG <info@scs.ch>")
@@ -216,16 +226,20 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
             Command::new("check")
                 .description("checks if keyshare for given nftid is stored in url keyvault")
                 .options(|app| {
-                    let app_with_nftid = add_nft_id_arg(app);
+                    let app_with_owner = add_account_id_arg(app, OWNER);
+                    let app_with_nftid = add_nft_id_arg(app_with_owner);
                     add_url_arg(app_with_nftid)
                 })
                 .runner(|_args: &str, matches: &ArgMatches<'_>| {
                     // check if the key share for NFTId is stored in the keyvault with <url>. exit code 1 if negative
-                    // INPUT:  NFTId (u32)
+                    // INPUT:  owner
+                    //         NFTId (u32)
                     //         url
                     let nft_id = get_nft_id_from_matches(matches);
+                    let owner = matches.value_of(OWNER).unwrap();
                     let url: &str = matches.value_of(URL_ARG_NAME).unwrap();
-                    keyvault::check::check(nft_id, url).unwrap();
+                    let mrenclave = get_mrenclave(matches);
+                    keyvault::check::check(nft_id, owner, url, mrenclave).unwrap();
                     Ok(())
                 }),
         )
@@ -233,20 +247,21 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
             Command::new("get")
                 .description("returns single key share")
                 .options(|app| {
-                    let app_with_nftid = add_nft_id_arg(app);
-                    let app_with_owner = add_account_id_arg(app_with_nftid, OWNER);
-                    add_url_arg(app_with_owner)
+                    let app_with_owner = add_account_id_arg(app, OWNER);
+                    let app_with_nftid = add_nft_id_arg(app_with_owner);
+                    add_url_arg(app_with_nftid)
                 })
                 .runner(|_args: &str, matches: &ArgMatches<'_>| {
                     // returns single key share
-                    // INPUT:  NFTId (u32)
-                    //         owner
+                    // INPUT:  owner
+                    //         NFTId (u32)
                     //         enclave url
                     let nft_id = get_nft_id_from_matches(matches);
-                    let owner = crate::get_accountid_from_str(matches.value_of(OWNER).unwrap());
+                    let owner = matches.value_of(OWNER).unwrap();
                     let url: &str = matches.value_of(URL_ARG_NAME).unwrap();
+                    let mrenclave = get_mrenclave(matches);
                     // KEYVAULT GET CODE HERE
-                    keyvault::get::get(nft_id, owner, url).unwrap();
+                    keyvault::get::get(nft_id, owner, url, mrenclave).unwrap();
                     Ok(())
                 }),
         )
@@ -264,7 +279,8 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
             Command::new("provision")
                 .description("provisions all keyvaults and verifies")
                 .options(|app| {
-                    let app_with_nftid = add_nft_id_arg(app);
+                    let app_with_owner = add_account_id_arg(app, OWNER);
+                    let app_with_nftid = add_nft_id_arg(app_with_owner);
                     app_with_nftid
                         .arg(
                             Arg::with_name("urllist")
@@ -298,7 +314,16 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     let urllist: &str = matches.value_of("urllist").unwrap();
                     let needed_keys = get_u8_from_str(matches.value_of("needed_keys").unwrap());
                     let keyfile: &str = matches.value_of("keyfile").unwrap();
-                    match keyvault::provision::provision(urllist, needed_keys, nft_id, keyfile) {
+                    let mrenclave = get_mrenclave(matches);
+                    let signer: &str = matches.value_of(OWNER).unwrap();
+                    match keyvault::provision::provision(
+                        signer,
+                        urllist,
+                        needed_keys,
+                        nft_id,
+                        keyfile,
+                        mrenclave,
+                    ) {
                         Ok(_) => println!("success!"),
                         Err(msg) => println!("[Error]: {}", msg),
                     };
@@ -372,4 +397,20 @@ fn get_ternoa_chain_api(matches: &ArgMatches<'_>) -> Api<sr25519::Pair> {
     );
     info!("connecting to {}", url);
     Api::<sr25519::Pair>::new(url).unwrap()
+}
+
+// simplified duplicate from stf/cli.rs get_identifiers
+pub fn get_mrenclave(matches: &ArgMatches<'_>) -> [u8; 32] {
+    let mut mrenclave = [0u8; 32];
+    if !matches.is_present("mrenclave") {
+        panic!("--mrenclave must be provided");
+    };
+    mrenclave.copy_from_slice(
+        &matches
+            .value_of("mrenclave")
+            .unwrap()
+            .from_base58()
+            .expect("mrenclave has to be base58 encoded"),
+    );
+    mrenclave
 }

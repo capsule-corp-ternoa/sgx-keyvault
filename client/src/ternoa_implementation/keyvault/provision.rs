@@ -15,19 +15,28 @@
 
 */
 use super::constants::KEYVAULT_DEFAULT_PATH;
+use super::keyvault_interaction::send_direct_request_to_keyvault;
+use crate::get_pair_from_str;
 use crate::ternoa_implementation::cipher;
 use crate::ternoa_implementation::keyvault::constants::KEYVAULT_NFT_URLLIST_FILENAME_PREFIX;
 use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
-use my_node_primitives::NFTId;
+use my_node_primitives::{AccountId, NFTId};
 use sharks::{Share, Sharks};
+use sp_core::{sr25519 as sr25519_core, Pair};
 use std::path::PathBuf;
+use substratee_stf::{KeyPair, TrustedCall, TrustedOperation};
 
 pub fn provision(
+    signer_s58: &str,
     keyvault_selection_file: &str,
     recovery_threshold: u8,
     nft_id: NFTId,
     key_file: &str,
+    mrenclave: [u8; 32],
 ) -> Result<(), String> {
+    // Create trusted call signed
+    let signer = sr25519_core::Pair::from(get_pair_from_str(signer_s58));
+    let signer_public: AccountId = signer.public().into();
     // retrieve encryption key that is to be shamir shared to the keyvaults
     let encryption_key = get_key_from_file(key_file)?;
     // read urllist from file
@@ -38,19 +47,34 @@ pub fn provision(
     let urls: Vec<String> = url_handler
         .read_lines()
         .map_err(|e| format!("Could not read urls: {}", e))?;
+    let number_of_keyvaults = urls.len();
 
     // create shamir shares
     let shamir_shares =
-        create_shamir_shares(urls.len() as usize, recovery_threshold, &encryption_key)?;
+        create_shamir_shares(number_of_keyvaults, recovery_threshold, &encryption_key)?;
 
     // for all urls in list (= # of shares):
     //    a. send ith share to url_i
     //    b. verify availability
-    let nft_urls: Vec<String> = Vec::new();
-    for _shamir_share in shamir_shares.iter() {
-        // send to enclave:
-        // TODO: TASK of ISSUE #6
-        //nft_urls.push()
+    let mut nft_urls: Vec<String> = Vec::new();
+    for i in 0..(number_of_keyvaults - 1) {
+        // create trusted call
+        let provision_call: TrustedOperation = TrustedCall::keyvault_provision(
+            signer_public.clone(),
+            nft_id,
+            (&shamir_shares[i]).into(),
+        )
+        .sign(
+            &KeyPair::Sr25519(signer.clone()),
+            0,
+            &mrenclave,
+            &mrenclave.into(),
+        )
+        .into_trusted_operation(true);
+        // send to enclave
+        send_direct_request_to_keyvault(&urls[i], provision_call, mrenclave)?;
+        // only push to urls if successful
+        nft_urls.push(urls[i].clone());
     }
 
     // Create file NFT urllist NFT File
