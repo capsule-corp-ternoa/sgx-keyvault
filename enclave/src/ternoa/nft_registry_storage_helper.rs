@@ -13,15 +13,14 @@
 use codec::{Decode, Encode};
 use log::*;
 use std::collections::HashMap;
-use std::vec::Vec;
 use std::fs;
+use std::vec::Vec;
 use ternoa_primitives::{BlockNumber, NFTId};
 
-use super::nft_registry::{NFTData, NFTRegistry, Error, Result};
+use super::nft_registry::{Error, NFTData, NFTRegistry, Result};
 
 use crate::constants::NFT_REGISTRY_DB;
 use crate::io as SgxIo;
-
 
 /// helper struct to encode / decode hashmap
 /// and finally store it in SgxFs
@@ -32,8 +31,8 @@ pub struct NFTRegistryStorageHelper {
 }
 
 impl NFTRegistryStorageHelper {
-    fn create_from_registry(hashmap_registry: NFTRegistry) -> Self {
-        let vec_registry: Vec<(NFTId, NFTData)> = hashmap_registry.registry.into_iter().collect();
+    fn create_from_registry(hashmap_registry: &NFTRegistry) -> Self {
+        let vec_registry: Vec<(NFTId, NFTData)> = hashmap_registry.registry.clone().into_iter().collect();
         NFTRegistryStorageHelper {
             block_number: hashmap_registry.block_number,
             registry: vec_registry,
@@ -55,12 +54,15 @@ impl NFTRegistryStorageHelper {
     }
 
     /// save NFT Registry into SgxFs
-    pub fn seal(hashmap_registry: NFTRegistry) -> Result<()> {
+    pub fn seal(hashmap_registry: &NFTRegistry) -> Result<()> {
         debug!("backup registry state");
         if fs::copy(NFT_REGISTRY_DB, format!("{}.1", NFT_REGISTRY_DB)).is_err() {
             warn!("could not backup previous registry state");
         };
-        debug!("Seal Nft Registry State. Current state: {:?}", hashmap_registry);
+        debug!(
+            "Seal Nft Registry State. Current state: {:?}",
+            hashmap_registry
+        );
         let helper = NFTRegistryStorageHelper::create_from_registry(hashmap_registry);
         match SgxIo::seal(helper.encode().as_slice(), NFT_REGISTRY_DB) {
             Ok(_) => Ok(()),
@@ -71,8 +73,8 @@ impl NFTRegistryStorageHelper {
     /// load NFT Registry from SgxFs
     pub fn unseal() -> Result<NFTRegistry> {
         let encoded = SgxIo::unseal(NFT_REGISTRY_DB).map_err(Error::SgxIoUnsealError)?;
-        let registry_codec =
-            NFTRegistryStorageHelper::decode(&mut encoded.as_slice()).map_err(|_| Error::DecodeError)?;
+        let registry_codec = NFTRegistryStorageHelper::decode(&mut encoded.as_slice())
+            .map_err(|_| Error::DecodeError)?;
         Ok(registry_codec.recover_registry())
     }
 }

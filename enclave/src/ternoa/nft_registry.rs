@@ -10,6 +10,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
+use super::nft_registry_storage_helper::NFTRegistryStorageHelper;
 use codec::{Decode, Encode};
 use log::*;
 use sgx_types::sgx_status_t;
@@ -17,7 +18,6 @@ use std::collections::HashMap;
 use std::vec::Vec;
 use ternoa_primitives::nfts::{NFTData as NFTDataPrimitives, NFTDetails, NFTSeriesId};
 use ternoa_primitives::{AccountId, BlockNumber, NFTId};
-use super::nft_registry_storage_helper::NFTRegistryStorageHelper;
 
 use crate::constants::NFT_REGISTRY_DB;
 use crate::io as SgxIo;
@@ -42,7 +42,6 @@ pub struct NFTRegistry {
     pub registry: HashMap<NFTId, NFTData>,
     pub nft_ids: Vec<NFTId>, // optional, not sure if this is necessary
 }
-
 
 impl Default for NFTRegistry {
     fn default() -> Self {
@@ -96,17 +95,22 @@ impl NFTRegistry {
     }
 
     /// save NFT Registry into SgxFs
-    pub fn seal(self) -> Result<()> {
+    pub fn seal(&self) -> Result<()> {
         NFTRegistryStorageHelper::seal(self)
     }
     /// load NFT Registry from SgxFs
     pub fn unseal() -> Result<Self> {
-       NFTRegistryStorageHelper::unseal()
+        NFTRegistryStorageHelper::unseal()
     }
 
-    /// udpate sealed NFT Registry in SgxFs
-    pub fn update(block_number: BlockNumber, id: NFTId, data: NFTData) -> Result<()> {
+    /// udpate sealed and in memory NFT Registry in SgxFs
+    pub fn update(&mut self, block_number: BlockNumber, id: NFTId, data: NFTData) -> Result<()> {
         // update registry
-        Ok(())
+        self.block_number = block_number;
+        self.registry.insert(id, data);
+        self.nft_ids.push(id);
+
+        // seal in permanent stoage
+        self.seal()
     }
 }
