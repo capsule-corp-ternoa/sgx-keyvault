@@ -17,10 +17,10 @@
 use crate::aes;
 use crate::attestation;
 use crate::ed25519;
-use crate::keyvault;
 use crate::rpc;
 use crate::rsa3072;
 use crate::state;
+use crate::ternoa;
 use crate::top_pool;
 
 use crate::{Timeout, WorkerRequest, WorkerResponse};
@@ -134,20 +134,20 @@ pub extern "C" fn test_main_entrance() -> size_t {
         //ipfs::test_verification_ok_for_correct_content,
         //ipfs::test_verification_fails_for_incorrect_content,
         //test_ocall_read_write_ipfs,
-        keyvault::test::test_ensure_dir_exists_creates_new_if_not_existing,
-        keyvault::test::test_sealed_file_name_contains_nftid,
-        keyvault::test::test_seal_create_file,
-        keyvault::test::test_share_saved_in_sealed_file,
-        keyvault::test::test_seal_override_existing_sealed_file,
-        keyvault::test::test_unseal_fails_when_no_file_exists,
-        keyvault::test::test_provision_store_share_in_sealed_file,
-        keyvault::test::test_check_is_true_when_sealed_file,
-        keyvault::test::test_check_is_false_when_no_sealed_file,
-        keyvault::test::test_get_none_when_nft_not_in_store,
-        keyvault::test::test_get_the_valid_stored_share,
-        keyvault::test::test_provision_fails_when_no_nft_owner,
-        keyvault::test::test_check_is_false_when_no_nft_owner,
-        keyvault::test::test_get_none_when_no_nft_owner,
+        ternoa::keyvault::test::test_ensure_dir_exists_creates_new_if_not_existing,
+        ternoa::keyvault::test::test_sealed_file_name_contains_nftid,
+        ternoa::keyvault::test::test_seal_create_file,
+        ternoa::keyvault::test::test_share_saved_in_sealed_file,
+        ternoa::keyvault::test::test_seal_override_existing_sealed_file,
+        ternoa::keyvault::test::test_unseal_fails_when_no_file_exists,
+        ternoa::keyvault::test::test_provision_store_share_in_sealed_file,
+        ternoa::keyvault::test::test_check_is_true_when_sealed_file,
+        ternoa::keyvault::test::test_check_is_false_when_no_sealed_file,
+        ternoa::keyvault::test::test_get_none_when_nft_not_in_store,
+        ternoa::keyvault::test::test_get_the_valid_stored_share,
+        ternoa::keyvault::test::test_provision_fails_when_no_nft_owner,
+        ternoa::keyvault::test::test_check_is_false_when_no_nft_owner,
+        ternoa::keyvault::test::test_get_none_when_no_nft_owner,
     )
 }
 
