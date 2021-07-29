@@ -154,6 +154,14 @@ pub extern "C" fn test_main_entrance() -> size_t {
         ternoa::nft_registry_storage_helper::test::test_seal_creates_file,
         ternoa::nft_registry_storage_helper::test::test_seal_creates_backup_file,
         ternoa::nft_registry_storage_helper::test::test_unseal_works,
+        ternoa::nft_registry::test::test_is_authorized_returns_true_if_registered,
+        ternoa::nft_registry::test::test_is_authorized_returns_false_if_nft_not_registered,
+        ternoa::nft_registry::test::test_is_authorized_returns_false_if_wrong_owner,
+        ternoa::nft_registry::test::test_initialize_and_load_pointer_works,
+        ternoa::nft_registry::test::test_create_works,
+        ternoa::nft_registry::test::test_mutate_works,
+        ternoa::nft_registry::test::test_transfer_works,
+        ternoa::nft_registry::test::test_update_block_number_and_seal,
     )
 }
 

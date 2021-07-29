@@ -118,7 +118,7 @@ impl NFTRegistry {
 
     /// create new nft entry
     pub fn create(&mut self, owner: AccountId, details: NFTDetails) -> Result<()> {
-        error!("entering create");
+        debug!("entering create");
         let nft_id = self
             .nft_ids
             .len()
@@ -137,7 +137,7 @@ impl NFTRegistry {
 
     /// mutate nft details
     pub fn mutate(&mut self, id: NFTId, new_details: NFTDetails) {
-        error!("entering mutate");
+        debug!("entering mutate");
         if let Some(data) = self.registry.get_mut(&id) {
             data.details = new_details;
         } else {
@@ -147,7 +147,7 @@ impl NFTRegistry {
 
     /// tranfser ownership of nft
     pub fn transfer(&mut self, id: NFTId, new_owner: AccountId) {
-        error!("entering trasnfer");
+        debug!("entering transfer");
         if let Some(data) = self.registry.get_mut(&id) {
             data.owner = new_owner;
         } else {
@@ -187,5 +187,185 @@ impl NFTRegistry {
     /// load NFT Registry from SgxFs
     fn unseal() -> Result<Self> {
         NFTRegistryStorageHelper::unseal(NFT_REGISTRY_DB)
+    }
+}
+
+pub mod test {
+    use super::*;
+
+    use my_node_primitives::nfts::NFTDetails;
+    use my_node_primitives::AccountId;
+    use std::fs;
+
+    pub fn test_is_authorized_returns_true_if_registered() {
+        //given
+        let nft_id = 9;
+        let details = NFTDetails::new(vec![10, 3, 0, 1, 2], 9, false);
+        let owner = dummy_account();
+        let nft_data = NFTData::new(owner.clone(), details, false, false);
+        let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
+        hash_map.insert(nft_id, nft_data);
+        let registry = NFTRegistry::new(100, hash_map, vec![]);
+
+        // when
+        let is_authorized = registry.is_authorized(owner, nft_id);
+
+        // then
+        assert!(is_authorized)
+    }
+
+    pub fn test_is_authorized_returns_false_if_nft_not_registered() {
+        //given
+        let nft_id = 9;
+        let details = NFTDetails::new(vec![10, 3, 0, 1, 2], 9, false);
+        let owner = dummy_account();
+        let nft_data = NFTData::new(owner.clone(), details, false, false);
+        let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
+        hash_map.insert(nft_id, nft_data);
+        let registry = NFTRegistry::new(100, hash_map, vec![]);
+
+        // when
+        let is_authorized = registry.is_authorized(owner, 1);
+
+        // then
+        assert!(!is_authorized)
+    }
+
+    pub fn test_is_authorized_returns_false_if_wrong_owner() {
+        //given
+        let nft_id = 9;
+        let details = NFTDetails::new(vec![10, 3, 0, 1, 2], 9, false);
+        let owner = dummy_account();
+        let fake_owner = dummy_account_two();
+        let nft_data = NFTData::new(owner, details, false, false);
+        let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
+        hash_map.insert(nft_id, nft_data);
+        let registry = NFTRegistry::new(100, hash_map, vec![]);
+
+        // when
+        let is_authorized = registry.is_authorized(fake_owner, nft_id);
+
+        // then
+        assert!(!is_authorized)
+    }
+
+    pub fn test_initialize_and_load_pointer_works() {
+        let new_block_number = 20;
+
+        NFTRegistry::initialize();
+        // get read lock
+        {
+            let registry_lock = NFTRegistry::load().unwrap();
+            let read = registry_lock.read().unwrap();
+            assert_eq!(*read, NFTRegistry::default());
+        }
+        // get write lock
+        {
+            let registry_lock = NFTRegistry::load().unwrap();
+            let mut write = registry_lock.write().unwrap();
+            write.block_number = new_block_number;
+        }
+        // test if write worked
+        {
+            let registry_lock = NFTRegistry::load().unwrap();
+            let read = registry_lock.read().unwrap();
+            assert_eq!(read.block_number, new_block_number);
+        }
+    }
+
+    pub fn test_create_works() {
+        //given
+        let details = NFTDetails::new(vec![10, 3, 0, 1, 2], 9, false);
+        let owner = dummy_account();
+        let mut registry = NFTRegistry::default();
+
+        // when
+        registry.create(owner.clone(), details.clone()).unwrap();
+
+        // then
+        let nft_data = registry.registry.get(&1).unwrap();
+        assert_eq!(registry.nft_ids.len(), 1);
+        assert_eq!(registry.nft_ids[0], 1);
+        assert_eq!(nft_data.details, details);
+        assert_eq!(nft_data.owner, owner);
+    }
+
+    pub fn test_mutate_works() {
+        //given
+        let nft_id = 7;
+        let details = NFTDetails::new(vec![10, 3, 0, 1, 2], 9, false);
+        let new_details = NFTDetails::new(vec![0, 1, 1, 1], 1, false);
+        let owner = dummy_account();
+        let nft_data = NFTData::new(owner.clone(), details, false, false);
+        let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
+        hash_map.insert(nft_id, nft_data);
+        let mut registry = NFTRegistry::new(100, hash_map, vec![]);
+
+        // when
+        registry.mutate(nft_id, new_details.clone());
+
+        // then
+        let nft_data = registry.registry.get(&nft_id).unwrap();
+        assert_eq!(nft_data.details, new_details);
+        assert_eq!(nft_data.owner, owner);
+    }
+
+    pub fn test_transfer_works() {
+        //given
+        let nft_id = 7;
+        let details = NFTDetails::new(vec![10, 3, 0, 1, 2], 9, false);
+        let owner = dummy_account();
+        let new_owner = dummy_account_two();
+        let nft_data = NFTData::new(owner, details.clone(), false, false);
+        let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
+        hash_map.insert(nft_id, nft_data);
+        let mut registry = NFTRegistry::new(100, hash_map, vec![]);
+
+        // when
+        registry.transfer(nft_id, new_owner.clone());
+
+        // then
+        let nft_data = registry.registry.get(&nft_id).unwrap();
+        assert_eq!(nft_data.details, details);
+        assert_eq!(nft_data.owner, new_owner);
+    }
+
+    pub fn test_update_block_number_and_seal() {
+        //given
+        let block_number = 30;
+        let details = NFTDetails::new(vec![10, 3, 0, 1, 2], 9, false);
+        let owner = dummy_account();
+        let nft_data = NFTData::new(owner, details, false, false);
+        let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
+        hash_map.insert(1, nft_data);
+        let mut registry = NFTRegistry::new(10, hash_map, vec![]);
+
+        // when
+        registry.update_block_number_and_seal(block_number).unwrap();
+
+        // then
+        let read_registry = NFTRegistry::unseal().unwrap();
+        assert_eq!(read_registry.block_number, 30);
+
+        // clean up
+        fs::remove_file(NFT_REGISTRY_DB).unwrap();
+        let backup_path = format!("{}.1", NFT_REGISTRY_DB);
+        if fs::copy(backup_path, NFT_REGISTRY_DB).is_err() {
+            warn!("could not restore previous state");
+        };
+    }
+
+    fn dummy_account() -> AccountId {
+        AccountId::from([
+            212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133,
+            88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 163, 127,
+        ])
+    }
+
+    fn dummy_account_two() -> AccountId {
+        AccountId::from([
+            212, 53, 147, 191, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133,
+            88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 163, 127,
+        ])
     }
 }
