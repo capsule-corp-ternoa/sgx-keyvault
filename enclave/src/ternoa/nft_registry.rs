@@ -66,7 +66,12 @@ impl Default for NFTRegistry {
 
 impl NFTRegistryAuthorization for NFTRegistry {
     fn is_authorized(&self, owner: AccountId, nft_id: NFTId) -> bool {
-        true
+        if let Some(data) = self.registry.get(&nft_id) {
+            if data.owner == owner {
+                return true;
+            }
+        }
+        false
     }
 }
 
