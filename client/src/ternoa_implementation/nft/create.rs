@@ -9,6 +9,7 @@ use log::*;
 use my_node_primitives::NFTId;
 use my_node_runtime::Event;
 use sp_core::H256 as Hash;
+use sp_runtime::DispatchError;
 use std::sync::mpsc::channel;
 use ternoa_pallet_nfts::Event as NFTEvent;
 
@@ -72,10 +73,18 @@ pub fn create(owner_ss58: &str, filename: &str, chain_api: Api<sr25519::Pair>) -
                         Event::frame_system(fse) => {
                             info!("Other frame system event received: {:?}", fse);
                             match &fse {
-                                SystemEvent::ExtrinsicFailed(error, _info) => {
-                                    error!("Error: {:?}", error);
-                                    break 'outer;
-                                }
+                                SystemEvent::ExtrinsicFailed(error, _info) => match error {
+                                    DispatchError::Module { index, error, .. } => {
+                                        error!(
+                                                "ExtrinsicFailed Module error: module index {}, error num {}",
+                                                index, error
+                                            );
+                                        break 'outer;
+                                    }
+                                    _ => debug!(
+                                        "ignoring unsupported ExtrinsicFailed event. Wait ..."
+                                    ),
+                                },
                                 _ => {
                                     debug!("ignoring unsupported frame system event");
                                 }
