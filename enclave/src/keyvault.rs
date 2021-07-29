@@ -5,11 +5,11 @@ use derive_more::{Display, From};
 use log::*;
 use my_node_primitives::NFTId;
 use sharks::Share;
-use ternoa_primitives::AccountId;
 use std::fs;
 use std::path::PathBuf;
 use std::prelude::v1::*;
 use std::vec::Vec;
+use ternoa_primitives::AccountId;
 
 use crate::nft_registry::NFTRegistryAuthorization;
 
