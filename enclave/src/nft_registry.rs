@@ -24,6 +24,10 @@ use crate::constants::NFT_REGISTRY_DB;
 pub type NFTData = NFTDataPrimitives<AccountId>;
 
 
+pub trait NFTRegistryAuthorization {
+    fn is_authorized(&self, owner: AccountId, nft_id: NFTId) -> bool;
+}
+
 #[derive(Debug)]
 pub enum Error {
     SgxIoUnsealError(sgx_status_t),
@@ -32,7 +36,7 @@ pub enum Error {
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
-#[derive(Debug, Decode, Encode)]
+#[derive(Debug)]
 pub struct NFTRegistry {
     block_number: BlockNumber,
     registry: HashMap<NFTId, NFTData>,
@@ -42,6 +46,12 @@ pub struct NFTRegistry {
 impl Default for NFTRegistry {
     fn default() -> Self {
         Self::new(0, HashMap::default(), vec![])
+    }
+}
+
+impl NFTRegistryAuthorization for NFTRegistry {
+    fn is_authorized(&self, owner: AccountId, nft_id: NFTId) -> bool {
+
     }
 }
 
