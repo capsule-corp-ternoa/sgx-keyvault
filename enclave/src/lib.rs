@@ -477,6 +477,21 @@ pub unsafe extern "C" fn sync_chain(
                 Ok(c) => calls.extend(c.into_iter()),
                 Err(_) => error!("Error executing relevant extrinsics"),
             };
+
+            // update nft registry
+            if let Ok(rw_lock) = NFTRegistry::load() {
+                if let Ok(mut registry) = rw_lock.write() {
+                    if let Err(e) =
+                        registry.update_block_number_and_seal(signed_block.block.header.number())
+                    {
+                        error!("Cold not update NFT Registry : {:?}", e);
+                    };
+                } else {
+                    error!("Could not get write lock on nft registry");
+                }
+            } else {
+                error!("could not load ternoa registry");
+            }
             // compose indirect block confirmation
             let xt_block = [SUBSRATEE_REGISTRY_MODULE, BLOCK_CONFIRMED];
             let genesis_hash = validator.genesis_hash(validator.num_relays).unwrap();

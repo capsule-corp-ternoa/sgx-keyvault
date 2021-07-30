@@ -156,9 +156,9 @@ impl NFTRegistry {
     }
 
     /// uddate sealed and in memory NFT Registry in SgxFs
-    pub fn update_block_number_and_seal(&mut self, block_number: BlockNumber) -> Result<()> {
+    pub fn update_block_number_and_seal(&mut self, block_number: &BlockNumber) -> Result<()> {
         // update registry
-        self.block_number = block_number;
+        self.block_number = *block_number;
         // seal in permanent stoage
         self.seal()
     }
@@ -341,7 +341,9 @@ pub mod test {
         let mut registry = NFTRegistry::new(10, hash_map, vec![]);
 
         // when
-        registry.update_block_number_and_seal(block_number).unwrap();
+        registry
+            .update_block_number_and_seal(&block_number)
+            .unwrap();
 
         // then
         let read_registry = NFTRegistry::unseal().unwrap();
