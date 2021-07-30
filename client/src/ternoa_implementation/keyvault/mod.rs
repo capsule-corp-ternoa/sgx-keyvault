@@ -18,6 +18,7 @@
 pub mod check;
 pub mod constants;
 pub mod get;
+pub mod get_nft_registry;
 pub mod keyvault_interaction;
 pub mod list;
 pub mod provision;

@@ -74,6 +74,9 @@ package = "ternoa-primitives"
 [dependencies.substratee-worker-primitives]
 path = "../substratee-worker-primitives"
 
+[dependencies.substratee-node-primitives]
+path = "../substratee-node-primitives"
+
 [dependencies.substratee-stf]
 path = "../stf"
 

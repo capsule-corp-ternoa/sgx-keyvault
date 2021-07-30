@@ -30,6 +30,7 @@ pub mod rpc_info;
 
 pub mod rpc_keyvault_check;
 pub mod rpc_keyvault_get;
+pub mod rpc_keyvault_get_nft_registry;
 pub mod rpc_keyvault_provision;
 mod ternoa_rpc_gateway;
 pub mod trusted_operation_verifier;

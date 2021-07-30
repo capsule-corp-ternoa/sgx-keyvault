@@ -216,6 +216,7 @@ pub enum TrustedGetter {
     keyvault_check(AccountId, NFTId),
     /// (Owner, NFTid)
     keyvault_get(AccountId, NFTId),
+    keyvault_get_nft_registry(AccountId),
 }
 
 impl TrustedGetter {
@@ -226,6 +227,7 @@ impl TrustedGetter {
             TrustedGetter::nonce(account) => account,
             TrustedGetter::keyvault_check(account, _) => account,
             TrustedGetter::keyvault_get(account, _) => account,
+            TrustedGetter::keyvault_get_nft_registry(account) => account,
         }
     }
 

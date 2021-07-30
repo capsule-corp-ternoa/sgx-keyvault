@@ -5695,6 +5695,7 @@ dependencies = [
  "substrate-api-client",
  "substrate-bip39",
  "substrate-client-keystore",
+ "substratee-node-primitives",
  "substratee-stf",
  "substratee-worker-api",
  "substratee-worker-primitives",

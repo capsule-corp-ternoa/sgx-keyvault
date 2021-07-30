@@ -19,7 +19,9 @@
 pub extern crate alloc;
 use alloc::string::String;
 use log::*;
+use alloc::vec::Vec;
 use my_node_primitives::{AccountId, NFTId};
+use substratee_node_primitives::NFTData;
 use substratee_stf::ShamirShare;
 
 use crate::ternoa;
@@ -37,8 +39,14 @@ pub trait RpcGateway: Send + Sync {
     fn keyvault_check(&self, owner: AccountId, nft_id: NFTId) -> Result<bool>;
 
     /// store the shamir shard of a specific nft id
-    fn keyvault_provision(&self, owner: AccountId, nft_id: NFTId, share: ShamirShare)
-        -> Result<()>;
+    fn keyvault_provision(
+        &self,
+        owner: AccountId,
+        nft_id: NFTId,
+        share: ShamirShare,
+    ) -> Result<()>;
+
+    fn keyvault_get_nft_registry(&self) -> Vec<(NFTId, NFTData)>;
 }
 
 pub struct TernoaRpcGateway {}
@@ -68,6 +76,11 @@ impl RpcGateway for TernoaRpcGateway {
         keyvault
             .provision(owner, nft_id, share)
             .map_err(|e| format!("{}", e))
+    }
+
+    fn keyvault_get_nft_registry(&self) -> Vec<(NFTId, NFTData)> {
+        // TODO: Add real function here (issue #8)
+        vec![]
     }
 }
 

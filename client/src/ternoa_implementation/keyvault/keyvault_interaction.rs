@@ -114,6 +114,9 @@ pub fn get_rpc_function_name_from_top(trusted_operation: &TrustedOperation) -> O
             Getter::trusted(tgs) => match tgs.getter {
                 TrustedGetter::keyvault_check(_, _) => Some("keyvault_check".to_owned()),
                 TrustedGetter::keyvault_get(_, _) => Some("keyvault_get".to_owned()),
+                TrustedGetter::keyvault_get_nft_registry(_) => {
+                    Some("keyvault_get_nft_registry".to_owned())
+                }
                 _ => None,
             },
         },
