@@ -6,6 +6,9 @@ use sgx_tstd as std;
 
 use std::vec::Vec;
 
+use my_node_primitives::nfts::NFTData as NFTDataPrimitives;
+use my_node_primitives::AccountId;
+
 use codec::{Decode, Encode};
 use sp_core::H256;
 
@@ -13,7 +16,9 @@ pub type ShardIdentifier = H256;
 pub type BlockNumber = u32;
 
 use my_node_primitives::nfts::NFTDetails;
-use my_node_primitives::{AccountId, NFTId};
+use my_node_primitives::NFTId;
+
+pub type NFTData = NFTDataPrimitives<AccountId>;
 
 // Note in the substratee-pallet-registry this is a struct. But for the coded this does not matter.
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq, Debug)]

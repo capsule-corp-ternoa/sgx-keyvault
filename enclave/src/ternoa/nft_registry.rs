@@ -181,6 +181,12 @@ impl NFTRegistry {
         }
     }
 
+    /// read the NFT Registry into an printable Vec
+    pub fn read(&self) -> Vec<(NFTId, NFTData)> {
+        let helper = NFTRegistryStorageHelper::create_from_registry(self);
+        helper.registry
+    }
+
     /// save NFT Registry into SgxFs
     fn seal(&self) -> Result<()> {
         NFTRegistryStorageHelper::seal(NFT_REGISTRY_DB, self)
@@ -267,7 +273,6 @@ pub mod test {
             assert_eq!(read.block_number, new_block_number);
         }
     }
-
     pub fn test_create_works() {
         //given
         let details = NFTDetails::new(vec![10, 3, 0, 1, 2], 9, false);

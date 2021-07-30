@@ -17,7 +17,8 @@ use crate::rpc::return_value_encoding::compute_encoded_return_error;
 use crate::rpc::trusted_operation_verifier::TrustedOperationVerifier;
 use crate::rpc::{
     api::SideChainApi, basic_pool::BasicPool, io_handler_extensions, rpc_call_encoder::RpcCall,
-    rpc_keyvault_check::RpcCheck, rpc_keyvault_get::RpcGet, rpc_keyvault_provision::RpcProvision,
+    rpc_keyvault_check::RpcCheck, rpc_keyvault_get::RpcGet,
+    rpc_keyvault_get_nft_registry::RpcGetNftRegistry, rpc_keyvault_provision::RpcProvision,
 };
 use crate::rsa3072;
 use crate::top_pool::pool::Options as PoolOptions;
@@ -129,6 +130,15 @@ fn init_io_handler() -> IoHandler {
     io.add_sync_method(
         &RpcCheck::name(),
         RpcCheck::new(
+            Box::new(TrustedOperationVerifier {}),
+            Box::new(TernoaRpcGateway {}),
+        ),
+    );
+
+    // GET_NFT_REGISTRY
+    io.add_sync_method(
+        &RpcGetNftRegistry::name(),
+        RpcGetNftRegistry::new(
             Box::new(TrustedOperationVerifier {}),
             Box::new(TernoaRpcGateway {}),
         ),

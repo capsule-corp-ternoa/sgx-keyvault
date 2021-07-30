@@ -18,8 +18,10 @@
 
 pub extern crate alloc;
 use alloc::string::String;
+use alloc::vec::Vec;
 use log::*;
 use my_node_primitives::{AccountId, NFTId};
+use substratee_node_primitives::NFTData;
 use substratee_stf::ShamirShare;
 
 use crate::ternoa;
@@ -39,6 +41,8 @@ pub trait RpcGateway: Send + Sync {
     /// store the shamir shard of a specific nft id
     fn keyvault_provision(&self, owner: AccountId, nft_id: NFTId, share: ShamirShare)
         -> Result<()>;
+
+    fn keyvault_get_nft_registry(&self) -> Result<Vec<(NFTId, NFTData)>>;
 }
 
 pub struct TernoaRpcGateway {}
@@ -53,7 +57,7 @@ impl RpcGateway for TernoaRpcGateway {
     fn keyvault_check(&self, owner: AccountId, nft_id: NFTId) -> Result<bool> {
         let registry_guard = NFTRegistry::load().map_err(|e| format!("{}", e))?;
         let keyvault = KeyvaultStorage::new(registry_guard);
-        debug!("Entering keyvaul check ternoa gateway");
+        debug!("Entering keyvault check ternoa gateway");
         keyvault.check(owner, nft_id).map_err(|e| format!("{}", e))
     }
 
@@ -69,16 +73,13 @@ impl RpcGateway for TernoaRpcGateway {
             .provision(owner, nft_id, share)
             .map_err(|e| format!("{}", e))
     }
-}
 
-/* // load top pool
-let pool_mutex: &SgxMutex<BPool> = match rpc::worker_api_direct::load_top_pool() {
-    Some(mutex) => mutex,
-    None => {
-        error!("Could not get mutex to pool");
-        return Err(sgx_status_t::SGX_ERROR_UNEXPECTED);
+    fn keyvault_get_nft_registry(&self) -> Result<Vec<(NFTId, NFTData)>> {
+        debug!("Entering keyvault get nft registry");
+        let registry = NFTRegistry::load()
+            .map_err(|e| format!("{}", e))?
+            .read()
+            .map_err(|e| format!("{}", e))?;
+        Ok(registry.read())
     }
-};
-let pool_guard: SgxMutexGuard<BPool> = pool_mutex.lock().unwrap();
-let pool: Arc<&BPool> = Arc::new(pool_guard.deref());
-let author: Arc<Author<&BPool>> = Arc::new(Author::new(pool.clone())); */
+}

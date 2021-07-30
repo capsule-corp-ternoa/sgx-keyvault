@@ -17,9 +17,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub extern crate alloc;
+use alloc::vec::Vec;
 
 use crate::rpc::ternoa_rpc_gateway::{Result as RpcResult, RpcGateway};
 use my_node_primitives::{AccountId, NFTId};
+use substratee_node_primitives::NFTData;
 use substratee_stf::ShamirShare;
 /// Mock implementation to be used in unit testing
 pub struct RpcGatewayMock {}
@@ -40,5 +42,9 @@ impl RpcGateway for RpcGatewayMock {
         _share: ShamirShare,
     ) -> RpcResult<()> {
         Ok(())
+    }
+
+    fn keyvault_get_nft_registry(&self) -> RpcResult<Vec<(NFTId, NFTData)>> {
+        Ok(vec![])
     }
 }
