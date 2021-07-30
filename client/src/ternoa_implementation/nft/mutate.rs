@@ -3,6 +3,7 @@ use codec::Decode;
 use frame_system::Event as SystemEvent;
 use log::*;
 use my_node_runtime::Event;
+use sp_runtime::DispatchError;
 use sp_application_crypto::sr25519;
 use sp_core::H256 as Hash;
 use sp_core::{sr25519 as sr25519_core, Pair};
@@ -67,10 +68,18 @@ pub fn mutate(owner_ss58: &str, nft_id: u32, new_filename: &str, chain_api: Api<
                         Event::frame_system(fse) => {
                             info!("Other frame system event received: {:?}", fse);
                             match &fse {
-                                SystemEvent::ExtrinsicFailed(error, _info) => {
-                                    error!("Error: {:?}", error);
-                                    break 'outer;
-                                }
+                                SystemEvent::ExtrinsicFailed(error, _info) => match error {
+                                    DispatchError::Module { index, error, .. } => {
+                                        error!(
+                                                "ExtrinsicFailed Module error: module index {}, error num {}",
+                                                index, error
+                                            );
+                                        break 'outer;
+                                    }
+                                    _ => debug!(
+                                        "ignoring unsupported ExtrinsicFailed event. Wait ..."
+                                    ),
+                                },
                                 _ => {
                                     debug!("ignoring unsupported frame system event");
                                 }

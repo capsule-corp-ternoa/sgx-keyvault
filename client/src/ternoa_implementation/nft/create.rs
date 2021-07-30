@@ -6,6 +6,7 @@ use crate::{get_accountid_from_str, get_pair_from_str};
 use codec::Decode;
 use frame_system::Event as SystemEvent;
 use log::*;
+use sp_runtime::DispatchError;
 use my_node_primitives::NFTId;
 use my_node_runtime::Event;
 use sp_core::H256 as Hash;
@@ -72,10 +73,18 @@ pub fn create(owner_ss58: &str, filename: &str, chain_api: Api<sr25519::Pair>) -
                         Event::frame_system(fse) => {
                             info!("Other frame system event received: {:?}", fse);
                             match &fse {
-                                SystemEvent::ExtrinsicFailed(error, _info) => {
-                                    error!("Error: {:?}", error);
-                                    break 'outer;
-                                }
+                                SystemEvent::ExtrinsicFailed(error, _info) => match error {
+                                    DispatchError::Module { index, error, .. } => {
+                                        error!(
+                                                "ExtrinsicFailed Module error: module index {}, error num {}",
+                                                index, error
+                                            );
+                                        break 'outer;
+                                    }
+                                    _ => debug!(
+                                        "ignoring unsupported ExtrinsicFailed event. Wait ..."
+                                    ),
+                                },
                                 _ => {
                                     debug!("ignoring unsupported frame system event");
                                 }
