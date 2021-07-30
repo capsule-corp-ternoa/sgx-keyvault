@@ -478,20 +478,6 @@ pub unsafe extern "C" fn sync_chain(
                 Err(_) => error!("Error executing relevant extrinsics"),
             };
 
-            // update nft registry
-            if let Ok(rw_lock) = NFTRegistry::load() {
-                if let Ok(mut registry) = rw_lock.write() {
-                    if let Err(e) =
-                        registry.update_block_number_and_seal(signed_block.block.header.number())
-                    {
-                        error!("Cold not update NFT Registry : {:?}", e);
-                    };
-                } else {
-                    error!("Could not get write lock on nft registry");
-                }
-            } else {
-                error!("could not load ternoa registry");
-            }
             // compose indirect block confirmation
             let xt_block = [SUBSRATEE_REGISTRY_MODULE, BLOCK_CONFIRMED];
             let genesis_hash = validator.genesis_hash(validator.num_relays).unwrap();
@@ -509,7 +495,7 @@ pub unsafe extern "C" fn sync_chain(
     // execute pending calls from operation pool and create block
     // (one per shard) as opaque call with block confirmation
     let signed_blocks: Vec<SignedSidechainBlock> =
-        match execute_top_pool_calls(latest_onchain_header) {
+        match execute_top_pool_calls(latest_onchain_header.clone()) {
             Ok((confirm_calls, signed_blocks)) => {
                 calls.extend(confirm_calls.into_iter());
                 signed_blocks
@@ -535,6 +521,22 @@ pub unsafe extern "C" fn sync_chain(
     if io::light_validation::seal(validator).is_err() {
         return sgx_status_t::SGX_ERROR_UNEXPECTED;
     };
+
+    // update nft registry
+    if let Ok(rw_lock) = NFTRegistry::load() {
+        if let Ok(mut registry) = rw_lock.write() {
+            if let Err(e) = registry.update_block_number_and_seal(latest_onchain_header.number()) {
+                error!("Cold not update NFT Registry : {:?}", e);
+                return sgx_status_t::SGX_ERROR_UNEXPECTED;
+            };
+        } else {
+            error!("Could not get write lock on nft registry");
+            return sgx_status_t::SGX_ERROR_UNEXPECTED;
+        }
+    } else {
+        error!("could not load ternoa registry");
+        return sgx_status_t::SGX_ERROR_UNEXPECTED;
+    }
 
     // ocall to worker to store signed block and send block confirmation
     if let Err(_e) = send_block_and_confirmation(extrinsics, signed_blocks) {
