@@ -41,46 +41,51 @@ read MRENCLAVE <<< $($CLIENT list-workers | awk '/  MRENCLAVE: / { print $2; exi
 [[ -z $MRENCLAVE ]] && { echo "MRENCLAVE is empty. cannot continue" ; exit 1; }
 
 
-aliceCreatesACapsule(){
 echo ""
 echo "Create a new file to encrypt:"
 INPUTFILENAME="input_file"
 INPUTFILE="${INPUTFILENAME}.txt"
 touch ${INPUTFILE}
-echo "These are very important data" > INPUTFILE
-INPUTFILETEXT=cat ${INPUTFILE}
-echo "> ${INPUTFILE}: ${INPUTFILETEXT}"
+echo "These are very important data" > $INPUTFILE
+read INPUTFILE_TEXT <<< $(cat ${INPUTFILE})
+echo "> ${INPUTFILE}: ${INPUTFILE_TEXT}"
 echo ""
 
-echo "Encrypt file"
-${CLIENT} encrypt ${INPUTFILE}
 
 CIPHERFILE="${INPUTFILENAME}.ciphertext"
 KEYFILE="${INPUTFILENAME}.aes256"
+DECRYPTEDFILE="${INPUTFILENAME}.decrypted"
 
-echo "> ${CIPHERFILE}"
+read CIPHERFILE_TEXT <<< $(cat ${CIPHERFILE})
+
+
+aliceCreatesACapsule(){
+echo "Alice encrypts file ${INPUTFILE}"
+${CLIENT} encrypt ${INPUTFILE}
+
+echo "> ${CIPHERFILE} : ${CIPHERFILE_TEXT}"
 echo "> ${KEYFILE}"
 echo ""
 
-echo "Create a new NFT onchain..."
+echo "Alices creates a new NFT onchain..."
 read NFTID <<< $(${CLIENT} nft create ${ALICE} ${CIPHERFILE})
 echo "Received NFT id from node: ${NFTID}"
 echo ""
 }
 
+getKeyvaults(){
 echo "Get registered sgx keyvaults from the onchain registry"
-read registered_keyvaults <<< $(${CLIENT} keyvault list)
-echo "found keyvaults ${registered_keyvaults}"
 URLSFILE="./my_keyvaults/keyvault_pool.txt"
-
+}
 
 aliceProvisionsKeyvaults(){
 # Load file into array URLS
 URLS=()
 readarray URLS < ${URLSFILE}
+echo "Alices provisiones the following keyvaults:"
 for ELEMENT in ${URLS[@]}
 do
-echo "URL $ELEMENT"
+echo "$ELEMENT"
 done
 URLSNUM=${#URLS[@]}
 
@@ -90,21 +95,21 @@ then
 else
    SHAMITHRESHOLD=$(((2*${URLSNUM}+1)/3))
 fi
-echo "Threshold to recover secret : ${SHAMITHRESHOLD}"
+echo ""
+echo "Setting threshold to recover secret : ${SHAMITHRESHOLD}"
 echo " "
 
 
 echo "Create shamir shares and provision keyvaults"
-read PROVISIONED <<< $(${CLIENT} keyvault provision ${ALICE} ${NFTID} "keyvault_pool.txt" ${SHAMITHRESHOLD} ${KEYFILE} --mrenclave ${MRENCLAVE})
-echo "Provisioned keyvaults = ${PROVISIONED}"
+${CLIENT} keyvault provision ${ALICE} ${NFTID} "keyvault_pool.txt" ${SHAMITHRESHOLD} ${KEYFILE} --mrenclave ${MRENCLAVE}
+echo " "
 
 URLSNFTFILE="./my_keyvaults/keyvault_nft_urls_${NFTID}.txt"
-echo "NFT Urls"
+echo "Successfully provisioned the following keyvaults:"
 text= cat ${URLSNFTFILE}
 echo "$text"
 echo " "
 }
-
 
 
 #function to retrieve the key shares from keyvault, called by Bob
@@ -118,42 +123,79 @@ echo " "
 for ELEMENT in ${URLSNFT[@]}
 do
 CURRENTURL=${URLSNFT[i++]}
-    echo "${CURRENTURL}\n"
-    read CHECKED <<< $(${CLIENT} keyvault check ${ACCOUNTBOB} ${NFTID} ${CURRENTURL}  --mrenclave ${MRENCLAVE})
-    ${CLIENT} keyvault get ${NFTID} ${ACCOUNTBOB}  ${CURRENTURL}  --mrenclave ${MRENCLAVE}
+    read CHECKED <<< $(${CLIENT} keyvault check ${BOB} ${NFTID} ${CURRENTURL} --mrenclave ${MRENCLAVE})
+    ${CLIENT} keyvault get ${BOB} ${NFTID} ${CURRENTURL} --mrenclave ${MRENCLAVE}
+    echo "${CURRENTURL} returned: ${CHECKED}"
 done
 }
 
 
 #Success Scenario
 echo "------ Success senario -------------"
+echo " "
 aliceCreatesACapsule
+echo "Wait 30s until keyvaults registered new blocks .. "
+echo " "
+sleep 30
+getKeyvaults
+URLS=()
+readarray URLS < ${URLSFILE}
+echo "Check if Keyvault with url ${URLS[0]} registered new nft id.. "
+echo " "
+read NFTIDS <<< $(${CLIENT} keyvault get-nft-registry ${URLS[0]} --mrenclave ${MRENCLAVE})
+echo "Received the following NFTs:"
+echo "${NFTIDS}"
+echo " "
 aliceProvisionsKeyvaults
 echo " "
 echo "Transfer capsule to Bob "
-${CLIENT} nft transfer ${ACCOUNTALICE} ${ACCOUNTBOB} ${NFTID}
+${CLIENT} nft transfer ${ALICE} ${BOB} ${NFTID}
 echo " "
-echo "Bob open capsule"
+echo "Wait 30s until keyvaults registered new blocks .. "
+echo " "
+sleep 30
+echo "Bob retrieves his new shamir key shares"
 bobRetrievesKeyShares
 echo " "
-KEYSHAREFILE="./my-shares/shares_nft_${NFTID}.txt"
+KEYSHAREFILE="./my_shares/shares_nft_${NFTID}.txt"
 ${CLIENT} decrypt ${CIPHERFILE} ${KEYSHAREFILE}
-echo " "
+read DECRYPTED_TEXT <<< $(cat ${DECRYPTEDFILE})
+echo " Bob successfully decrypted"
+echo "> ${CIPHERFILE} : ${CIPHERFILE_TEXT} to"
+echo "> ${DECRYPTEDFILE} : ${DECRYPTED_TEXT}"
 
-#adversary scenario 1
+
+
+# adversary scenario 1
+echo " "
+echo " "
+echo " "
 echo "------ Adversary scenario 1 -------------"
+echo " "
 aliceCreatesACapsule
+echo "Wait 30s until keyvaults registered new blocks .. "
+echo " "
+sleep 30
 aliceProvisionsKeyvaults
 echo " "
-echo "Bob fails to retrieve the key shares"
+echo "Bob should fail to retrieve the key shares"
 bobRetrievesKeyShares
 echo " "
+
+
 #adversary scenario 2
-echo "------ Adversary scenario 2 -------------"
-aliceCreatesACapsule
 echo " "
-echo "Bob fails to provision key shards"
-read BOBPROVISIONED <<< $(${CLIENT} keyvault provision ${ACCOUNTBOB} ${NFTID} "keyvault_pool.txt" ${SHAMITHRESHOLD} ${KEYFILE} --mrenclave ${MRENCLAVE})
-echo "Keyvault provision = ${BOBPROVISIONED}"
+echo " "
+echo " "
+echo " "
+echo "------ Adversary scenario 2 -------------"
+echo " "
+aliceCreatesACapsule
+echo "Wait 30s until keyvaults registered new blocks .. "
+echo " "
+sleep 30
+echo "Bob should fail to provision key shards:"
+read BOBPROVISIONED <<< $(${CLIENT} keyvault provision ${BOB} ${NFTID} "keyvault_pool.txt" ${SHAMITHRESHOLD} ${KEYFILE} --mrenclave ${MRENCLAVE})
+echo "${BOBPROVISIONED}"
 echo " "
 echo "All scenarios Done!"
