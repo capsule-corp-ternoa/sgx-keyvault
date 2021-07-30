@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM scssubstratee/substratee_dev:1804-2.12-1.1.3-001
 # prepare the linux system
 RUN apt-get update && \
     apt-get install -y git && apt-get install -y curl && \
@@ -19,15 +19,16 @@ RUN rustup default stable && \
 RUN cargo --help
 RUN rustup show
 #prepare chain
-# RUN cd /ternoa && \
-#     git clone https://github.com/capsule-corp-ternoa/chain.git
-# RUN cd /ternoa/chain && \
-#     git checkout add-skip-ra-feature && \
-#     ls && \
-# 	cargo build --release --features skip-ias-check
+RUN cd /ternoa && \
+    git clone https://github.com/capsule-corp-ternoa/chain.git
+RUN cd /ternoa/chain && \
+    git checkout add-skip-ra-feature && \
+    ls && \
+	cargo build --release --features skip-ias-check
 # prepare workers
 RUN cd /ternoa && \
     git clone  https://github.com/capsule-corp-ternoa/sgx-keyvault.git
+RUN rustup show
 RUN cd /ternoa/sgx-keyvault && \
     git checkout develop && \
     SGX_MODE=SW make

@@ -1,13 +1,13 @@
 !/bin/bash
 
-# name of the docker image
-DOCKER_IMAGE=ternoa/demo
+# # name of the docker image
+DOCKER_IMAGE=ternoa-demo
 
 # clone the rust-sgx-sdk (used to run the substratee-worker in the docker)
-git clone https://github.com/baidu/rust-sgx-sdk.git
+#git clone https://github.com/baidu/rust-sgx-sdk.git
 
 # get the substraTEE docker image from docker hub
-docker pull $DOCKER_IMAGE
+docker image build -t ternoa-demo -f Dockerfile
 
 # if you want to build the docker image yourself, use the following command:
 # docker build -t substratee -f DockerfileM5 .
@@ -62,12 +62,12 @@ then
 #         \"/ternoa/demo_scenarios.sh\"" Enter
 
     # start the ternoa-worker in pane 3
-    tmux send-keys -t3 "docker run -ti \
-        --ip=192.168.10.21 \
-        --network=ternoa-net \
-        -v $(pwd)/output:/ternoa/output \
-        $DOCKER_IMAGE \
-        \"/ternoa/start_worker.sh 2910\"" Enter
+     tmux send-keys -t2 "docker run -ti \
+         --ip=192.168.10.21 \
+         --network=ternoa-net \
+         -v $(pwd)/output:/ternoa/output \
+         $DOCKER_IMAGE \
+         \"/ternoa/start_worker.sh\"" Enter
 
 #     # start the 2d ternoa-worker in pane 4
 #     tmux send-keys -t4 "docker run -ti \
