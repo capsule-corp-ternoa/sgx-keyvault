@@ -44,7 +44,6 @@ impl<T: NFTRegistryAuthorization> KeyvaultStorage<T> {
     }
 
     fn is_authorized(&self, owner: AccountId, nft_id: NFTId) -> Result<bool> {
-        // get read lock
         Ok(self
             .nft_access
             .read()
@@ -66,8 +65,11 @@ impl<T: NFTRegistryAuthorization> KeyvaultStorage<T> {
 
     ///Check if share for NFTId is in store
     pub fn check(&self, owner: AccountId, nft_id: NFTId) -> Result<bool> {
-        //TODO Authorization owner
-        if !self.is_authorized(owner, nft_id)? {
+        if !self.is_authorized(owner.clone(), nft_id)? {
+            error!(
+                "check of {} is non authorized for this owner: {:?}.",
+                nft_id, owner
+            );
             return Ok(false);
         }
         let file_name = self.nft_sealed_file_path(nft_id);
@@ -76,7 +78,6 @@ impl<T: NFTRegistryAuthorization> KeyvaultStorage<T> {
 
     ///Get the share from store for this NFTId
     pub fn get(&self, owner: AccountId, nft_id: NFTId) -> Result<Option<ShamirShare>> {
-        //TODO Authorization owner
         if !&self.is_authorized(owner.clone(), nft_id)? {
             error!(
                 "get of {} is non authorized for this owner: {:?}.",
