@@ -72,7 +72,7 @@ impl NFTRegistryStorageHelper {
 
     /// load NFT Registry from SgxFs
     pub fn unseal(path: &str) -> Result<NFTRegistry> {
-        let encoded = SgxIo::unseal(path).map_err(Error::SgxIoUnsealError)?;
+        let encoded = SgxIo::unseal_without_log(path).map_err(Error::SgxIoUnsealError)?;
         let registry_codec = NFTRegistryStorageHelper::decode(&mut encoded.as_slice())
             .map_err(|_| Error::DecodeError)?;
         Ok(registry_codec.recover_registry())
