@@ -64,7 +64,7 @@ impl RpcCheck {
             _ => return Err(RpcCallStatus::operation_type_mismatch.to_string()),
         };
 
-        let share_exists = self.rpc_gateway.keyvault_check(owner, nft_id);
+        let share_exists = self.rpc_gateway.keyvault_check(owner, nft_id)?;
         debug!("Share exists: {:?}", share_exists);
 
         Ok((share_exists, false, DirectRequestStatus::Ok))

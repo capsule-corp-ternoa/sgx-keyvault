@@ -67,7 +67,7 @@ impl RpcGet {
             _ => return Err(RpcCallStatus::operation_type_mismatch.to_string()),
         };
 
-        let share = self.rpc_gateway.keyvault_get(owner, nft_id);
+        let share = self.rpc_gateway.keyvault_get(owner, nft_id)?;
         debug!("Received share: {:?}", share);
 
         Ok((share, false, DirectRequestStatus::Ok))

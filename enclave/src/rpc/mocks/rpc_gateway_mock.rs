@@ -17,22 +17,20 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub extern crate alloc;
-use alloc::string::String;
 
-use crate::rpc::ternoa_rpc_gateway::RpcGateway;
+use crate::rpc::ternoa_rpc_gateway::{Result as RpcResult, RpcGateway};
 use my_node_primitives::{AccountId, NFTId};
 use substratee_stf::ShamirShare;
-
 /// Mock implementation to be used in unit testing
 pub struct RpcGatewayMock {}
 
 impl RpcGateway for RpcGatewayMock {
-    fn keyvault_get(&self, _owner: AccountId, _nft_id: NFTId) -> Option<ShamirShare> {
-        Some(vec![])
+    fn keyvault_get(&self, _owner: AccountId, _nft_id: NFTId) -> RpcResult<Option<ShamirShare>> {
+        Ok(Some(vec![]))
     }
 
-    fn keyvault_check(&self, _owner: AccountId, _nft_id: NFTId) -> bool {
-        true
+    fn keyvault_check(&self, _owner: AccountId, _nft_id: NFTId) -> RpcResult<bool> {
+        Ok(true)
     }
 
     fn keyvault_provision(
@@ -40,7 +38,7 @@ impl RpcGateway for RpcGatewayMock {
         _owner: AccountId,
         _nft_id: NFTId,
         _share: ShamirShare,
-    ) -> Result<(), String> {
+    ) -> RpcResult<()> {
         Ok(())
     }
 }
