@@ -17,7 +17,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub extern crate alloc;
-use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::rpc::ternoa_rpc_gateway::{Result as RpcResult, RpcGateway};
@@ -45,7 +44,7 @@ impl RpcGateway for RpcGatewayMock {
         Ok(())
     }
 
-    fn keyvault_get_nft_registry(&self) -> Vec<(NFTId, NFTData)> {
-        vec![]
+    fn keyvault_get_nft_registry(&self) -> RpcResult<Vec<(NFTId, NFTData)>> {
+        Ok(vec![])
     }
 }

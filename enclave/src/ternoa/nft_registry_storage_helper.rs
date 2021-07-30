@@ -25,12 +25,12 @@ use crate::io as SgxIo;
 /// and finally store it in SgxFs
 #[derive(Debug, Encode, Decode)]
 pub struct NFTRegistryStorageHelper {
-    registry: Vec<(NFTId, NFTData)>,
-    block_number: BlockNumber,
+    pub registry: Vec<(NFTId, NFTData)>,
+    pub block_number: BlockNumber,
 }
 
 impl NFTRegistryStorageHelper {
-    fn create_from_registry(hashmap_registry: &NFTRegistry) -> Self {
+    pub fn create_from_registry(hashmap_registry: &NFTRegistry) -> Self {
         let vec_registry: Vec<(NFTId, NFTData)> =
             hashmap_registry.registry.clone().into_iter().collect();
         NFTRegistryStorageHelper {

@@ -59,7 +59,7 @@ impl RpcGetNftRegistry {
             _ => return Err(RpcCallStatus::operation_type_mismatch.to_string()),
         };
 
-        let registry = self.rpc_gateway.keyvault_get_nft_registry();
+        let registry = self.rpc_gateway.keyvault_get_nft_registry()?;
         debug!("Received registry: {:?}", registry);
 
         Ok((registry, false, DirectRequestStatus::Ok))
