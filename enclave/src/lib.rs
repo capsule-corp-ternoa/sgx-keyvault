@@ -1006,7 +1006,7 @@ fn handle_nft_transfer(
     let account = match multi_addr {
         MultiAddress::Id(acc) => acc,
         MultiAddress::Address32(acc) => acc.into(),
-        _ => return Err("Unsupported acc id format".to_string())
+        _ => return Err("Unsupported acc id format".to_string()),
     };
     let mut registry = match NFTRegistry::load() {
         Ok(rw_lock) => match rw_lock.write() {
