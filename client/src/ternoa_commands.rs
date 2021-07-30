@@ -331,6 +331,19 @@ pub fn keyvault_commands() -> MultiCommand<'static, str, str> {
                     Ok(())
                 }),
         )
+        .add_cmd(
+            Command::new("get-nft-registry")
+                .description("returns the keyvault nft registry")
+                .options(add_url_arg)
+                .runner(|_args: &str, matches: &ArgMatches<'_>| {
+                    // prints the keyvault nft registry
+                    // INPUT:  enclave url
+                    let url: &str = matches.value_of(URL_ARG_NAME).unwrap();
+                    let mrenclave = get_mrenclave(matches);
+                    keyvault::get_nft_registry::get_nft_registy(url, mrenclave).unwrap();
+                    Ok(())
+                }),
+        )
         .into_cmd("keyvault")
 }
 
