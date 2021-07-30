@@ -20,12 +20,12 @@ use crate::get_pair_from_str;
 use crate::ternoa_implementation::cipher;
 use crate::ternoa_implementation::keyvault::constants::KEYVAULT_NFT_URLLIST_FILENAME_PREFIX;
 use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
+use log::*;
 use my_node_primitives::{AccountId, NFTId};
 use sharks::{Share, Sharks};
 use sp_core::{sr25519 as sr25519_core, Pair};
 use std::path::PathBuf;
 use substratee_stf::{KeyPair, TrustedCall, TrustedOperation};
-use log::*;
 
 pub fn provision(
     signer_s58: &str,
@@ -49,7 +49,10 @@ pub fn provision(
         .read_lines()
         .map_err(|e| format!("Could not read urls: {}", e))?;
     let number_of_keyvaults = urls.len();
-    debug!("Sending provisioning key to {:?} keyvaults", number_of_keyvaults);
+    debug!(
+        "Sending provisioning key to {:?} keyvaults",
+        number_of_keyvaults
+    );
     // create shamir shares
     let shamir_shares =
         create_shamir_shares(number_of_keyvaults, recovery_threshold, &encryption_key)?;
