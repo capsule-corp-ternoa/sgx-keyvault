@@ -1,0 +1,34 @@
+version: "2"
+services:
+  ternoa-node:
+    build:
+      context: .
+      dockerfile: ./ternoa/Dockerfile
+    ports:
+      - "9910:9910"
+#    command: ./chain/target/release/ternoa --dev --tmp --ws-port 9910
+  ternoa-worker1:
+    image: myworker
+    build:
+      context: .
+      dockerfile: ./sgx-keyvault/Dockerfile
+    ports:
+      - "2910:2910"
+      - "3443:3443"
+#    command: bash -c "cd sgx-keyvault/bin && sleep 60 && RUST_BACKTRACE=1 ./substratee-worker -P 2910 -p 9910  run --skip-ra"
+    depends_on: [ternoa-node]
+#  ternoa-worker2:
+#    image: myworker
+#    ports:
+#      - "2911:2911"
+#    command: bash -c "cd sgx-keyvault/bin2 && sleep 30 && ./substratee-worker -P 2911 -p 9910 run --skip-ra"
+#    depends_on:
+#      - ternoa-worker1
+#  ternoa-worker3:
+#    build:
+#      context: .
+#      dockerfile: ./sgx-keyvault/Dockerfile
+#    ports:
+#      - "2974:2944"
+#    command: cd worker/bin3 && ./worker -P 2984 -p 9994 run --skip-ra
+#    depends_on: [ternoa-node]
