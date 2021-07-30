@@ -27,4 +27,4 @@ RUN cd sgx-keyvault/bin && \
 #      ./substratee-worker signing-key && \
 #      ./substratee-worker mrenclave > ~/mrenclave.b58
 EXPOSE 2910 3443
-CMD cd sgx-keyvault/bin && sleep 30 &&./substratee-worker -P 2910 -p 9910  run --skip-ra
+CMD cd sgx-keyvault/bin && sleep 30 && RUST_BACKTRACE=full ./substratee-worker -u ws://ternoa-node -P 2910 -p 9910 run --skip-ra
