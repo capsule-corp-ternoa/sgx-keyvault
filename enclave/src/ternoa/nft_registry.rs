@@ -71,7 +71,10 @@ impl NFTRegistryAuthorization for NFTRegistry {
             if data.owner == owner {
                 return true;
             } else {
-                error!("Owner mismatch. Expected {:?}, received: {:?}", data.owner, owner);
+                error!(
+                    "Owner mismatch. Expected {:?}, received: {:?}",
+                    data.owner, owner
+                );
             }
         } else {
             error!("Nft Id not found: {:?}", nft_id);
