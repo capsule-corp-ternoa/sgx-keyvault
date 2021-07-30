@@ -20,7 +20,6 @@ pub extern crate alloc;
 use alloc::string::String;
 use my_node_primitives::{AccountId, NFTId};
 use substratee_stf::ShamirShare;
-use std::sync::Arc;
 
 use crate::ternoa;
 use ternoa::keyvault::KeyvaultStorage;
@@ -60,13 +59,13 @@ impl RpcGateway for TernoaRpcGateway {
 
     fn keyvault_provision(
         &self,
-        _owner: AccountId,
-        _nft_id: NFTId,
-        _share: ShamirShare,
+        owner: AccountId,
+        nft_id: NFTId,
+        share: ShamirShare,
     ) -> Result<()> {
         let registry_guard =  NFTRegistry::load().map_err(|e| {format!("{}", e)})?;
-        let KeyvaultStorage = KeyvaultStorage::new(registry_guard);
-        Ok(())
+        let keyvault = KeyvaultStorage::new(registry_guard);
+        keyvault.provision(owner, nft_id, share).map_err(|e| format!("{}", e))
     }
 }
 
