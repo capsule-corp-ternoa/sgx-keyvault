@@ -18,6 +18,8 @@ pub type BlockNumber = u32;
 use my_node_primitives::nfts::NFTDetails;
 use my_node_primitives::NFTId;
 
+pub type NFTData = NFTDataPrimitives<AccountId>;
+
 // Note in the substratee-pallet-registry this is a struct. But for the coded this does not matter.
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq, Debug)]
 pub struct Request {
