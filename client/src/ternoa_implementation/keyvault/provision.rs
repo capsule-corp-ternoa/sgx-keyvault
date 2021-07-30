@@ -25,6 +25,7 @@ use sharks::{Share, Sharks};
 use sp_core::{sr25519 as sr25519_core, Pair};
 use std::path::PathBuf;
 use substratee_stf::{KeyPair, TrustedCall, TrustedOperation};
+use log::*;
 
 pub fn provision(
     signer_s58: &str,
@@ -48,7 +49,7 @@ pub fn provision(
         .read_lines()
         .map_err(|e| format!("Could not read urls: {}", e))?;
     let number_of_keyvaults = urls.len();
-
+    debug!("Sending provisioning key to {:?} keyvaults", number_of_keyvaults);
     // create shamir shares
     let shamir_shares =
         create_shamir_shares(number_of_keyvaults, recovery_threshold, &encryption_key)?;
@@ -57,7 +58,7 @@ pub fn provision(
     //    a. send ith share to url_i
     //    b. verify availability
     let mut nft_urls: Vec<String> = Vec::new();
-    for i in 0..(number_of_keyvaults - 1) {
+    for i in 0..number_of_keyvaults {
         // create trusted call
         let provision_call: TrustedOperation = TrustedCall::keyvault_provision(
             signer_public.clone(),
@@ -73,6 +74,7 @@ pub fn provision(
         .into_trusted_operation(true);
         // send to enclave
         send_direct_request_to_keyvault(&urls[i], provision_call, mrenclave)?;
+        debug!("Keyvault {:?} returned successfully", urls[i]);
         // only push to urls if successful
         nft_urls.push(urls[i].clone());
     }
