@@ -27,6 +27,7 @@ use crate::io as SgxIo;
 pub struct NFTRegistryStorageHelper {
     pub registry: Vec<(NFTId, NFTData)>,
     pub block_number: BlockNumber,
+    pub current_id: NFTId,
 }
 
 impl NFTRegistryStorageHelper {
@@ -36,20 +37,19 @@ impl NFTRegistryStorageHelper {
         NFTRegistryStorageHelper {
             block_number: hashmap_registry.block_number,
             registry: vec_registry,
+            current_id: hashmap_registry.current_id,
         }
     }
 
     fn recover_registry(&self) -> NFTRegistry {
         let mut recovered_map: HashMap<NFTId, NFTData> = HashMap::new();
-        let mut ids: Vec<NFTId> = Vec::new();
         for data_point in self.registry.clone() {
             recovered_map.insert(data_point.0, data_point.1);
-            ids.push(data_point.0);
         }
         NFTRegistry {
             block_number: self.block_number,
             registry: recovered_map,
-            nft_ids: ids,
+            current_id: self.current_id,
         }
     }
 
@@ -100,6 +100,7 @@ pub mod test {
         let helper = NFTRegistryStorageHelper {
             registry: vec_map,
             block_number: 13,
+            current_id: 0,
         };
 
         // when
@@ -109,7 +110,7 @@ pub mod test {
         assert_eq!(pair_one.1, *registry.registry.get(&pair_one.0).unwrap());
         assert_eq!(pair_two.1, *registry.registry.get(&pair_two.0).unwrap());
         assert_eq!(registry.block_number, helper.block_number);
-        assert_eq!(registry.nft_ids.len(), 2);
+        assert_eq!(registry.current_id, helper.current_id);
     }
 
     pub fn test_create_from_registry() {
@@ -122,7 +123,7 @@ pub mod test {
         let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
         hash_map.insert(1, nft_data_one);
         hash_map.insert(2, nft_data_two);
-        let registry = NFTRegistry::new(100, hash_map.clone(), vec![10, 2, 10, 4]);
+        let registry = NFTRegistry::new(100, hash_map.clone(), 10);
 
         // when
         let helper = NFTRegistryStorageHelper::create_from_registry(&registry);
@@ -140,6 +141,7 @@ pub mod test {
             *hash_map.get(&retrieved_key_two).unwrap()
         );
         assert_eq!(registry.block_number, helper.block_number);
+        assert_eq!(registry.current_id, helper.current_id);
     }
 
     pub fn test_recover_from_create_from_registry() {
@@ -152,7 +154,7 @@ pub mod test {
         let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
         hash_map.insert(1, nft_data_one);
         hash_map.insert(2, nft_data_two);
-        let registry = NFTRegistry::new(100, hash_map, vec![2, 1]);
+        let registry = NFTRegistry::new(100, hash_map, 3);
         let helper = NFTRegistryStorageHelper::create_from_registry(&registry);
 
         // when
@@ -161,7 +163,7 @@ pub mod test {
         // then
         assert_eq!(registry.registry, recovered_registry.registry);
         assert_eq!(registry.block_number, recovered_registry.block_number);
-        assert_eq!(registry.nft_ids.len(), recovered_registry.nft_ids.len());
+        assert_eq!(registry.current_id, recovered_registry.current_id);
     }
 
     pub fn test_seal_creates_file() {
@@ -198,7 +200,7 @@ pub mod test {
     pub fn test_unseal_works() {
         // given
         let path = "hello_unseal";
-        let registry = NFTRegistry::new(3, HashMap::default(), vec![]);
+        let registry = NFTRegistry::new(3, HashMap::default(), 1);
         NFTRegistryStorageHelper::seal(path, &registry).unwrap();
 
         // when

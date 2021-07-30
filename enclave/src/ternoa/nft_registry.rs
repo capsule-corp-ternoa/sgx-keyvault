@@ -56,12 +56,12 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub struct NFTRegistry {
     pub block_number: BlockNumber,
     pub registry: HashMap<NFTId, NFTData>,
-    pub nft_ids: Vec<NFTId>, // optional, not sure if this is necessary
+    pub current_id: NFTId,
 }
 
 impl Default for NFTRegistry {
     fn default() -> Self {
-        Self::new(0, HashMap::default(), vec![])
+        Self::new(0, HashMap::default(), 0)
     }
 }
 
@@ -70,7 +70,11 @@ impl NFTRegistryAuthorization for NFTRegistry {
         if let Some(data) = self.registry.get(&nft_id) {
             if data.owner == owner {
                 return true;
+            } else {
+                error!("Owner mismatch. Expected {:?}, received: {:?}", data.owner, owner);
             }
+        } else {
+            error!("Nft Id not found: {:?}", nft_id);
         }
         false
     }
@@ -80,12 +84,12 @@ impl NFTRegistry {
     pub fn new(
         block_number: BlockNumber,
         registry: HashMap<NFTId, NFTData>,
-        nft_ids: Vec<NFTId>,
+        current_id: NFTId,
     ) -> Self {
         NFTRegistry {
             block_number,
             registry,
-            nft_ids,
+            current_id,
         }
     }
 
@@ -120,9 +124,7 @@ impl NFTRegistry {
     /// create new nft entry
     pub fn create(&mut self, owner: AccountId, details: NFTDetails) -> Result<()> {
         debug!("entering create");
-        let nft_id = self
-            .nft_ids
-            .len() as NFTId;
+        let nft_id = self.current_id;
         let nft_data = NFTData {
             owner,
             details,
@@ -130,7 +132,7 @@ impl NFTRegistry {
             locked: false,
         };
         self.registry.insert(nft_id, nft_data);
-        self.nft_ids.push(nft_id);
+        self.current_id = nft_id.checked_add(1).ok_or(Error::NFTIdOverflow)?;
         Ok(())
     }
 
@@ -210,7 +212,7 @@ pub mod test {
         let nft_data = NFTData::new(owner.clone(), details, false, false);
         let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
         hash_map.insert(nft_id, nft_data);
-        let registry = NFTRegistry::new(100, hash_map, vec![]);
+        let registry = NFTRegistry::new(100, hash_map, 1);
 
         // when
         let is_authorized = registry.is_authorized(owner, nft_id);
@@ -227,7 +229,7 @@ pub mod test {
         let nft_data = NFTData::new(owner.clone(), details, false, false);
         let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
         hash_map.insert(nft_id, nft_data);
-        let registry = NFTRegistry::new(100, hash_map, vec![]);
+        let registry = NFTRegistry::new(100, hash_map, 1);
 
         // when
         let is_authorized = registry.is_authorized(owner, 1);
@@ -245,7 +247,7 @@ pub mod test {
         let nft_data = NFTData::new(owner, details, false, false);
         let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
         hash_map.insert(nft_id, nft_data);
-        let registry = NFTRegistry::new(100, hash_map, vec![]);
+        let registry = NFTRegistry::new(100, hash_map, 1);
 
         // when
         let is_authorized = registry.is_authorized(fake_owner, nft_id);
@@ -281,9 +283,8 @@ pub mod test {
         registry.create(owner.clone(), details.clone()).unwrap();
 
         // then
-        let nft_data = registry.registry.get(&1).unwrap();
-        assert_eq!(registry.nft_ids.len(), 1);
-        assert_eq!(registry.nft_ids[0], 1);
+        let nft_data = registry.registry.get(&0).unwrap();
+        assert_eq!(registry.current_id, 1);
         assert_eq!(nft_data.details, details);
         assert_eq!(nft_data.owner, owner);
     }
@@ -297,7 +298,7 @@ pub mod test {
         let nft_data = NFTData::new(owner.clone(), details, false, false);
         let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
         hash_map.insert(nft_id, nft_data);
-        let mut registry = NFTRegistry::new(100, hash_map, vec![]);
+        let mut registry = NFTRegistry::new(100, hash_map, 2);
 
         // when
         registry.mutate(nft_id, new_details.clone());
@@ -317,7 +318,7 @@ pub mod test {
         let nft_data = NFTData::new(owner, details.clone(), false, false);
         let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
         hash_map.insert(nft_id, nft_data);
-        let mut registry = NFTRegistry::new(100, hash_map, vec![]);
+        let mut registry = NFTRegistry::new(100, hash_map, 10);
 
         // when
         registry.transfer(nft_id, new_owner.clone());
@@ -336,7 +337,7 @@ pub mod test {
         let nft_data = NFTData::new(owner, details, false, false);
         let mut hash_map: HashMap<NFTId, NFTData> = HashMap::new();
         hash_map.insert(1, nft_data);
-        let mut registry = NFTRegistry::new(10, hash_map, vec![]);
+        let mut registry = NFTRegistry::new(10, hash_map, 1);
 
         // when
         registry
