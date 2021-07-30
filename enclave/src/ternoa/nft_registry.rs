@@ -71,9 +71,11 @@ impl NFTRegistryAuthorization for NFTRegistry {
             if data.owner == owner {
                 return true;
             } else {
+                let expected: [u8; 32] = data.owner.clone().into();
+                let given: [u8; 32] = owner.into();
                 error!(
                     "Owner mismatch. Expected {:?}, received: {:?}",
-                    data.owner, owner
+                    expected, given
                 );
             }
         } else {

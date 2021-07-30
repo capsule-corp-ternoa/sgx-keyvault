@@ -19,6 +19,7 @@ use my_node_primitives::nfts::NFTDetails;
 use my_node_primitives::NFTId;
 
 pub type NFTData = NFTDataPrimitives<AccountId>;
+use sp_runtime::MultiAddress;
 
 // Note in the substratee-pallet-registry this is a struct. But for the coded this does not matter.
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq, Debug)]
@@ -33,7 +34,7 @@ pub type CallWorkerFn = ([u8; 2], Request);
 // Ternoa Types
 pub type NFTCreateFn = ([u8; 2], NFTDetails);
 pub type NFTMutateFn = ([u8; 2], NFTId, NFTDetails);
-pub type NFTTransferFn = ([u8; 2], NFTId, AccountId);
+pub type NFTTransferFn = ([u8; 2], NFTId, MultiAddress<AccountId, ()>);
 
 #[cfg(feature = "std")]
 pub mod calls {

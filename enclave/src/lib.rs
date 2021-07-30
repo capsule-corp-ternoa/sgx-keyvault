@@ -1002,7 +1002,12 @@ fn handle_nft_transfer(
     _calls: &mut Vec<OpaqueCall>,
     xt: UncheckedExtrinsicV4<NFTTransferFn>,
 ) -> Result<(), String> {
-    let (_, nft_id, account) = xt.function;
+    let (_, nft_id, multi_addr) = xt.function;
+    let account = match multi_addr {
+        MultiAddress::Id(acc) => acc,
+        MultiAddress::Address32(acc) => acc.into(),
+        _ => return Err("Unsupported acc id format".to_string())
+    };
     let mut registry = match NFTRegistry::load() {
         Ok(rw_lock) => match rw_lock.write() {
             Ok(registry) => registry,
@@ -1014,6 +1019,7 @@ fn handle_nft_transfer(
             return Err(format!("could not load ternoa registry: {:?}", e));
         }
     };
+
     registry.transfer(nft_id, account);
     Ok(())
 }
