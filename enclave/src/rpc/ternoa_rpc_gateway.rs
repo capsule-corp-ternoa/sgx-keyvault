@@ -19,6 +19,7 @@
 pub extern crate alloc;
 use alloc::string::String;
 use my_node_primitives::{AccountId, NFTId};
+use std::sync::SgxRwLockReadGuard;
 use substratee_stf::ShamirShare;
 
 use crate::ternoa;
@@ -63,7 +64,8 @@ impl RpcGateway for TernoaRpcGateway {
         _nft_id: NFTId,
         _share: ShamirShare,
     ) -> Result<core::result::Result<(), String>> {
-        // TODO: Add real function here (issue #8)
+        let registry_lock = NFTRegistry::load().map_err(|e| format!("{}", e))?;
+        let registry = registry_lock.read().map_err(|e| format!("{}", e))?;
         Ok(Ok(()))
     }
 }

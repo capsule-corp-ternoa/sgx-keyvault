@@ -11,6 +11,7 @@
     limitations under the License.
 */
 use super::nft_registry_storage_helper::NFTRegistryStorageHelper;
+use derive_more::Display;
 use log::*;
 use my_node_primitives::nfts::{NFTData as NFTDataPrimitives, NFTDetails};
 use my_node_primitives::{AccountId, BlockNumber, NFTId};
@@ -39,7 +40,7 @@ pub trait NFTRegistryAuthorization {
     fn is_authorized(&self, owner: AccountId, nft_id: NFTId) -> bool;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Display)]
 pub enum Error {
     SgxIoUnsealError(sgx_status_t),
     SgxIoSealError(sgx_status_t),
