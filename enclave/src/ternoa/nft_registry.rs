@@ -122,9 +122,7 @@ impl NFTRegistry {
         debug!("entering create");
         let nft_id = self
             .nft_ids
-            .len()
-            .checked_add(1)
-            .ok_or(Error::NFTIdOverflow)? as NFTId;
+            .len() as NFTId;
         let nft_data = NFTData {
             owner,
             details,
