@@ -56,12 +56,11 @@ CIPHERFILE="${INPUTFILENAME}.ciphertext"
 KEYFILE="${INPUTFILENAME}.aes256"
 DECRYPTEDFILE="${INPUTFILENAME}.decrypted"
 
-read CIPHERFILE_TEXT <<< $(cat ${CIPHERFILE})
-
 
 aliceCreatesACapsule(){
 echo "Alice encrypts file ${INPUTFILE}"
 ${CLIENT} encrypt ${INPUTFILE}
+read CIPHERFILE_TEXT <<< $(cat ${CIPHERFILE})
 
 echo "> ${CIPHERFILE} : ${CIPHERFILE_TEXT}"
 echo "> ${KEYFILE}"
@@ -75,6 +74,8 @@ echo ""
 
 getKeyvaults(){
 echo "Get registered sgx keyvaults from the onchain registry"
+echo " "
+${CLIENT} keyvault list
 URLSFILE="./my_keyvaults/keyvault_pool.txt"
 }
 
@@ -115,6 +116,7 @@ echo " "
 #function to retrieve the key shares from keyvault, called by Bob
 bobRetrievesKeyShares() {
 # Load file into array URLS
+i=0
 URLSNFT=()
 readarray URLSNFT < ${URLSNFTFILE}
 text= cat ${URLSNFTFILE}
@@ -124,8 +126,8 @@ for ELEMENT in ${URLSNFT[@]}
 do
 CURRENTURL=${URLSNFT[i++]}
     read CHECKED <<< $(${CLIENT} keyvault check ${BOB} ${NFTID} ${CURRENTURL} --mrenclave ${MRENCLAVE})
-    ${CLIENT} keyvault get ${BOB} ${NFTID} ${CURRENTURL} --mrenclave ${MRENCLAVE}
-    echo "${CURRENTURL} returned: ${CHECKED}"
+    read GOTTEN <<< $(${CLIENT} keyvault get ${BOB} ${NFTID} ${CURRENTURL} --mrenclave ${MRENCLAVE})
+    echo "${CURRENTURL} returned for check: ${CHECKED}"
 done
 }
 
@@ -176,6 +178,9 @@ aliceCreatesACapsule
 echo "Wait 30s until keyvaults registered new blocks .. "
 echo " "
 sleep 30
+getKeyvaults
+URLS=()
+readarray URLS < ${URLSFILE}
 aliceProvisionsKeyvaults
 echo " "
 echo "Bob should fail to retrieve the key shares"

@@ -55,7 +55,7 @@ impl<T: NFTRegistryAuthorization> KeyvaultStorage<T> {
     pub fn provision(&self, owner: AccountId, nft_id: NFTId, share: ShamirShare) -> Result<()> {
         if !self.is_authorized(owner, nft_id)? {
             return Err(Error::KeyvaultError(format!(
-                "Provisioning of NFT id {:?} is not allwed.",
+                "Provisioning of NFT id {:?} is not allowed.",
                 nft_id
             )));
         }
