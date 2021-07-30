@@ -60,9 +60,10 @@ echo "> ${CIPHERFILE}"
 echo "> ${KEYFILE}"
 echo ""
 
-echo "Create a new NFT onchain"
-NFTID= $(${CLIENT} nft create ${ALICE} ${CIPHERFILE}
-echo "Alice NFT id = ${NFTID}"
+echo "Create a new NFT onchain..."
+read NFTID <<< $(${CLIENT} nft create ${ALICE} ${CIPHERFILE})
+echo "Received NFT id from node: ${NFTID}"
+echo ""
 
 echo "Get registered sgx keyvaults from the onchain registry"
 ${CLIENT} keyvault list
@@ -115,6 +116,6 @@ while (( ${#URLSNFT[@]} > i )); do
     ${CLIENT} keyvault get ${NFTID} ${BOB}  ${CURRENTURL}  --mrenclave ${MRENCLAVE}
 done
 
-${CLIENT} nft decrypt ${BOB} ${CIPHERFILE} ${KEYSHAREFILE}
+#${CLIENT} nft decrypt ${BOB} ${CIPHERFILE} ${KEYSHAREFILE}
 
 #adversary scenario 1
