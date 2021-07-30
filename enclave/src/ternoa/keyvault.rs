@@ -8,7 +8,7 @@ use sharks::Share;
 use std::fs;
 use std::path::PathBuf;
 use std::prelude::v1::*;
-use std::sync::Arc;
+use std::sync::SgxRwLock;
 use std::vec::Vec;
 
 use super::nft_registry::NFTRegistryAuthorization;
@@ -19,19 +19,21 @@ pub enum Error {
     IoError(std::io::Error),
     ///Wrapping of Keyvault error
     KeyvaultError(String),
+    /// Read lock error
+    NFTRegistryLockPoisoned,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub const STORAGE_PATH: &str = "keyshare";
 
-pub struct KeyvaultStorage<T: NFTRegistryAuthorization> {
+pub struct KeyvaultStorage<T: NFTRegistryAuthorization + 'static> {
     path: PathBuf,
-    nft_access: Arc<T>,
+    nft_access: &'static SgxRwLock<T>,
 }
 
 impl<T: NFTRegistryAuthorization> KeyvaultStorage<T> {
-    fn new(t: Arc<T>) -> Self {
+    pub fn new(t: &'static SgxRwLock<T>) -> Self {
         KeyvaultStorage {
             path: PathBuf::from(STORAGE_PATH),
             nft_access: t,
@@ -42,13 +44,15 @@ impl<T: NFTRegistryAuthorization> KeyvaultStorage<T> {
         self
     }
 
-    fn is_authorized(&self, owner: AccountId, nft_id: NFTId) -> bool {
-        self.nft_access.is_authorized(owner, nft_id)
+    fn is_authorized(&self, owner: AccountId, nft_id: NFTId) -> Result<bool> {
+        // get read lock
+        Ok(self.nft_access.read().map_err(|_| {Error::NFTRegistryLockPoisoned})?
+            .is_authorized(owner, nft_id))
     }
 
     ///Store share on disk in sealed file
     pub fn provision(&self, owner: AccountId, nft_id: NFTId, share: Share) -> Result<()> {
-        if !self.is_authorized(owner.clone(), nft_id) {
+        if !self.is_authorized(owner.clone(), nft_id)? {
             return Err(Error::KeyvaultError(format!(
                 "Provision of {} is non authorized for this owner: {:?}.",
                 nft_id, owner
@@ -59,30 +63,30 @@ impl<T: NFTRegistryAuthorization> KeyvaultStorage<T> {
     }
 
     ///Check if share for NFTId is in store
-    pub fn check(&self, owner: AccountId, nft_id: NFTId) -> bool {
+    pub fn check(&self, owner: AccountId, nft_id: NFTId) -> Result<bool> {
         //TODO Authorization owner
-        if !self.is_authorized(owner, nft_id) {
-            return false;
+        if !self.is_authorized(owner, nft_id)? {
+            return Ok(false);
         }
         let file_name = self.nft_sealed_file_path(nft_id);
-        file_name.is_file()
+        Ok(file_name.is_file())
     }
 
     ///Get the share from store for this NFTId
-    pub fn get(&self, owner: AccountId, nft_id: NFTId) -> Option<Share> {
+    pub fn get(&self, owner: AccountId, nft_id: NFTId) -> Result<Option<Share>> {
         //TODO Authorization owner
-        if !&self.is_authorized(owner.clone(), nft_id) {
+        if !&self.is_authorized(owner.clone(), nft_id)? {
             error!(
                 "get of {} is non authorized for this owner: {:?}.",
                 nft_id, owner
             );
-            return None;
+            return Ok(None);
         }
         match self.unseal(nft_id) {
-            Ok(share) => Some(share),
+            Ok(share) => Ok(Some(share)),
             Err(e) => {
                 error!("No share found for {:?} and NFT {}: {:?}", owner, nft_id, e);
-                None
+                Ok(None)
             }
         }
     }
@@ -148,6 +152,8 @@ impl<T: NFTRegistryAuthorization> KeyvaultStorage<T> {
 
 pub mod test {
     use super::*;
+    use std::sync::atomic::{AtomicPtr, Ordering};
+    use std::sync::Arc;
 
     //owner for test
     const ALICE_ENCODED: [u8; 32] = [
@@ -155,8 +161,40 @@ pub mod test {
         133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
     ];
 
+    static NFT_REGISTRY_TRUE: AtomicPtr<()> = AtomicPtr::new(0 as *mut ());
+    static NFT_REGISTRY_FALSE: AtomicPtr<()> = AtomicPtr::new(0 as *mut ());
+
+
     struct MockNftAccess {
         return_value: bool,
+    }
+
+    impl MockNftAccess {
+        fn author_true() -> &'static SgxRwLock<Self> {
+            let ptr = NFT_REGISTRY_TRUE.load(Ordering::SeqCst) as *mut SgxRwLock<Self>;
+            if ptr.is_null() {
+                let storage_ptr = Arc::new(SgxRwLock::new(MockNftAccess{return_value: true}));
+                NFT_REGISTRY_TRUE.store(Arc::into_raw(storage_ptr) as *mut (), Ordering::SeqCst);
+                let ptr = NFT_REGISTRY_TRUE.load(Ordering::SeqCst) as *mut SgxRwLock<Self>;
+                unsafe { &*ptr }
+            } else {
+                unsafe { &*ptr }
+            }
+        }
+
+        fn author_false() -> &'static SgxRwLock<Self> {
+            let ptr = NFT_REGISTRY_FALSE.load(Ordering::SeqCst) as *mut SgxRwLock<Self>;
+            if ptr.is_null() {
+                let storage_ptr = Arc::new(SgxRwLock::new(MockNftAccess{return_value: false}));
+                NFT_REGISTRY_FALSE.store(Arc::into_raw(storage_ptr) as *mut (), Ordering::SeqCst);
+                let ptr = NFT_REGISTRY_FALSE.load(Ordering::SeqCst) as *mut SgxRwLock<Self>;
+                unsafe { &*ptr }
+            } else {
+                unsafe { &*ptr }
+            }
+
+        }
+
     }
 
     impl NFTRegistryAuthorization for MockNftAccess {
@@ -167,14 +205,14 @@ pub mod test {
 
     ///Tests
     pub fn create_keyvault_storage_works() {
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess { return_value: true }));
+        let storage = KeyvaultStorage::new(MockNftAccess::author_true());
         assert_eq!(storage.path, PathBuf::from(STORAGE_PATH));
     }
 
     pub fn set_filename_and_path_works() {
         let dir = PathBuf::from("test_set_path");
 
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess { return_value: true }))
+        let storage = KeyvaultStorage::new(MockNftAccess::author_true())
             .set_path(dir.clone());
 
         assert_eq!(storage.path, dir);
@@ -182,7 +220,7 @@ pub mod test {
 
     pub fn test_ensure_dir_exists_creates_new_if_not_existing() {
         let dir = PathBuf::from("test_creates_dir");
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess { return_value: true }))
+        let storage = KeyvaultStorage::new(MockNftAccess::author_true())
             .set_path(dir.clone());
         storage.ensure_dir_exists().unwrap();
 
@@ -195,7 +233,7 @@ pub mod test {
     pub fn test_sealed_file_name_contains_nftid() {
         let dir = PathBuf::from("test_sealed_file_name");
         let storage =
-            KeyvaultStorage::new(Arc::new(MockNftAccess { return_value: true })).set_path(dir);
+            KeyvaultStorage::new(MockNftAccess::author_true()).set_path(dir);
         let file = storage.nft_sealed_file_path(197);
         let name = file.file_name().unwrap().to_str().unwrap();
 
@@ -207,7 +245,7 @@ pub mod test {
         let share_bytes = Vec::from("hello");
         let share = Share::try_from(share_bytes.as_slice()).unwrap();
         let nft_id = 365;
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess { return_value: true }))
+        let storage = KeyvaultStorage::new(MockNftAccess::author_true())
             .set_path(dir.clone());
         storage.seal(nft_id, share).unwrap();
         let file = PathBuf::from("test_seal_create_file/365_Nft.bin");
@@ -223,7 +261,7 @@ pub mod test {
         let share_bytes = Vec::from("hello");
         let share = Share::try_from(share_bytes.as_slice()).unwrap();
         let nft_id = 365;
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess { return_value: true }))
+        let storage = KeyvaultStorage::new(MockNftAccess::author_true())
             .set_path(dir.clone());
         storage.seal(nft_id, share).unwrap();
 
@@ -241,7 +279,7 @@ pub mod test {
     pub fn test_seal_override_existing_sealed_file() {
         let dir = PathBuf::from("test_override_file");
         let share = Share::try_from("hello".as_bytes()).unwrap();
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess { return_value: true }))
+        let storage = KeyvaultStorage::new(MockNftAccess::author_true())
             .set_path(dir.clone());
 
         let nft_id = 5870;
@@ -263,7 +301,7 @@ pub mod test {
 
     pub fn test_unseal_fails_when_no_file_exists() {
         let dir = PathBuf::from("unseal_fails_no_file");
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess { return_value: true }))
+        let storage = KeyvaultStorage::new(MockNftAccess::author_true())
             .set_path(dir.clone());
         let file = dir.join("365_Nft.bin");
 
@@ -277,28 +315,22 @@ pub mod test {
         let author = AccountId::from(ALICE_ENCODED);
         let share_bytes = Vec::from("new_test_share_5875");
         let share = Share::try_from(share_bytes.as_slice()).unwrap();
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess {
-            return_value: false,
-        }));
+        let storage = KeyvaultStorage::new(MockNftAccess::author_false());
         assert!(storage.provision(author, nft_id, share).is_err());
     }
 
     pub fn test_check_is_false_when_no_nft_owner() {
         let nft_id = 5880;
         let author = AccountId::from(ALICE_ENCODED);
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess {
-            return_value: false,
-        }));
-        assert!(!storage.check(author, nft_id));
+        let storage = KeyvaultStorage::new(MockNftAccess::author_false());
+        assert!(!storage.check(author, nft_id).unwrap());
     }
 
     pub fn test_get_none_when_no_nft_owner() {
         let nft_id = 5880;
         let author = AccountId::from(ALICE_ENCODED);
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess {
-            return_value: false,
-        }));
-        assert!(storage.get(author, nft_id).is_none());
+        let storage = KeyvaultStorage::new(MockNftAccess::author_false());
+        assert!(storage.get(author, nft_id).unwrap().is_none());
     }
 
     pub fn test_provision_store_share_in_sealed_file() {
@@ -306,7 +338,7 @@ pub mod test {
         let author = AccountId::from(ALICE_ENCODED);
         let share_bytes = Vec::from("new_test_share_5875");
         let share = Share::try_from(share_bytes.as_slice()).unwrap();
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess { return_value: true }));
+        let storage = KeyvaultStorage::new(MockNftAccess::author_true());
         storage.provision(author, nft_id, share).unwrap();
 
         let file_name = storage.nft_sealed_file_path(nft_id);
@@ -324,14 +356,14 @@ pub mod test {
 
     pub fn test_check_is_true_when_sealed_file() {
         let nft_id = 5890;
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess { return_value: true }));
+        let storage = KeyvaultStorage::new(MockNftAccess::author_true());
         let file_name = storage.nft_sealed_file_path(nft_id);
         let author = AccountId::from(ALICE_ENCODED);
         let new_share = Share::try_from("hello_world".as_bytes()).unwrap();
 
         storage.seal(nft_id, new_share).unwrap();
 
-        assert!(storage.check(author, nft_id));
+        assert!(storage.check(author, nft_id).unwrap());
 
         //Clean-up
         fs::remove_file(file_name).unwrap();
@@ -340,15 +372,15 @@ pub mod test {
     pub fn test_check_is_false_when_no_sealed_file() {
         let nft_id = 6000;
         let author = AccountId::from(ALICE_ENCODED);
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess { return_value: true }));
-        assert!(!storage.check(author, nft_id));
+        let storage = KeyvaultStorage::new(MockNftAccess::author_true());
+        assert!(!storage.check(author, nft_id).unwrap());
     }
 
     pub fn test_get_none_when_nft_not_in_store() {
         let nft_id = 6010;
         let author = AccountId::from(ALICE_ENCODED);
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess { return_value: true }));
-        assert! {storage.get(author, nft_id).is_none()};
+        let storage = KeyvaultStorage::new(MockNftAccess::author_true());
+        assert! {storage.get(author, nft_id).unwrap().is_none()};
     }
 
     pub fn test_get_the_valid_stored_share() {
@@ -356,10 +388,10 @@ pub mod test {
         let owner = AccountId::from(ALICE_ENCODED);
         let share_bytes = Vec::from("new_test_share_6020");
         let share = Share::try_from(share_bytes.as_slice()).unwrap();
-        let storage = KeyvaultStorage::new(Arc::new(MockNftAccess { return_value: true }));
+        let storage = KeyvaultStorage::new(MockNftAccess::author_true());
         storage.provision(owner.clone(), nft_id, share).unwrap();
 
-        let read_share = storage.get(owner, nft_id).unwrap();
+        let read_share = storage.get(owner, nft_id).unwrap().unwrap();
         let read_share_bytes = Vec::from(&read_share);
         for i in 1..18 {
             assert_eq!(share_bytes[i], read_share_bytes[i]);

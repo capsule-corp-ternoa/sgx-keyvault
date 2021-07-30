@@ -254,12 +254,6 @@ pub mod test {
         let new_block_number = 20;
 
         NFTRegistry::initialize();
-        // get read lock
-        {
-            let registry_lock = NFTRegistry::load().unwrap();
-            let read = registry_lock.read().unwrap();
-            assert_eq!(*read, NFTRegistry::default());
-        }
         // get write lock
         {
             let registry_lock = NFTRegistry::load().unwrap();

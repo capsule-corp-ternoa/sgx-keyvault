@@ -39,7 +39,7 @@ impl RpcGateway for RpcGatewayMock {
         _owner: AccountId,
         _nft_id: NFTId,
         _share: ShamirShare,
-    ) -> RpcResult<core::result::Result<(), String>> {
-        Ok(Ok(()))
+    ) -> RpcResult<()> {
+        Ok(())
     }
 }
