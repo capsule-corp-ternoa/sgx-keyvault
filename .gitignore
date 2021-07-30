@@ -52,6 +52,7 @@ bin/key_production.txt
 bin/attestation_report.json
 bin/shards
 bin/*.der
+bin/*.bin.1
 bin/enclave-shielding-pubkey.json
 bin/my_keystore
 bin/my_keyvaults

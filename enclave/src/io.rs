@@ -30,6 +30,10 @@ pub fn unseal(filepath: &str) -> SgxResult<Vec<u8>> {
         .sgx_error_with_log(&format!("[Enclave] File '{}' not found!", filepath))?
 }
 
+pub fn unseal_without_log(filepath: &str) -> SgxResult<Vec<u8>> {
+    SgxFile::open(filepath).map(_read).sgx_error()?
+}
+
 pub fn read(filepath: &str) -> SgxResult<Vec<u8>> {
     fs::File::open(filepath)
         .map(_read)

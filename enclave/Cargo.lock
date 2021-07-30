@@ -2542,6 +2542,7 @@ dependencies = [
  "primitive-types",
  "sgx_tstd",
  "sp-core",
+ "ternoa-primitives",
 ]
 
 [[package]]

@@ -20,6 +20,7 @@ pub const ENCRYPTED_STATE_FILE: &str = "state.bin";
 pub const SHARDS_PATH: &str = "./shards";
 pub const AES_KEY_FILE_AND_INIT_V: &str = "aes_key_sealed.bin";
 pub const CHAIN_RELAY_DB: &str = "chain_relay_db.bin";
+pub const NFT_REGISTRY_DB: &str = "nft_registry_db.bin";
 
 pub const RA_DUMP_CERT_DER_FILE: &str = "ra_dump_cert.der";
 
@@ -42,6 +43,14 @@ pub static CALL_WORKER: u8 = 2u8;
 pub static CALL_CONFIRMED: u8 = 3u8;
 pub static BLOCK_CONFIRMED: u8 = 4u8;
 pub static SHIELD_FUNDS: u8 = 5u8;
+
+pub static NFT_REGISTRY_MODULE: u8 = 24u8;
+pub static CREATE: u8 = 0u8;
+pub static MUTATE: u8 = 1u8;
+pub static TRANSFER: u8 = 2u8;
+//pub static SEAL: u8 = 3u8;
+//pub static BURN: u8 = 4u8;
+//pub static TRANSFER_SERIES: u8 = 5u8;
 
 // bump this to be consistent with SubstraTEE-node runtime
 pub static RUNTIME_SPEC_VERSION: u32 = 19;
