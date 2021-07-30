@@ -64,7 +64,7 @@ impl RpcProvision {
             _ => return Err(RpcCallStatus::operation_type_mismatch.to_string()),
         };
 
-        match self.rpc_gateway.keyvault_provision(owner, nft_id, share) {
+        match self.rpc_gateway.keyvault_provision(owner, nft_id, share)? {
             Ok(()) => Ok(((), false, DirectRequestStatus::Ok)),
             Err(e) => Err(e),
         }

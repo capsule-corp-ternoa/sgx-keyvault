@@ -21,13 +21,19 @@ use alloc::string::String;
 use my_node_primitives::{AccountId, NFTId};
 use substratee_stf::ShamirShare;
 
+use crate::ternoa;
+use ternoa::keyvault::KeyvaultStorage;
+use ternoa::nft_registry::NFTRegistry;
+
+pub type Result<T> = core::result::Result<T, String>;
+
 /// Gateway trait from RPC API -> Ternoa gateway implementation
 pub trait RpcGateway: Send + Sync {
     /// get the the shamir shard of a specifc nft id
-    fn keyvault_get(&self, owner: AccountId, nft_id: NFTId) -> Option<ShamirShare>;
+    fn keyvault_get(&self, owner: AccountId, nft_id: NFTId) -> Result<Option<ShamirShare>>;
 
     /// check if the keyvault contains the shard of the given nft id
-    fn keyvault_check(&self, owner: AccountId, nft_id: NFTId) -> bool;
+    fn keyvault_check(&self, owner: AccountId, nft_id: NFTId) -> Result<bool>;
 
     /// store the shamir shard of a specific nft id
     fn keyvault_provision(
@@ -35,20 +41,20 @@ pub trait RpcGateway: Send + Sync {
         owner: AccountId,
         nft_id: NFTId,
         share: ShamirShare,
-    ) -> Result<(), String>;
+    ) -> Result<core::result::Result<(), String>>;
 }
 
 pub struct TernoaRpcGateway {}
 
 impl RpcGateway for TernoaRpcGateway {
-    fn keyvault_get(&self, _owner: AccountId, _nft_id: NFTId) -> Option<ShamirShare> {
+    fn keyvault_get(&self, _owner: AccountId, _nft_id: NFTId) -> Result<Option<ShamirShare>> {
         // TODO: Add real function here (issue #8)
-        None
+        Ok(None)
     }
 
-    fn keyvault_check(&self, _owner: AccountId, _nft_id: NFTId) -> bool {
+    fn keyvault_check(&self, _owner: AccountId, _nft_id: NFTId) -> Result<bool> {
         // TODO: Add real function here (issue #8)
-        true
+        Ok(true)
     }
 
     fn keyvault_provision(
@@ -56,8 +62,8 @@ impl RpcGateway for TernoaRpcGateway {
         _owner: AccountId,
         _nft_id: NFTId,
         _share: ShamirShare,
-    ) -> Result<(), String> {
+    ) -> Result<core::result::Result<(), String>> {
         // TODO: Add real function here (issue #8)
-        Ok(())
+        Ok(Ok(()))
     }
 }
