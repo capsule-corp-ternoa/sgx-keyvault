@@ -36,25 +36,23 @@ pub trait RpcGateway: Send + Sync {
     fn keyvault_check(&self, owner: AccountId, nft_id: NFTId) -> Result<bool>;
 
     /// store the shamir shard of a specific nft id
-    fn keyvault_provision(
-        &self,
-        owner: AccountId,
-        nft_id: NFTId,
-        share: ShamirShare,
-    ) -> Result<()>;
+    fn keyvault_provision(&self, owner: AccountId, nft_id: NFTId, share: ShamirShare)
+        -> Result<()>;
 }
 
 pub struct TernoaRpcGateway {}
 
 impl RpcGateway for TernoaRpcGateway {
-    fn keyvault_get(&self, _owner: AccountId, _nft_id: NFTId) -> Result<Option<ShamirShare>> {
-        // TODO: Add real function here (issue #8)
-        Ok(None)
+    fn keyvault_get(&self, owner: AccountId, nft_id: NFTId) -> Result<Option<ShamirShare>> {
+        let registry_guard = NFTRegistry::load().map_err(|e| format!("{}", e))?;
+        let keyvault = KeyvaultStorage::new(registry_guard);
+        keyvault.get(owner, nft_id).map_err(|e| format!("{}", e))
     }
 
-    fn keyvault_check(&self, _owner: AccountId, _nft_id: NFTId) -> Result<bool> {
-        // TODO: Add real function here (issue #8)
-        Ok(true)
+    fn keyvault_check(&self, owner: AccountId, nft_id: NFTId) -> Result<bool> {
+        let registry_guard = NFTRegistry::load().map_err(|e| format!("{}", e))?;
+        let keyvault = KeyvaultStorage::new(registry_guard);
+        keyvault.check(owner, nft_id).map_err(|e| format!("{}", e))
     }
 
     fn keyvault_provision(
@@ -63,12 +61,13 @@ impl RpcGateway for TernoaRpcGateway {
         nft_id: NFTId,
         share: ShamirShare,
     ) -> Result<()> {
-        let registry_guard =  NFTRegistry::load().map_err(|e| {format!("{}", e)})?;
+        let registry_guard = NFTRegistry::load().map_err(|e| format!("{}", e))?;
         let keyvault = KeyvaultStorage::new(registry_guard);
-        keyvault.provision(owner, nft_id, share).map_err(|e| format!("{}", e))
+        keyvault
+            .provision(owner, nft_id, share)
+            .map_err(|e| format!("{}", e))
     }
 }
-
 
 /* // load top pool
 let pool_mutex: &SgxMutex<BPool> = match rpc::worker_api_direct::load_top_pool() {

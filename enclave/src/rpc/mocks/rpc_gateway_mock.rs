@@ -17,7 +17,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub extern crate alloc;
-use alloc::string::String;
 
 use crate::rpc::ternoa_rpc_gateway::{Result as RpcResult, RpcGateway};
 use my_node_primitives::{AccountId, NFTId};
