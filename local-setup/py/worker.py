@@ -104,6 +104,7 @@ class Worker:
         """ Deletes the mrenclave shard and the chain_relay_db.bin. """
         self.purge_shard()
         self.purge_chain_relay_db()
+        self.purge_nft_registry_db()
         return self
 
     def purge_shard(self, shard=None):
@@ -120,6 +121,12 @@ class Worker:
     def purge_chain_relay_db(self):
         print(f'purging chain_relay_db')
         for db in pathlib.Path(self.cwd).glob('chain_relay_db.bin*'):
+            print(f'remove: {db}')
+            db.unlink()
+
+    def purge_nft_registry_db(self):
+        print(f'purging nft_registry_db')
+        for db in pathlib.Path(self.cwd).glob('nft_registry_db.bin*'):
             print(f'remove: {db}')
             db.unlink()
 
