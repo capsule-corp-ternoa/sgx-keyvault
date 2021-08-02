@@ -2,11 +2,11 @@
 """
 Launch handily a local dev setup consisting of one substraTEE-node and some workers.
 
-Example usage: `./local-setup/launch.py /local-setup/simple-config.py`
+Example usage: `./local-setup/launch.py ./local-setup/simple-config.json`
 
 The node and workers logs are piped to `./log/node.log` etc. folder in the current-working dir.
 
-run: `cd local-setup && tmux_logger.sh` to automatically `tail -f` these three logs.
+run: `cd local-setup && ./tmux_logger.sh` to automatically `tail -f` these three logs.
 
 """
 import argparse
