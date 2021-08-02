@@ -7,6 +7,7 @@ use my_node_runtime::Event;
 use sp_application_crypto::sr25519;
 use sp_core::H256 as Hash;
 use sp_core::{sr25519 as sr25519_core, Pair};
+use sp_runtime::DispatchError;
 use std::sync::mpsc::channel;
 use substrate_api_client::{
     compose_extrinsic, utils::FromHexString, Api, GenericAddress, XtStatus,
@@ -69,10 +70,18 @@ pub fn transfer(from: &str, to: &str, nft_id: NFTId, chain_api: Api<sr25519::Pai
                         Event::frame_system(fse) => {
                             info!("Other frame system event received: {:?}", fse);
                             match &fse {
-                                SystemEvent::ExtrinsicFailed(error, _info) => {
-                                    error!("Error: {:?}", error);
-                                    break 'outer;
-                                }
+                                SystemEvent::ExtrinsicFailed(error, _info) => match error {
+                                    DispatchError::Module { index, error, .. } => {
+                                        error!(
+                                                "ExtrinsicFailed Module error: module index {}, error num {}",
+                                                index, error
+                                            );
+                                        break 'outer;
+                                    }
+                                    _ => debug!(
+                                        "ignoring unsupported ExtrinsicFailed event. Wait ..."
+                                    ),
+                                },
                                 _ => {
                                     debug!("ignoring unsupported frame system event");
                                 }

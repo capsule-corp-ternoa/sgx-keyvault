@@ -139,6 +139,7 @@ pub fn nft_commands() -> MultiCommand<'static, str, str> {
                     match create(owner_ss58, filename, chain_api) {
                         Some(id) => {
                             info!("NFT was created {}", id);
+                            println!("{}", id);
                         }
                         None => {
                             info!("NFT couldn't be created !");

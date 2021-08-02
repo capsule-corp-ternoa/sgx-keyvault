@@ -41,14 +41,12 @@ default-features = false
 git = "https://github.com/paritytech/substrate.git"
 version = "3.0.0"
 default-features = false
-optional = true
 
 [features]
 default = ['std']
 std = [ 'substrate-api-client',
         'my-node-runtime',
         'sp-core/std',
-        'sp-runtime',
         'base58',
         'log',
         ]
