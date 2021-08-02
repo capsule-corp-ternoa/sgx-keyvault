@@ -38,7 +38,7 @@ else
     send-keys -t substratee_logger:0.2 'tail -f ../log/worker3.log' C-m
 
     # start demo on client window
-    tmux send-keys -t substratee_logger:0.4 'cd ../client && ./demo_create_capsule.sh' C-m
+    tmux send-keys -t substratee_logger:0.4 'cd ../client && ./demo_create_capsule.sh -p 9944' C-m
 
     # Attention: Depending on your tmux conf, indexes may start at 1
 
