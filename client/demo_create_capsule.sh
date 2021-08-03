@@ -106,6 +106,7 @@ echo " "
 read NFTIDS <<< $(${CLIENT} keyvault get-nft-registry ${URLS[0]} --mrenclave ${MRENCLAVE})
 echo "Received the following NFT:"
 echo "${NFTIDS}"
+echo " "
 }
 
 getKeyvaults(){
@@ -113,6 +114,7 @@ echo "Get registered sgx keyvaults from the onchain registry"
 echo " "
 ${CLIENT} keyvault list
 URLSFILE="./my_keyvaults/keyvault_pool.txt"
+echo " "
 }
 
 aliceProvisionsKeyvaults(){
