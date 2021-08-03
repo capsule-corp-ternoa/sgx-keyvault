@@ -73,7 +73,7 @@ cd sgx-keyvault/local-setup
 Now you can see three workers running on the left side. The node is running on the above right, the client demo on the right left.
 Enjoy!
 
-you can remove the tmux session of the script by running
+Once the demo is finished, you can remove the tmux session of the script by running
 ```bash
 tmux kill-session -t substratee_logger
 ```
