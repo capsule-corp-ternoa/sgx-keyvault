@@ -1,0 +1,42 @@
+{
+  "node": {
+    "bin": "../chain/target/release/ternoa",
+    "flags": [
+      "--tmp",
+      "--dev",
+      "-lruntime=info"
+    ]
+  },
+  "workers": [
+    {
+      "source": "bin",
+      "flags": [
+        "-P",
+        "2000"
+      ],
+      "subcommand_flags": [
+        "--skip-ra"
+      ]
+    },
+    {
+      "source": "bin",
+      "flags": [
+        "-P",
+        "3000"
+      ],
+      "subcommand_flags": [
+        "--skip-ra"
+      ]
+    },
+    {
+      "source": "bin",
+      "flags": [
+        "-P",
+        "2030"
+      ],
+      "subcommand_flags": [
+        "--skip-ra"
+      ]
+    }
+  ]
+}

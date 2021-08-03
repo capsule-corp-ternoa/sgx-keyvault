@@ -30,7 +30,12 @@ while getopts ":p:t:" opt; do
     esac
 done
 
+echo "------ STARTING DEMO -------------"
 echo "Using node-port ${NPORT}"
+echo " Waiting 10s to ensure all workers have started.. "
+sleep 10
+
+
 
 CLIENT="../bin/ternoa-client -p ${NPORT}"
 ALICE="//Alice"
@@ -41,27 +46,31 @@ read MRENCLAVE <<< $($CLIENT list-workers | awk '/  MRENCLAVE: / { print $2; exi
 [[ -z $MRENCLAVE ]] && { echo "MRENCLAVE is empty. cannot continue" ; exit 1; }
 
 
-echo ""
-echo "Create a new file to encrypt:"
+
 INPUTFILENAME="input_file"
 INPUTFILE="${INPUTFILENAME}.txt"
+DECRYPTEDFILE="${INPUTFILENAME}.decrypted"
+
+CIPHERFILE="${INPUTFILENAME}.ciphertext"
+KEYFILE="${INPUTFILENAME}.aes256"
+
+
+COPIED_FILENAME="input_file_copy"
+CIPHERFILE_COPIED="${COPIED_FILENAME}.ciphertext"
+
+
+
+aliceCreatesACapsule(){
+echo ""
+echo "Alice creates a new file to encrypt:"
 touch ${INPUTFILE}
 echo "These are very important data" > $INPUTFILE
 read INPUTFILE_TEXT <<< $(cat ${INPUTFILE})
 echo "> ${INPUTFILE}: ${INPUTFILE_TEXT}"
 echo ""
-
-
-CIPHERFILE="${INPUTFILENAME}.ciphertext"
-KEYFILE="${INPUTFILENAME}.aes256"
-DECRYPTEDFILE="${INPUTFILENAME}.decrypted"
-
-
-aliceCreatesACapsule(){
 echo "Alice encrypts file ${INPUTFILE}"
 ${CLIENT} encrypt ${INPUTFILE}
 read CIPHERFILE_TEXT <<< $(cat ${CIPHERFILE})
-
 echo "> ${CIPHERFILE} : ${CIPHERFILE_TEXT}"
 echo "> ${KEYFILE}"
 echo ""
@@ -70,6 +79,33 @@ echo "Alices creates a new NFT onchain..."
 read NFTID <<< $(${CLIENT} nft create ${ALICE} ${CIPHERFILE})
 echo "Received NFT id from node: ${NFTID}"
 echo ""
+}
+
+aliceMutatesACapsule(){
+getKeyvaults
+URLS=()
+readarray URLS < ${URLSFILE}
+echo "Check if Keyvault with url ${URLS[0]} registered new nft id.. "
+echo " "
+read NFTIDS <<< $(${CLIENT} keyvault get-nft-registry ${URLS[0]} --mrenclave ${MRENCLAVE})
+echo "Received the following NFT:"
+echo "${NFTIDS}"
+echo " "
+echo "Alices copies the ciphertext into another file..."
+cp $CIPHERFILE $CIPHERFILE_COPIED
+read CIPHERFILE_COPY_TEXT <<< $(cat ${CIPHERFILE_COPIED})
+echo "> ${CIPHERFILE_COPIED} : ${CIPHERFILE_COPY_TEXT}"
+echo " "
+echo "Alices mutates her NFT onchain..."
+${CLIENT} nft mutate ${ALICE} ${NFTID} ${CIPHERFILE_COPIED}
+echo "Wait 30s until keyvaults registered new blocks .. "
+echo " "
+sleep 30
+echo "Check if Keyvault with url ${URLS[0]} mutated nft .."
+echo " "
+read NFTIDS <<< $(${CLIENT} keyvault get-nft-registry ${URLS[0]} --mrenclave ${MRENCLAVE})
+echo "Received the following NFT:"
+echo "${NFTIDS}"
 }
 
 getKeyvaults(){
@@ -139,15 +175,7 @@ aliceCreatesACapsule
 echo "Wait 30s until keyvaults registered new blocks .. "
 echo " "
 sleep 30
-getKeyvaults
-URLS=()
-readarray URLS < ${URLSFILE}
-echo "Check if Keyvault with url ${URLS[0]} registered new nft id.. "
-echo " "
-read NFTIDS <<< $(${CLIENT} keyvault get-nft-registry ${URLS[0]} --mrenclave ${MRENCLAVE})
-echo "Received the following NFTs:"
-echo "${NFTIDS}"
-echo " "
+aliceMutatesACapsule
 aliceProvisionsKeyvaults
 echo " "
 echo "Transfer capsule to Bob "
