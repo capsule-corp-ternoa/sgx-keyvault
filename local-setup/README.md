@@ -66,7 +66,7 @@ cd demo
 # If you work with docker: exec into the running container:
 docker exec -it [container-id] bash
 # run the script with:
-cd demo/sgx-keyvault/local-setup
+cd sgx-keyvault/local-setup
 ./run_demo.sh
 ```
 
