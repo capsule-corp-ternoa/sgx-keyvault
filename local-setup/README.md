@@ -59,15 +59,14 @@ cd ..
 wait a little until worker 3 has been launched
 
 ## Open a second terminal to run demo
+Open a new bash session in a new terminal.
 
-If you work with docker: open a new bash session in a new window in the running container:
 ```bash
+cd demo
+# If you work with docker: exec into the running container:
 docker exec -it [container-id] bash
-```
-
-Run the script with:
-```bash
-cd work/demo/sgx-keyvault/local-setup
+# run the script with:
+cd demo/sgx-keyvault/local-setup
 ./run_demo.sh
 ```
 
