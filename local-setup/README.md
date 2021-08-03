@@ -92,5 +92,5 @@ ls -la
 #  where the numbers are 1002 (NUMBER1) and 1002 (NUMBER2)
 
 # give all files back to the external user
-chown -R <NUMBER1>:<NUMBER2> substraTEE-worker substraTEE-node
+chown -R <NUMBER1>:<NUMBER2> chain sgx-keyvault
 ```
