@@ -25,13 +25,6 @@ else
     split-window -v
     # enable pane titles
     tmux set -g pane-border-status top
-    # color the panes
-    #tmux select-pane -t substratee_logger:0.3 -P 'fg=colour093' # node
-    #tmux select-pane -t substratee_logger:0.4 -P 'fg=colour073' # client
-    #tmux select-pane -t substratee_logger:0.0 -P 'fg=colour040' # worker 1
-    #tmux select-pane -t substratee_logger:0.1 -P 'fg=colour053' # worker 2
-    #tmux select-pane -t substratee_logger:0.2 -P 'fg=colour063' # worker 3
-    #select-layout even-vertical \; \
     tmux send-keys -t substratee_logger:0.3 'tail -f ../log/node.log' C-m \; \
     send-keys -t substratee_logger:0.0 'tail -f ../log/worker1.log' C-m \; \
     send-keys -t substratee_logger:0.1 'tail -f ../log/worker2.log' C-m \; \
