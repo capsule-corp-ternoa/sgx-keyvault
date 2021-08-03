@@ -52,6 +52,8 @@ make
 
 ## Launch worker and node in terminal 1
 ```bash
+cd bin && touch spid.txt key.txt
+cd ..
 ./local-setup/launch.py ./local-setup/simple-config.json
 ```
 wait a little until worker 3 has been launched
