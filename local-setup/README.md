@@ -14,12 +14,15 @@ In the following demo we show three different scenarios:
 Build worker, client and node in our docker:
 
 ```bash
+# create a dedicated demo directory
+mkdir demo && cd demo
+
+#(optional, in case of no sgx available) start the docker container (with sgx support)
 # get the docker image
 # check for updates on https://hub.docker.com/repository/docker/scssubstratee/substratee_dev
 docker pull scssubstratee/substratee_dev:1804-2.12-1.1.3-001
-
-# create a dedicated demo directory
-mkdir demo && cd demo
+docker run -it -v $(pwd):/root/work scssubstratee/substratee_dev:1804-2.12-1.1.3-001 /bin/bash
+cd work
 
 # clone and build the node
 git clone https://github.com/capsule-corp-ternoa/chain
@@ -29,13 +32,11 @@ git checkout add-skip-ra-feature
 # initialize wasm build environment
 ./scripts/init.sh
 # build the node
-cargo build --release --features skip-ias-check
+cargo +nightly build --release --features skip-ias-check
 # another 10min
 cd ..
 
-#(optional, in case of no sgx available) start the docker container (with sgx support)
-docker run -it -v $(pwd):/root/work scssubstratee/substratee_dev:1804-2.12-1.1.3-001 /bin/bash
-cd work
+
 
 # clone and build the worker and the client
 git clone https://github.com/capsule-corp-ternoa/sgx-keyvault.git
