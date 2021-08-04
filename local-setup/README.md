@@ -34,11 +34,9 @@ git checkout add-skip-ra-feature
 # build the node
 cargo +nightly build --release --features skip-ias-check
 # another 10min
-cd ..
-
-
 
 # clone and build the worker and the client
+cd ..
 git clone https://github.com/capsule-corp-ternoa/sgx-keyvault.git
 cd sgx-keyvault
 git fetch origin develop
