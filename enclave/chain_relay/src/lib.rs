@@ -95,70 +95,75 @@ impl LightValidation {
         Ok(new_relay_id)
     }
 
-    pub fn submit_finalized_headers(
-        &mut self,
-        relay_id: RelayId,
-        header: Header,
-        ancestry_proof: Vec<Header>,
-        validator_set: AuthorityList,
-        validator_set_id: SetId,
-        grandpa_proofs: Option<Justifications>,
-    ) -> Result<(), Error> {
-        let mut relay = self
-            .tracked_relays
-            .get_mut(&relay_id)
-            .ok_or(Error::NoSuchRelayExists)?;
+    fn submit_finalized_headers(
+		&mut self,
+		relay_id: RelayId,
+		header: Header,
+		ancestry_proof: Vec<Header>,
+		validator_set: AuthorityList,
+		validator_set_id: SetId,
+		justifications: Option<Justifications>,
+	) -> Result<(), Error> {
+		let mut relay = self.tracked_relays.get_mut(&relay_id).ok_or(Error::NoSuchRelayExists)?;
 
-        // Check that the new header is a decendent of the old header
-        let last_header = &relay.last_finalized_block_header;
-        Self::verify_ancestry(ancestry_proof, last_header.hash(), &header)?;
+		// Check that the new header is a decendent of the old header
+		let last_header = &relay.last_finalized_block_header;
+		Self::verify_ancestry(ancestry_proof, last_header.hash(), &header)?;
 
-        if grandpa_proofs.is_none() {
-            relay.last_finalized_block_header = header.clone();
-            relay.unjustified_headers.push(header.hash());
-            debug!(
-                "Syncing finalized block without grandpa proof. Amount of unjustified headers: {}",
-                relay.unjustified_headers.len()
-            );
-            return Ok(());
-        }
+		// Check that the header has been finalized
+		let voter_set =
+			VoterSet::new(validator_set.clone().into_iter()).expect("VoterSet may not be empty");
 
-        let block_hash = header.hash();
-        let block_num = *header.number();
+		// ensure justifications is a grandpa justification
+		let grandpa_justification =
+			justifications.and_then(|just| just.into_justification(GRANDPA_ENGINE_ID));
 
-        // Check that the header has been finalized
-        let voter_set =
-            VoterSet::new(validator_set.clone().into_iter()).expect("VoterSet may not be empty");
-        // https://github.com/paritytech/substrate/pull/7640/files
-        // multiple proofs due to multiple consensus protococol possible..
-        for grandpa_proof in grandpa_proofs.unwrap().iter() {
-            Self::verify_grandpa_proof::<Block>(
-                // https://github.com/paritytech/substrate/pull/7640/files
-                // only works for one consenus protocol. In case of multiple
-                // use .into_justification(consensusprotocol) of substrate
-                grandpa_proof.clone(),
-                block_hash,
-                block_num,
-                validator_set_id,
-                &voter_set,
-            )?;
-        }
+		let block_hash = header.hash();
+		let block_num = *header.number();
 
-        relay.last_finalized_block_header = header.clone();
+		match grandpa_justification {
+			Some(justification) => {
+				if let Err(err) = Self::verify_grandpa_proof::<Block>(
+					(GRANDPA_ENGINE_ID, justification),
+					block_hash,
+					block_num,
+					validator_set_id,
+					&voter_set,
+				) {
+					// FIXME: Printing error upon invalid justfication, but this will need a better fix
+					// see issue #353
+					error!("Block {} contained invalid justification: {:?}", block_num, err);
+					relay.unjustified_headers.push(header.hash());
+					relay.last_finalized_block_header = header;
+					return Ok(())
+				}
+			},
+			None => {
+				relay.last_finalized_block_header = header.clone();
+				relay.unjustified_headers.push(header.hash());
+				debug!(
+					"Syncing finalized block without grandpa proof. Amount of unjustified headers: {}",
+					relay.unjustified_headers.len()
+				);
+				return Ok(())
+			},
+		}
 
-        Self::schedule_validator_set_change(&mut relay, &header);
+		relay.last_finalized_block_header = header.clone();
 
-        // a valid grandpa proof proofs finalization of all previous unjustified blocks
-        relay.header_hashes.append(&mut relay.unjustified_headers);
-        relay.header_hashes.push(header.hash());
+		Self::schedule_validator_set_change(&mut relay, &header);
 
-        if validator_set_id > relay.current_validator_set_id {
-            relay.current_validator_set = validator_set;
-            relay.current_validator_set_id = validator_set_id;
-        }
+		// a valid grandpa proof proofs finalization of all previous unjustified blocks
+		relay.header_hashes.append(&mut relay.unjustified_headers);
+		relay.header_hashes.push(header.hash());
 
-        Ok(())
-    }
+		if validator_set_id > relay.current_validator_set_id {
+			relay.current_validator_set = validator_set;
+			relay.current_validator_set_id = validator_set_id;
+		}
+
+		Ok(())
+	}
 
     pub fn submit_simple_header(
         &mut self,
