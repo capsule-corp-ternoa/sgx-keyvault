@@ -53,7 +53,7 @@ pub static TRANSFER: u8 = 2u8;
 //pub static TRANSFER_SERIES: u8 = 5u8;
 
 // bump this to be consistent with SubstraTEE-node runtime
-pub static RUNTIME_SPEC_VERSION: u32 = 24;
+pub static RUNTIME_SPEC_VERSION: u32 = 25;
 pub static RUNTIME_TRANSACTION_VERSION: u32 = 2;
 
 // timeouts for getter and call execution
