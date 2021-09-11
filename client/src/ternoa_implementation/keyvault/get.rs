@@ -21,7 +21,7 @@ use crate::get_pair_from_str;
 use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
 use codec::Decode;
 use core::convert::TryFrom;
-use my_node_primitives::NFTId;
+use my_node_primitives::nfts::NFTId;
 use sharks::Share;
 use sp_core::{sr25519 as sr25519_core, Pair};
 use std::path::PathBuf;

@@ -63,7 +63,7 @@ pub static UNSHIELD: u8 = 6u8;
 pub type ShardIdentifier = H256;
 //pub type Index = u32;
 
-pub use my_node_primitives::NFTId;
+pub use my_node_primitives::nfts::NFTId;
 pub type ShamirShare = Vec<u8>;
 
 #[derive(Clone)]

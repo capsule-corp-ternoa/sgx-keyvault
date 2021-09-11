@@ -29,9 +29,10 @@ use super::constants::KEYVAULT_DEFAULT_URLLIST_FILENAME;
 use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
 use std::io::Result;
 use std::path::PathBuf;
+use substrate_api_client::rpc::WsRpcClient;
 
 /// Prints all registered keyvaults and stores all url within a file (one url per line)
-pub fn list(api: Api<sr25519::Pair>) -> Result<()> {
+pub fn list(api: Api<sr25519::Pair, WsRpcClient>) -> Result<()> {
     let number_of_keyvaults = get_enclave_count(&api);
     println!("number of keyvaults registered: {}", number_of_keyvaults);
     let mut keyvault_urls: Vec<String> = Vec::new();

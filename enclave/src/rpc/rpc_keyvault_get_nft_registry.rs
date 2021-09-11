@@ -25,7 +25,7 @@ use crate::rpc::ternoa_rpc_gateway::RpcGateway;
 use crate::rpc::trusted_operation_verifier::TrustedOperationExtractor;
 use jsonrpc_core::{BoxFuture, Params, Result as RpcResult, RpcMethodSync, Value};
 use log::*;
-use my_node_primitives::NFTId;
+use my_node_primitives::nfts::NFTId;
 use substratee_node_primitives::{NFTData, Request};
 use substratee_stf::{Getter, TrustedOperation};
 use substratee_worker_primitives::DirectRequestStatus;

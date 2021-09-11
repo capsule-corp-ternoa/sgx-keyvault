@@ -17,6 +17,7 @@ use clap::{App, AppSettings, Arg, ArgMatches};
 use clap_nested::{Command, Commander, MultiCommand};
 use log::*;
 use sp_application_crypto::sr25519;
+use substrate_api_client::rpc::WsRpcClient;
 use substrate_api_client::Api;
 
 use crate::ternoa_implementation::cipher;
@@ -26,7 +27,7 @@ use crate::ternoa_implementation::nft::mutate::mutate;
 use crate::ternoa_implementation::nft::transfer::transfer;
 
 use crate::get_chain_api;
-use my_node_primitives::NFTId;
+use my_node_primitives::nfts::NFTId;
 
 use crate::VERSION;
 
@@ -403,14 +404,14 @@ pub fn add_url_arg<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
 }
 
 //Duplicate code. See get_chain_api in main.rs.
-fn get_ternoa_chain_api(matches: &ArgMatches<'_>) -> Api<sr25519::Pair> {
+fn get_ternoa_chain_api(matches: &ArgMatches<'_>) -> Api<sr25519::Pair, WsRpcClient> {
     let url = format!(
         "{}:{}",
         matches.value_of("node-url").unwrap(),
         matches.value_of("node-port").unwrap()
     );
     info!("connecting to {}", url);
-    Api::<sr25519::Pair>::new(url).unwrap()
+    Api::<sr25519::Pair, WsRpcClient>::new(WsRpcClient::new(&url)).unwrap()
 }
 
 // simplified duplicate from stf/cli.rs get_identifiers

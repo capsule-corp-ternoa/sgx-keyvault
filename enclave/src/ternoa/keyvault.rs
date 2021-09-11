@@ -1,8 +1,8 @@
 use crate::io;
 use derive_more::{Display, From};
 use log::*;
+use my_node_primitives::nfts::NFTId;
 use my_node_primitives::AccountId;
-use my_node_primitives::NFTId;
 use std::fs;
 use std::path::PathBuf;
 use std::prelude::v1::*;

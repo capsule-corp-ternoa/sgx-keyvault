@@ -8,13 +8,19 @@ use sp_core::H256 as Hash;
 use sp_core::{sr25519 as sr25519_core, Pair};
 use sp_runtime::DispatchError;
 use std::sync::mpsc::channel;
+use substrate_api_client::rpc::WsRpcClient;
 use substrate_api_client::{compose_extrinsic, utils::FromHexString, Api, XtStatus};
 use ternoa_pallet_nfts::Event as NFTEvent;
 
 /// Update the file included in the NFT with id nft_id.
 /// Must be called by the owner of the NFT and while the NFT is not sealed.
 /// Note: the series id, this nft belongs to, is hardcoded to 0 (the default series id) and the capsule flag is true.
-pub fn mutate(owner_ss58: &str, nft_id: u32, new_filename: &str, chain_api: Api<sr25519::Pair>) {
+pub fn mutate(
+    owner_ss58: &str,
+    nft_id: u32,
+    new_filename: &str,
+    chain_api: Api<sr25519::Pair, WsRpcClient>,
+) {
     let signer = get_pair_from_str(owner_ss58);
     let chain_api = chain_api.set_signer(sr25519_core::Pair::from(signer));
     // compose the extrinsic
@@ -50,7 +56,7 @@ pub fn mutate(owner_ss58: &str, nft_id: u32, new_filename: &str, chain_api: Api<
                 for evr in &evts {
                     info!("decoded: phase{:?} event {:?}", evr.phase, evr.event);
                     match &evr.event {
-                        Event::ternoa_nfts(nfte) => {
+                        Event::Nfts(nfte) => {
                             info!("NFT event received: {:?}", nfte);
                             match &nfte {
                                 NFTEvent::Mutated(id) => {
@@ -65,7 +71,7 @@ pub fn mutate(owner_ss58: &str, nft_id: u32, new_filename: &str, chain_api: Api<
                                 }
                             }
                         }
-                        Event::frame_system(fse) => {
+                        Event::System(fse) => {
                             info!("Other frame system event received: {:?}", fse);
                             match &fse {
                                 SystemEvent::ExtrinsicFailed(error, _info) => match error {

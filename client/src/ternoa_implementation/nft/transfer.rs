@@ -2,13 +2,14 @@ use crate::{get_accountid_from_str, get_pair_from_str};
 use codec::Decode;
 use frame_system::Event as SystemEvent;
 use log::*;
-use my_node_primitives::NFTId;
+use my_node_primitives::nfts::NFTId;
 use my_node_runtime::Event;
 use sp_application_crypto::sr25519;
 use sp_core::H256 as Hash;
 use sp_core::{sr25519 as sr25519_core, Pair};
 use sp_runtime::DispatchError;
 use std::sync::mpsc::channel;
+use substrate_api_client::rpc::WsRpcClient;
 use substrate_api_client::{
     compose_extrinsic, utils::FromHexString, Api, GenericAddress, XtStatus,
 };
@@ -16,7 +17,7 @@ use ternoa_pallet_nfts::Event as NFTEvent;
 
 ///Transfer an NFT from an account to another one.
 ///Must be called by the current owner of the NFT.
-pub fn transfer(from: &str, to: &str, nft_id: NFTId, chain_api: Api<sr25519::Pair>) {
+pub fn transfer(from: &str, to: &str, nft_id: NFTId, chain_api: Api<sr25519::Pair, WsRpcClient>) {
     let signer = get_pair_from_str(from);
     let account_id = get_accountid_from_str(to);
     let chain_api = chain_api.set_signer(sr25519_core::Pair::from(signer));
@@ -50,7 +51,7 @@ pub fn transfer(from: &str, to: &str, nft_id: NFTId, chain_api: Api<sr25519::Pai
                 for evr in &evts {
                     info!("decoded: phase{:?} event {:?}", evr.phase, evr.event);
                     match &evr.event {
-                        Event::ternoa_nfts(nfte) => {
+                        Event::Nfts(nfte) => {
                             info!("NFT event received: {:?}", nfte);
                             match &nfte {
                                 NFTEvent::Transfer(id, old_owner, new_owner) => {
@@ -67,7 +68,7 @@ pub fn transfer(from: &str, to: &str, nft_id: NFTId, chain_api: Api<sr25519::Pai
                                 }
                             }
                         }
-                        Event::frame_system(fse) => {
+                        Event::System(fse) => {
                             info!("Other frame system event received: {:?}", fse);
                             match &fse {
                                 SystemEvent::ExtrinsicFailed(error, _info) => match error {

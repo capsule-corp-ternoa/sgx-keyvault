@@ -20,7 +20,7 @@ pub extern crate alloc;
 use alloc::vec::Vec;
 
 use crate::rpc::ternoa_rpc_gateway::{Result as RpcResult, RpcGateway};
-use my_node_primitives::{AccountId, NFTId};
+use my_node_primitives::{nfts::NFTId, AccountId};
 use substratee_node_primitives::NFTData;
 use substratee_stf::ShamirShare;
 /// Mock implementation to be used in unit testing

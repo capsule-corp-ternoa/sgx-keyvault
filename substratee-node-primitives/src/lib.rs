@@ -16,7 +16,7 @@ pub type ShardIdentifier = H256;
 pub type BlockNumber = u32;
 
 use my_node_primitives::nfts::NFTDetails;
-use my_node_primitives::NFTId;
+use my_node_primitives::nfts::NFTId;
 
 pub type NFTData = NFTDataPrimitives<AccountId>;
 use sp_runtime::MultiAddress;
@@ -42,9 +42,10 @@ pub mod calls {
     pub use my_node_runtime::substratee_registry::{Enclave, ShardIdentifier};
     use sp_core::crypto::Pair;
     use sp_runtime::MultiSignature;
+    use substrate_api_client::RpcClient;
 
-    pub fn get_worker_info<P: Pair>(
-        api: &substrate_api_client::Api<P>,
+    pub fn get_worker_info<P: Pair, C: RpcClient>(
+        api: &substrate_api_client::Api<P, C>,
         index: u64,
     ) -> Option<Enclave<AccountId, Vec<u8>>>
     where
@@ -54,8 +55,8 @@ pub mod calls {
             .unwrap()
     }
 
-    pub fn get_worker_for_shard<P: Pair>(
-        api: &substrate_api_client::Api<P>,
+    pub fn get_worker_for_shard<P: Pair, C: RpcClient>(
+        api: &substrate_api_client::Api<P, C>,
         shard: &ShardIdentifier,
     ) -> Option<Enclave<AccountId, Vec<u8>>>
     where
@@ -66,7 +67,9 @@ pub mod calls {
             .and_then(|w| get_worker_info(&api, w))
     }
 
-    pub fn get_worker_amount<P: Pair>(api: &substrate_api_client::Api<P>) -> Option<u64>
+    pub fn get_worker_amount<P: Pair, C: RpcClient>(
+        api: &substrate_api_client::Api<P, C>,
+    ) -> Option<u64>
     where
         MultiSignature: From<P::Signature>,
     {
@@ -74,8 +77,8 @@ pub mod calls {
             .unwrap()
     }
 
-    pub fn get_first_worker_that_is_not_equal_to_self<P: Pair>(
-        api: &substrate_api_client::Api<P>,
+    pub fn get_first_worker_that_is_not_equal_to_self<P: Pair, C: RpcClient>(
+        api: &substrate_api_client::Api<P, C>,
         self_account: &AccountId,
     ) -> Option<Enclave<AccountId, Vec<u8>>>
     where
@@ -95,8 +98,8 @@ pub mod calls {
         None
     }
 
-    pub fn get_latest_state<P: Pair>(
-        api: &substrate_api_client::Api<P>,
+    pub fn get_latest_state<P: Pair, C: RpcClient>(
+        api: &substrate_api_client::Api<P, C>,
         shard: &ShardIdentifier,
     ) -> Option<[u8; 46]>
     where

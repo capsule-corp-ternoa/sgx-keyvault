@@ -14,11 +14,12 @@
 
 use crate::ternoa_implementation::cipher::Error::ShamirError;
 use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
+use aes::cipher::stream::InvalidKeyNonceLength;
+use aes::cipher::{NewStreamCipher, SyncStreamCipher};
 ///A module to encrypt or decrypt file with AES256
 use aes::Aes256;
 use derive_more::{Display, From};
 use log::*;
-use ofb::stream_cipher::{InvalidKeyNonceLength, NewStreamCipher, SyncStreamCipher};
 use ofb::Ofb;
 use rand::{thread_rng, Rng};
 use sharks::{Share, Sharks};

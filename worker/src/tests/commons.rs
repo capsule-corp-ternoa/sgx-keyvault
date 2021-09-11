@@ -24,6 +24,7 @@ use sgx_types::*;
 use sp_core::crypto::AccountId32;
 use sp_core::sr25519;
 use sp_keyring::AccountKeyring;
+use substrate_api_client::rpc::WsRpcClient;
 
 use std::{fs, str};
 
@@ -106,9 +107,13 @@ pub fn setup(
     eid: sgx_enclave_id_t,
     who: Option<AccountKeyring>,
     port: &str,
-) -> (Api<sr25519::Pair>, Option<u32>, ShardIdentifier) {
+) -> (
+    Api<sr25519::Pair, WsRpcClient>,
+    Option<u32>,
+    ShardIdentifier,
+) {
     let node_url = format!("ws://{}:{}", "127.0.0.1", port);
-    let mut api = Api::<sr25519::Pair>::new(node_url).unwrap();
+    let mut api = Api::<sr25519::Pair, WsRpcClient>::new(WsRpcClient::new(&node_url)).unwrap();
     ensure_account_has_funds(&mut api, &enclave_account(eid));
 
     // create the state such that we do not need to initialize it manually
@@ -127,7 +132,7 @@ pub fn setup(
     }
 }
 
-pub fn get_nonce(api: &Api<sr25519::Pair>, who: &AccountId32) -> u32 {
+pub fn get_nonce(api: &Api<sr25519::Pair, WsRpcClient>, who: &AccountId32) -> u32 {
     if let Some(info) = api.get_account_info(who).unwrap() {
         info.nonce
     } else {
