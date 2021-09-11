@@ -10,37 +10,15 @@ codec = { package = "parity-scale-codec", version = "2.0.0", default-features = 
 primitive-types = { version = "0.10.1", default-features = false, features = ["codec"] }
 base58 = { version = "0.1", optional = true }
 
-[dependencies.sgx_tstd]
-git = "https://github.com/apache/teaclave-sgx-sdk.git"
-features = ["untrusted_fs","net","backtrace"]
-rev = "v1.1.3"
-optional = true
+sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["untrusted_fs", "net", "backtrace"], optional = true }
 
-[dependencies.my-node-runtime]
-git = "https://github.com/capsule-corp-ternoa/chain"
-package = "ternoa-runtime"
-optional = true
-default-features = false
+my-node-runtime = { git = "https://github.com/capsule-corp-ternoa/chain", package = "ternoa-runtime", optional = true, default-features = false }
+my-node-primitives = { git = "https://github.com/capsule-corp-ternoa/chain", package = "ternoa-runtime", default-features = false }
 
-[dependencies.my-node-primitives]
-git = "https://github.com/capsule-corp-ternoa/chain"
-package = "ternoa-primitives"
-default-features = false
+substrate-api-client = { git = "https://github.com/scs/substrate-api-client", features = ["ws-client"], branch = "master", optional = true }
 
-[dependencies.substrate-api-client]
-git = "https://github.com/scs/substrate-api-client"
-branch = "version-update-e5437e"
-optional = true
-
-[dependencies.sp-core]
-git = "https://github.com/paritytech/substrate.git"
-version = "3.0.0"
-default-features = false
-
-[dependencies.sp-runtime]
-git = "https://github.com/paritytech/substrate.git"
-version = "3.0.0"
-default-features = false
+sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "master",  version = "4.0.0-dev", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/substrate.git", branch = "master",  version = "4.0.0-dev", default-features = false }
 
 [features]
 default = ['std']

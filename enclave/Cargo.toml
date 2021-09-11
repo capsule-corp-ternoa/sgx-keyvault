@@ -20,7 +20,7 @@ production = []
 
 [target.'cfg(not(target_env = "sgx"))'.dependencies]
 sgx_tse = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
-sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["untrusted_fs","net","backtrace"] }
+sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["untrusted_fs", "net", "backtrace"] }
 sgx_rand = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_trts = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
@@ -70,7 +70,7 @@ rustls = { git = "https://github.com/mesalock-linux/rustls", rev = "sgx_1.1.3", 
 
 # scs / ternoa
 sp-io = { git = "https://github.com/integritee-network/sgx-runtime", branch = "master",  default-features = false, features = ["disable_oom", "disable_panic_handler", "disable_allocator", "sgx"], optional = true}
-substrate-api-client = { git = "https://github.com/scs/substrate-api-client", branch = "master", default-features = false }
+substrate-api-client = { git = "https://github.com/scs/substrate-api-client", branch = "master", features = ["ws-client"], default-features = false }
 sgx-externalities = { git = "https://github.com/integritee-network/sgx-runtime", branch = "master", default-features = false }
 my-node-primitives = { git = "https://github.com/capsule-corp-ternoa/chain", package = "ternoa-primitives" }
 jsonrpc-core = { git = "https://github.com/scs/jsonrpc", branch = "no_std", default-features = false }
