@@ -35,53 +35,25 @@ sgx_urts = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.g
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_crypto_helper = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 
-[dependencies.substrate-api-client]
-git = "https://github.com/scs/substrate-api-client"
-branch = "version-update-e5437e"
+substrate-api-client = { git = "https://github.com/scs/substrate-api-client", branch = "master" }
 
-[dependencies.substratee-node-primitives]
-path = "../substratee-node-primitives"
+# Local
+substratee-node-primitives = { path = "../substratee-node-primitives" }
+substratee-worker-primitives = { path = "../substratee-worker-primitives" }
+substratee-worker-api = { path = "worker-api" }
 
-[dependencies.substratee-worker-primitives]
-path = "../substratee-worker-primitives"
+# Ternoa
+my-node-runtime = { git = "https://github.com/capsule-corp-ternoa/chain", package = "ternoa-runtime" }
+my-node-primitives = { git = "https://github.com/capsule-corp-ternoa/chain", package = "ternoa-primitives" }
+substratee-stf= { path = "../stf" }
 
-[dependencies.substratee-worker-api]
-path = "worker-api"
-
-[dependencies.my-node-runtime]
-git = "https://github.com/capsule-corp-ternoa/chain"
-package = "ternoa-runtime"
-
-[dependencies.my-node-primitives]
-git = "https://github.com/capsule-corp-ternoa/chain"
-package = "ternoa-primitives"
-
-[dependencies.sp-finality-grandpa]
-git = "https://github.com/paritytech/substrate.git"
-version = "3.0.0"
-
-[dependencies.sp-runtime]
-git = "https://github.com/paritytech/substrate.git"
-version = "3.0.0"
-
-[dependencies.pallet-balances]
-git = "https://github.com/paritytech/substrate.git"
-version = "3.0.0"
-
-[dependencies.sp-core]
-git = "https://github.com/paritytech/substrate.git"
-version = "3.0.0"
-
-[dependencies.sp-keyring]
-git = "https://github.com/paritytech/substrate.git"
-version = "3.0.0"
-
-[dependencies.frame-system]
-git = "https://github.com/paritytech/substrate.git"
-version = "3.0.0"
-
-[dependencies.substratee-stf]
-path = "../stf"
+# Substrate
+sp-finality-grandpa = { git = "https://github.com/paritytech/substrate.git", branch = "master", version = "4.0.0-dev" }
+sp-runtime = { git = "https://github.com/paritytech/substrate.git", branch = "master", version = "4.0.0-dev" }
+pallet-balances = { git = "https://github.com/paritytech/substrate.git", branch = "master", version = "4.0.0-dev" }
+sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "master", version = "4.0.0-dev" }
+sp-keyring = { git = "https://github.com/paritytech/substrate.git", branch = "master", version = "4.0.0-dev" }
+frame-system = { git = "https://github.com/paritytech/substrate.git", branch = "master", version = "4.0.0-dev" }
 
 [features]
 default = []
