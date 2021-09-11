@@ -6,11 +6,11 @@ edition = "2018"
 
 [dependencies]
 codec           = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
-primitive-types = { version = "0.9", default-features = false, features = ["codec"] }
+primitive-types = { version = "0.10.1", default-features = false, features = ["codec"] }
 serde           = { version = "1.0", optional = true}
 serde_derive    = { version = "1.0", optional = true}
-serde_json      = { version = "1.0", optional = true}
-chrono          = { version = "0.4.19", default-features = false, features = ["alloc"]}
+serde_json = { version = "1.0", optional = true}
+chrono = { version = "0.4.19", default-features = false, features = ["alloc"]}
 
 [dependencies.sgx_tstd]
 git = "https://github.com/apache/teaclave-sgx-sdk.git"

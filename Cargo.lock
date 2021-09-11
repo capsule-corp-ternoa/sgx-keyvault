@@ -29,34 +29,33 @@ checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
 
 [[package]]
 name = "aes"
-version = "0.3.2"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54eb1d8fe354e5fc611daf4f2ea97dd45a765f4f1e4512306ec183ae2e8f20c9"
+checksum = "884391ef1066acaa41e766ba8f596341b96e93ce34f9a43e7d24bf0a0eaf0561"
 dependencies = [
  "aes-soft",
  "aesni",
- "block-cipher-trait",
+ "cipher",
 ]
 
 [[package]]
 name = "aes-soft"
-version = "0.3.3"
+version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfd7e7ae3f9a1fb5c03b389fc6bb9a51400d0c13053f0dca698c832bfd893a0d"
+checksum = "be14c7498ea50828a38d0e24a765ed2effe92a705885b57d029cd67d45744072"
 dependencies = [
- "block-cipher-trait",
- "byteorder",
- "opaque-debug 0.2.3",
+ "cipher",
+ "opaque-debug 0.3.0",
 ]
 
 [[package]]
 name = "aesni"
-version = "0.6.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f70a6b5f971e473091ab7cfb5ffac6cde81666c4556751d8d5620ead8abf100"
+checksum = "ea2e11f5e94c2f7d386164cc2aa1f97823fed6f259e486940a71c174dd01b0ce"
 dependencies = [
- "block-cipher-trait",
- "opaque-debug 0.2.3",
+ "cipher",
+ "opaque-debug 0.3.0",
 ]
 
 [[package]]
@@ -447,15 +446,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "block-cipher-trait"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c924d49bd09e7c06003acda26cd9742e796e34282ec6c1189404dee0c1f4774"
-dependencies = [
- "generic-array 0.12.4",
-]
-
-[[package]]
 name = "block-padding"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -498,12 +488,6 @@ name = "bumpalo"
 version = "3.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c59e7af012c713f529e7a3ee57ce9b31ddd858d4b512923602f74608b009631"
-
-[[package]]
-name = "byte-slice-cast"
-version = "0.3.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0a5e3906bcbf133e33c1d4d95afc664ad37fbdb9f6568d8043e7ea8c27d93d3"
 
 [[package]]
 name = "byte-slice-cast"
@@ -632,6 +616,15 @@ dependencies = [
  "integer-encoding",
  "multibase",
  "multihash 0.8.0",
+]
+
+[[package]]
+name = "cipher"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "12f8e7987cbd042a63249497f41aed09f8e65add917ea6566effbc56578d6801"
+dependencies = [
+ "generic-array 0.14.4",
 ]
 
 [[package]]
@@ -1027,17 +1020,8 @@ dependencies = [
  "futures-timer",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "parking_lot 0.11.1",
-]
-
-[[package]]
-name = "fixed-hash"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3367952ceb191f4ab95dd5685dc163ac539e36202f9fcfd0cb22f9f9c542fefc"
-dependencies = [
- "static_assertions",
 ]
 
 [[package]]
@@ -1098,7 +1082,7 @@ dependencies = [
  "frame-system",
  "linregress",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "paste",
  "sp-api",
  "sp-io 3.0.0",
@@ -1115,7 +1099,7 @@ source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1
 dependencies = [
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-core",
  "sp-io 3.0.0",
  "sp-runtime",
@@ -1128,7 +1112,7 @@ name = "frame-metadata"
 version = "13.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-core",
  "sp-std",
@@ -1145,7 +1129,7 @@ dependencies = [
  "impl-trait-for-tuples",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "once_cell 1.8.0",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "paste",
  "serde",
  "smallvec 1.6.1",
@@ -1202,7 +1186,7 @@ dependencies = [
  "frame-support",
  "impl-trait-for-tuples",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-core",
  "sp-io 3.0.0",
@@ -1216,7 +1200,7 @@ name = "frame-system-rpc-runtime-api"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-api",
 ]
 
@@ -1555,12 +1539,6 @@ dependencies = [
 
 [[package]]
 name = "hex"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "805026a5d0141ffc30abb3be3173848ad46a1b1664fe632428479619a3644d77"
-
-[[package]]
-name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
@@ -1745,7 +1723,7 @@ dependencies = [
  "base64 0.11.0",
  "chrono",
  "frame-support",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde_json",
  "sp-core",
  "sp-io 3.0.0",
@@ -1777,20 +1755,11 @@ dependencies = [
 
 [[package]]
 name = "impl-codec"
-version = "0.4.2"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1be51a921b067b0eaca2fad532d9400041561aa922221cc65f95a85641c6bf53"
+checksum = "161ebdfec3c8e3b52bf61c4f3550a1eea4f9579d10dc1b936f3171ebdcd6c443"
 dependencies = [
- "parity-scale-codec 1.3.7",
-]
-
-[[package]]
-name = "impl-codec"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df170efa359aebdd5cb7fe78edcc67107748e4737bdca8a8fb40d15ea7a877ed"
-dependencies = [
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
 ]
 
 [[package]]
@@ -2635,12 +2604,11 @@ dependencies = [
 
 [[package]]
 name = "ofb"
-version = "0.1.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a877c7cc0b1801e45e3a71a799f50d8e4707ffb36faa06998f0a479b54bb894"
+checksum = "f5e609fc8b72da3dabd56427be9489d8a9f4bd2e4dc41660dd033c3c8e90b93c"
 dependencies = [
- "block-cipher-trait",
- "stream-cipher",
+ "cipher",
 ]
 
 [[package]]
@@ -2715,7 +2683,7 @@ dependencies = [
  "frame-system",
  "pallet-session",
  "pallet-timestamp",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-application-crypto",
  "sp-consensus-aura",
  "sp-runtime",
@@ -2730,7 +2698,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "pallet-session",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-application-crypto",
  "sp-authority-discovery",
  "sp-runtime",
@@ -2745,7 +2713,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "impl-trait-for-tuples",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-authorship",
  "sp-runtime",
  "sp-std",
@@ -2763,7 +2731,7 @@ dependencies = [
  "pallet-authorship",
  "pallet-session",
  "pallet-timestamp",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-application-crypto",
  "sp-consensus-babe",
  "sp-consensus-vrf",
@@ -2783,7 +2751,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-runtime",
  "sp-std",
 ]
@@ -2796,7 +2764,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "pallet-treasury",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-runtime",
  "sp-std",
 ]
@@ -2809,7 +2777,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-core",
  "sp-io 3.0.0",
  "sp-runtime",
@@ -2825,7 +2793,7 @@ dependencies = [
  "frame-system",
  "pallet-authorship",
  "pallet-session",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-application-crypto",
  "sp-io 3.0.0",
@@ -2848,7 +2816,7 @@ dependencies = [
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "pallet-authorship",
  "pallet-session",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-application-crypto",
  "sp-core",
  "sp-finality-grandpa",
@@ -2867,7 +2835,7 @@ dependencies = [
  "frame-system",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "pallet-authorship",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-application-crypto",
  "sp-core",
  "sp-io 3.0.0",
@@ -2883,7 +2851,7 @@ source = "git+https://github.com/ETeissonniere/pallet-mandate?branch=eliott/tern
 dependencies = [
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-core",
  "sp-io 3.0.0",
@@ -2900,7 +2868,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-io 3.0.0",
  "sp-runtime",
  "sp-std",
@@ -2915,7 +2883,7 @@ dependencies = [
  "frame-system",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "pallet-balances",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-runtime",
  "sp-staking",
@@ -2929,7 +2897,7 @@ source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1
 dependencies = [
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "safe-mix",
  "sp-runtime",
  "sp-std",
@@ -2944,7 +2912,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-io 3.0.0",
  "sp-runtime",
  "sp-std",
@@ -2959,7 +2927,7 @@ dependencies = [
  "frame-system",
  "impl-trait-for-tuples",
  "pallet-timestamp",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-core",
  "sp-io 3.0.0",
  "sp-runtime",
@@ -2979,7 +2947,7 @@ dependencies = [
  "ias-verify",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "pallet-timestamp",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-core",
  "sp-io 3.0.0",
@@ -2994,7 +2962,7 @@ source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1
 dependencies = [
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-io 3.0.0",
  "sp-runtime",
  "sp-std",
@@ -3010,7 +2978,7 @@ dependencies = [
  "frame-system",
  "impl-trait-for-tuples",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-inherents",
  "sp-runtime",
  "sp-std",
@@ -3024,7 +2992,7 @@ source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1
 dependencies = [
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "smallvec 1.6.1",
  "sp-core",
@@ -3039,7 +3007,7 @@ version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
  "pallet-transaction-payment",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-api",
  "sp-runtime",
 ]
@@ -3053,7 +3021,7 @@ dependencies = [
  "frame-system",
  "impl-trait-for-tuples",
  "pallet-balances",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-runtime",
  "sp-std",
@@ -3066,7 +3034,7 @@ source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1
 dependencies = [
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-core",
  "sp-io 3.0.0",
  "sp-runtime",
@@ -3093,32 +3061,23 @@ dependencies = [
 
 [[package]]
 name = "parity-scale-codec"
-version = "1.3.7"
+version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4b26b16c7687c3075982af47719e481815df30bc544f7a6690763a25ca16e9d"
-dependencies = [
- "arrayvec 0.5.2",
- "byte-slice-cast 0.3.5",
-]
-
-[[package]]
-name = "parity-scale-codec"
-version = "2.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b310f220c335f9df1b3d2e9fbe3890bbfeef5030dad771620f48c5c229877cd3"
+checksum = "e11263a97373b43da4b426edbb52ef99a7b51e2d9752ef56a7f8b356f48495a5"
 dependencies = [
  "arrayvec 0.7.1",
  "bitvec",
- "byte-slice-cast 1.0.0",
+ "byte-slice-cast",
+ "impl-trait-for-tuples",
  "parity-scale-codec-derive",
  "serde",
 ]
 
 [[package]]
 name = "parity-scale-codec-derive"
-version = "2.1.3"
+version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81038e13ca2c32587201d544ea2e6b6c47120f1e4eae04478f9f60b6bcb89145"
+checksum = "b157dc92b3db2bae522afb31b3843e91ae097eb01d66c72dda66a2e86bc3ca14"
 dependencies = [
  "proc-macro-crate 1.0.0",
  "proc-macro2",
@@ -3386,25 +3345,25 @@ checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
 
 [[package]]
 name = "primitive-types"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4336f4f5d5524fa60bcbd6fe626f9223d8142a50e7053e979acdf0da41ab975"
-dependencies = [
- "fixed-hash 0.5.2",
- "impl-codec 0.4.2",
- "uint 0.8.5",
-]
-
-[[package]]
-name = "primitive-types"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2415937401cb030a2a0a4d922483f945fa068f52a7dbb22ce0fe5f2b6f6adace"
 dependencies = [
- "fixed-hash 0.7.0",
- "impl-codec 0.5.0",
+ "fixed-hash",
+ "impl-codec",
  "impl-serde",
- "uint 0.9.0",
+ "uint",
+]
+
+[[package]]
+name = "primitive-types"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05e4722c697a58a99d5d06a08c30821d7c082a4632198de1eaa5a6c22ef42373"
+dependencies = [
+ "fixed-hash",
+ "impl-codec",
+ "uint",
 ]
 
 [[package]]
@@ -4073,7 +4032,7 @@ dependencies = [
  "derive_more",
  "futures 0.3.15",
  "futures-util",
- "hex 0.4.3",
+ "hex",
  "merlin",
  "parking_lot 0.11.1",
  "rand 0.7.3",
@@ -4096,7 +4055,7 @@ dependencies = [
  "jsonrpc-derive",
  "jsonrpc-pubsub",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "parking_lot 0.11.1",
  "serde",
  "serde_json",
@@ -4308,7 +4267,7 @@ dependencies = [
  "pallet-timestamp",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-aura",
@@ -4639,7 +4598,7 @@ source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1
 dependencies = [
  "hash-db",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-api-proc-macro",
  "sp-core",
  "sp-runtime",
@@ -4666,7 +4625,7 @@ name = "sp-application-crypto"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-core",
  "sp-io 3.0.0",
@@ -4680,7 +4639,7 @@ source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1
 dependencies = [
  "integer-sqrt",
  "num-traits",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-debug-derive",
  "sp-std",
@@ -4692,7 +4651,7 @@ name = "sp-authority-discovery"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-api",
  "sp-application-crypto",
  "sp-runtime",
@@ -4705,7 +4664,7 @@ version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
  "async-trait",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-inherents",
  "sp-runtime",
  "sp-std",
@@ -4716,7 +4675,7 @@ name = "sp-block-builder"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-api",
  "sp-inherents",
  "sp-runtime",
@@ -4731,7 +4690,7 @@ dependencies = [
  "futures 0.3.15",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "lru",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "parking_lot 0.11.1",
  "sp-api",
  "sp-consensus",
@@ -4760,7 +4719,7 @@ dependencies = [
  "futures-timer",
  "libp2p",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "parking_lot 0.11.1",
  "serde",
  "sp-api",
@@ -4782,7 +4741,7 @@ name = "sp-consensus-aura"
 version = "0.9.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-api",
  "sp-application-crypto",
  "sp-consensus-slots",
@@ -4799,7 +4758,7 @@ source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1
 dependencies = [
  "async-trait",
  "merlin",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-api",
  "sp-application-crypto",
@@ -4819,7 +4778,7 @@ name = "sp-consensus-slots"
 version = "0.9.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-arithmetic",
  "sp-runtime",
 ]
@@ -4829,7 +4788,7 @@ name = "sp-consensus-vrf"
 version = "0.9.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "schnorrkel",
  "sp-core",
  "sp-runtime",
@@ -4849,14 +4808,14 @@ dependencies = [
  "futures 0.3.15",
  "hash-db",
  "hash256-std-hasher",
- "hex 0.4.3",
+ "hex",
  "impl-serde",
  "lazy_static",
  "libsecp256k1",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "merlin",
  "num-traits",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "parity-util-mem",
  "parking_lot 0.11.1",
  "primitive-types 0.9.0",
@@ -4905,7 +4864,7 @@ version = "0.9.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
  "environmental",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-std",
  "sp-storage",
 ]
@@ -4917,7 +4876,7 @@ source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1
 dependencies = [
  "finality-grandpa",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-api",
  "sp-application-crypto",
@@ -4934,7 +4893,7 @@ source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1
 dependencies = [
  "async-trait",
  "impl-trait-for-tuples",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-core",
  "sp-runtime",
  "sp-std",
@@ -4950,7 +4909,7 @@ dependencies = [
  "hash-db",
  "libsecp256k1",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "parking_lot 0.11.1",
  "sp-core",
  "sp-externalities",
@@ -4973,7 +4932,7 @@ dependencies = [
  "environmental",
  "hash-db",
  "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sgx-externalities",
  "sgx_tstd",
  "sgx_types",
@@ -5006,7 +4965,7 @@ dependencies = [
  "derive_more",
  "futures 0.3.15",
  "merlin",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "parking_lot 0.11.1",
  "schnorrkel",
  "serde",
@@ -5028,7 +4987,7 @@ name = "sp-npos-elections"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-arithmetic",
  "sp-core",
@@ -5085,7 +5044,7 @@ dependencies = [
  "hash256-std-hasher",
  "impl-trait-for-tuples",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "parity-util-mem",
  "paste",
  "rand 0.7.3",
@@ -5103,7 +5062,7 @@ version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
  "impl-trait-for-tuples",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "primitive-types 0.9.0",
  "sp-externalities",
  "sp-runtime-interface-proc-macro",
@@ -5131,7 +5090,7 @@ name = "sp-session"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-api",
  "sp-core",
  "sp-runtime",
@@ -5144,7 +5103,7 @@ name = "sp-staking"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-runtime",
  "sp-std",
 ]
@@ -5157,7 +5116,7 @@ dependencies = [
  "hash-db",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "parking_lot 0.11.1",
  "rand 0.7.3",
  "smallvec 1.6.1",
@@ -5183,7 +5142,7 @@ version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
  "impl-serde",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "ref-cast",
  "serde",
  "sp-debug-derive",
@@ -5198,7 +5157,7 @@ dependencies = [
  "async-trait",
  "futures-timer",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-api",
  "sp-inherents",
  "sp-runtime",
@@ -5214,7 +5173,7 @@ source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1
 dependencies = [
  "erased-serde",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "parking_lot 0.10.2",
  "serde",
  "serde_json",
@@ -5233,7 +5192,7 @@ dependencies = [
  "derive_more",
  "futures 0.3.15",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-api",
  "sp-blockchain",
@@ -5248,7 +5207,7 @@ source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1
 dependencies = [
  "hash-db",
  "memory-db",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-core",
  "sp-std",
  "trie-db",
@@ -5273,7 +5232,7 @@ version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
  "impl-serde",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-runtime",
  "sp-std",
@@ -5285,7 +5244,7 @@ version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git#e5437efefa82bd8eb567f1245f0a7443ac4e4fe7"
 dependencies = [
  "impl-trait-for-tuples",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sp-std",
  "wasmi",
 ]
@@ -5313,15 +5272,6 @@ dependencies = [
  "nalgebra 0.26.2",
  "num-traits",
  "rand 0.8.4",
-]
-
-[[package]]
-name = "stream-cipher"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8131256a5896cabcf5eb04f4d6dacbe1aefda854b0d9896e09cb58829ec5638c"
-dependencies = [
- "generic-array 0.12.4",
 ]
 
 [[package]]
@@ -5360,10 +5310,10 @@ dependencies = [
  "frame-metadata",
  "frame-support",
  "frame-system",
- "hex 0.4.3",
+ "hex",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "pallet-balances",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "primitive-types 0.9.0",
  "sc-rpc-api",
  "serde",
@@ -5395,7 +5345,7 @@ version = "0.6.0"
 source = "git+https://github.com/scs/substrate-api-client?branch=version-update-e5437e#e0628f1f1164da8c009b8da06011966ac240db54"
 dependencies = [
  "async-trait",
- "hex 0.4.3",
+ "hex",
  "parking_lot 0.10.2",
  "sc-keystore",
  "serde_json",
@@ -5441,8 +5391,8 @@ version = "0.8.0"
 dependencies = [
  "base58",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
- "primitive-types 0.9.0",
+ "parity-scale-codec",
+ "primitive-types 0.10.1",
  "sgx_tstd",
  "sp-core",
  "sp-runtime",
@@ -5462,11 +5412,11 @@ dependencies = [
  "env_logger 0.7.1 (git+https://github.com/mesalock-linux/env_logger-sgx)",
  "frame-support",
  "frame-system",
- "hex 0.4.3",
+ "hex",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
  "pallet-balances",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "sc-keystore",
  "sgx-externalities",
  "sgx-runtime",
@@ -5494,14 +5444,14 @@ dependencies = [
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "frame-system",
  "futures 0.3.15",
- "hex 0.3.2",
+ "hex",
  "ipfs-api",
  "lazy_static",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "multihash 0.8.0",
  "pallet-balances",
- "parity-scale-codec 2.1.3",
- "primitive-types 0.9.0",
+ "parity-scale-codec",
+ "primitive-types 0.10.1",
  "rust-crypto",
  "serde",
  "serde_derive",
@@ -5530,7 +5480,7 @@ name = "substratee-worker-api"
 version = "0.8.0"
 dependencies = [
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde_derive",
  "serde_json",
  "sgx_crypto_helper",
@@ -5544,8 +5494,8 @@ name = "substratee-worker-primitives"
 version = "0.8.0"
 dependencies = [
  "chrono",
- "parity-scale-codec 2.1.3",
- "primitive-types 0.9.0",
+ "parity-scale-codec",
+ "primitive-types 0.10.1",
  "serde",
  "serde_derive",
  "serde_json",
@@ -5655,7 +5605,7 @@ dependencies = [
  "frame-benchmarking",
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-runtime",
  "sp-std",
@@ -5675,13 +5625,13 @@ dependencies = [
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "frame-system",
  "geojson",
- "hex 0.4.3",
+ "hex",
  "json",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "ofb",
  "pallet-balances",
- "parity-scale-codec 2.1.3",
- "primitive-types 0.6.2",
+ "parity-scale-codec",
+ "primitive-types 0.10.1",
  "rand 0.8.4",
  "sc-keystore",
  "serde",
@@ -5725,7 +5675,7 @@ dependencies = [
  "frame-benchmarking",
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-runtime",
  "sp-std",
@@ -5741,7 +5691,7 @@ dependencies = [
  "frame-benchmarking",
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-runtime",
  "sp-std",
@@ -5755,7 +5705,7 @@ version = "0.2.0"
 source = "git+https://github.com/capsule-corp-ternoa/chain#5ed166ae3f38b57c52dd4955d6b22c60347eddd2"
 dependencies = [
  "frame-system",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-application-crypto",
  "sp-core",
@@ -5794,7 +5744,7 @@ dependencies = [
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-treasury",
  "pallet-utility",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-api",
  "sp-authority-discovery",
@@ -5827,7 +5777,7 @@ dependencies = [
  "frame-benchmarking",
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.1.3",
+ "parity-scale-codec",
  "serde",
  "sp-runtime",
  "sp-std",
@@ -6200,25 +6150,13 @@ checksum = "56dee185309b50d1f11bfedef0fe6d036842e3fb77413abef29f8f8d1c5d4c1c"
 
 [[package]]
 name = "uint"
-version = "0.8.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9db035e67dfaf7edd9aebfe8676afcd63eed53c8a4044fed514c8cccf1835177"
-dependencies = [
- "byteorder",
- "crunchy",
- "rustc-hex",
- "static_assertions",
-]
-
-[[package]]
-name = "uint"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e11fe9a9348741cf134085ad57c249508345fe16411b3d7fb4ff2da2f1d6382e"
 dependencies = [
  "byteorder",
  "crunchy",
- "hex 0.4.3",
+ "hex",
  "static_assertions",
 ]
 
