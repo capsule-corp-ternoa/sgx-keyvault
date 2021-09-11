@@ -32,9 +32,9 @@ codec = { version = "2.0.0", package = "parity-scale-codec", features = ["derive
 # scs / ternoa
 substrate-api-client = { git = "https://github.com/scs/substrate-api-client", features = ["ws-client"], branch = "master" }
 substrate-client-keystore = { git = "https://github.com/scs/substrate-api-client", branch = "master" }
-my-node-runtime = { git = "https://github.com/capsule-corp-ternoa/chain", package = "ternoa-runtime" }
-my-node-primitives = { git = "https://github.com/capsule-corp-ternoa/chain", package = "ternoa-primitives" }
-ternoa-pallet-nfts = { git = "https://github.com/capsule-corp-ternoa/chain", package = "ternoa-nfts" }
+my-node-runtime = { git = "https://github.com/capsule-corp-ternoa/chain", tag = "dev-spec-37", package = "ternoa-runtime" }
+my-node-primitives = { git = "https://github.com/capsule-corp-ternoa/chain", tag = "dev-spec-37", package = "ternoa-primitives" }
+ternoa-pallet-nfts = { git = "https://github.com/capsule-corp-ternoa/chain", tag = "dev-spec-37", package = "ternoa-nfts" }
 
 # substrate dependencies
 sp-runtime = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "master" }

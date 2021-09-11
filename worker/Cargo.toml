@@ -43,8 +43,8 @@ substratee-worker-primitives = { path = "../substratee-worker-primitives" }
 substratee-worker-api = { path = "worker-api" }
 
 # Ternoa
-my-node-runtime = { git = "https://github.com/capsule-corp-ternoa/chain", package = "ternoa-runtime" }
-my-node-primitives = { git = "https://github.com/capsule-corp-ternoa/chain", package = "ternoa-primitives" }
+my-node-runtime = { git = "https://github.com/capsule-corp-ternoa/chain", tag = "dev-spec-37", package = "ternoa-runtime" }
+my-node-primitives = { git = "https://github.com/capsule-corp-ternoa/chain", tag = "dev-spec-37", package = "ternoa-primitives" }
 substratee-stf= { path = "../stf" }
 
 # Substrate
