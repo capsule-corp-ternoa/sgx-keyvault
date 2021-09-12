@@ -42,6 +42,7 @@ use sp_core::{
     Pair,
 };
 use sp_keyring::AccountKeyring;
+use substrate_api_client::rpc::WsRpcClient;
 use substrate_api_client::{utils::FromHexString, Api, GenericAddress, XtStatus};
 
 use crate::enclave::api::{enclave_init_chain_relay, enclave_sync_chain};
@@ -298,7 +299,7 @@ fn worker(
 
     // ------------------------------------------------------------------------
     // start the substrate-api-client to communicate with the node
-    let mut api = Api::new(NODE_URL.lock().unwrap().clone())
+    let mut api = Api::new(WsRpcClient::new(&NODE_URL.lock().unwrap().clone()))
         .unwrap()
         .set_signer(AccountKeyring::Alice.pair());
     let genesis_hash = api.genesis_hash.as_bytes().to_vec();
@@ -431,7 +432,7 @@ fn print_events(events: Events, _sender: Sender<String>) {
     for evr in &events {
         debug!("Decoded: phase = {:?}, event = {:?}", evr.phase, evr.event);
         match &evr.event {
-            Event::pallet_balances(be) => {
+            Event::Balances(be) => {
                 info!("[+] Received balances event");
                 debug!("{:?}", be);
                 match &be {
@@ -445,7 +446,7 @@ fn print_events(events: Events, _sender: Sender<String>) {
                     }
                 }
             }
-            Event::pallet_substratee_registry(re) => {
+            Event::SubstrateeRegistry(re) => {
                 debug!("{:?}", re);
                 match &re {
                     my_node_runtime::substratee_registry::RawEvent::AddedEnclave(
@@ -505,7 +506,7 @@ fn print_events(events: Events, _sender: Sender<String>) {
     }
 }
 
-pub fn init_chain_relay(eid: sgx_enclave_id_t, api: &Api<sr25519::Pair>) -> Header {
+pub fn init_chain_relay(eid: sgx_enclave_id_t, api: &Api<sr25519::Pair, WsRpcClient>) -> Header {
     let genesis_hash = api.get_genesis_hash().unwrap();
     let genesis_header: Header = api.get_header(Some(genesis_hash)).unwrap().unwrap();
     info!("Got genesis Header: \n {:?} \n", genesis_header);
@@ -547,7 +548,7 @@ pub fn init_chain_relay(eid: sgx_enclave_id_t, api: &Api<sr25519::Pair>) -> Head
 /// Returns the last synced header of layer one
 pub fn sync_chain(
     eid: sgx_enclave_id_t,
-    api: &Api<sr25519::Pair>,
+    api: &Api<sr25519::Pair, WsRpcClient>,
     last_synced_head: Header,
 ) -> Header {
     // obtain latest finalized block from layer one
@@ -658,7 +659,7 @@ fn enclave_account(eid: sgx_enclave_id_t) -> AccountId32 {
 }
 
 // Alice plays the faucet and sends some funds to the account if balance is low
-fn ensure_account_has_funds(api: &mut Api<sr25519::Pair>, accountid: &AccountId32) {
+fn ensure_account_has_funds(api: &mut Api<sr25519::Pair, WsRpcClient>, accountid: &AccountId32) {
     let alice = AccountKeyring::Alice.pair();
     info!("encoding Alice's public 	= {:?}", alice.public().0.encode());
     let alice_acc = AccountId32::from(*alice.public().as_array_ref());
@@ -695,7 +696,7 @@ fn ensure_account_has_funds(api: &mut Api<sr25519::Pair>, accountid: &AccountId3
     }
 }
 
-fn get_nonce(api: &Api<sr25519::Pair>, who: &AccountId32) -> u32 {
+fn get_nonce(api: &Api<sr25519::Pair, WsRpcClient>, who: &AccountId32) -> u32 {
     if let Some(info) = api.get_account_info(who).unwrap() {
         info.nonce
     } else {
@@ -703,7 +704,7 @@ fn get_nonce(api: &Api<sr25519::Pair>, who: &AccountId32) -> u32 {
     }
 }
 
-fn get_balance(api: &Api<sr25519::Pair>, who: &AccountId32) -> u128 {
+fn get_balance(api: &Api<sr25519::Pair, WsRpcClient>, who: &AccountId32) -> u128 {
     if let Some(data) = api.get_account_data(who).unwrap() {
         data.free
     } else {
@@ -752,7 +753,9 @@ pub unsafe extern "C" fn ocall_worker_request(
         return sgx_status_t::SGX_SUCCESS;
     }
 
-    let api = Api::<sr25519::Pair>::new(NODE_URL.lock().unwrap().clone()).unwrap();
+    let api =
+        Api::<sr25519::Pair, WsRpcClient>::new(WsRpcClient::new(&NODE_URL.lock().unwrap().clone()))
+            .unwrap();
 
     let resp: Vec<WorkerResponse<Vec<u8>>> = requests
         .into_iter()
@@ -789,7 +792,9 @@ pub unsafe extern "C" fn ocall_send_block_and_confirmation(
     let mut signed_blocks_slice =
         slice::from_raw_parts(signed_blocks_ptr, signed_blocks_size as usize);
 
-    let api = Api::<sr25519::Pair>::new(NODE_URL.lock().unwrap().clone()).unwrap();
+    let api =
+        Api::<sr25519::Pair, WsRpcClient>::new(WsRpcClient::new(&NODE_URL.lock().unwrap().clone()))
+            .unwrap();
 
     // send confirmations to layer one
     let confirmation_calls: Vec<Vec<u8>> = match Decode::decode(&mut confirmations_slice) {

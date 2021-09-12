@@ -20,7 +20,7 @@ pub extern crate alloc;
 use alloc::string::String;
 use alloc::vec::Vec;
 use log::*;
-use my_node_primitives::{AccountId, NFTId};
+use my_node_primitives::{nfts::NFTId, AccountId};
 use substratee_node_primitives::NFTData;
 use substratee_stf::ShamirShare;
 

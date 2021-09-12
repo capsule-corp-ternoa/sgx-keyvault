@@ -53,15 +53,16 @@ use sp_runtime::{
     traits::{IdentifyAccount, Verify},
     MultiSignature,
 };
+use substrate_api_client::rpc::ws_client::{EventsDecoder, Subscriber};
+use substrate_api_client::rpc::WsRpcClient;
+use substrate_api_client::RpcClient;
 use substrate_api_client::{
     compose_extrinsic, compose_extrinsic_offline,
-    events::EventsDecoder,
     extrinsic::xt_primitives::{GenericAddress, UncheckedExtrinsicV4},
-    node_metadata::Metadata,
     utils::FromHexString,
-    Api, XtStatus,
+    Api, Metadata, XtStatus,
 };
-use substrate_client_keystore::LocalKeystore;
+use substrate_client_keystore::{KeystoreExt, LocalKeystore};
 
 use substratee_stf::{ShardIdentifier, TrustedCallSigned, TrustedOperation};
 use substratee_worker_api::direct_client::DirectApi as DirectWorkerApi;
@@ -436,14 +437,14 @@ fn main() {
     }
 }
 
-fn get_chain_api(matches: &ArgMatches<'_>) -> Api<sr25519::Pair> {
+fn get_chain_api(matches: &ArgMatches<'_>) -> Api<sr25519::Pair, WsRpcClient> {
     let url = format!(
         "{}:{}",
         matches.value_of("node-url").unwrap(),
         matches.value_of("node-port").unwrap()
     );
     info!("connecting to {}", url);
-    Api::<sr25519::Pair>::new(url).unwrap()
+    Api::<sr25519::Pair, WsRpcClient>::new(WsRpcClient::new(&url)).unwrap()
 }
 
 fn perform_trusted_operation(matches: &ArgMatches<'_>, top: &TrustedOperation) -> Option<Vec<u8>> {
@@ -720,7 +721,7 @@ fn listen(matches: &ArgMatches<'_>) {
                                 }
                             }
                         },*/
-                        Event::pallet_substratee_registry(ee) => {
+                        Event::SubstrateeRegistry(ee) => {
                             println!(">>>>>>>>>> substraTEE event: {:?}", ee);
                             count += 1;
                             match &ee {
@@ -800,9 +801,10 @@ fn listen(matches: &ArgMatches<'_>) {
 }
 
 // subscribes to he substratee_registry events of type CallConfirmed
-pub fn subscribe_to_call_confirmed<P: Pair>(api: Api<P>) -> H256
+pub fn subscribe_to_call_confirmed<P: Pair, Client: 'static>(api: Api<P, Client>) -> H256
 where
     MultiSignature: From<P::Signature>,
+    Client: RpcClient + Subscriber + Send,
 {
     let (events_in, events_out) = channel();
 
@@ -823,7 +825,7 @@ where
         if let Ok(evts) = _events {
             for evr in &evts {
                 info!("received event {:?}", evr.event);
-                if let Event::pallet_substratee_registry(pe) = &evr.event {
+                if let Event::SubstrateeRegistry(pe) = &evr.event {
                     if let my_node_runtime::substratee_registry::RawEvent::CallConfirmed(
                         sender,
                         payload,
@@ -874,7 +876,7 @@ fn get_pair_from_str(account: &str) -> sr25519::AppPair {
     }
 }
 
-fn get_enclave_count(api: &Api<sr25519::Pair>) -> u64 {
+fn get_enclave_count(api: &Api<sr25519::Pair, WsRpcClient>) -> u64 {
     if let Some(count) = api
         .get_storage_value("SubstrateeRegistry", "EnclaveCount", None)
         .unwrap()
@@ -885,7 +887,10 @@ fn get_enclave_count(api: &Api<sr25519::Pair>) -> u64 {
     }
 }
 
-fn get_enclave(api: &Api<sr25519::Pair>, eindex: u64) -> Option<Enclave<AccountId, Vec<u8>>> {
+fn get_enclave(
+    api: &Api<sr25519::Pair, WsRpcClient>,
+    eindex: u64,
+) -> Option<Enclave<AccountId, Vec<u8>>> {
     api.get_storage_map("SubstrateeRegistry", "EnclaveRegistry", eindex, None)
         .unwrap()
 }

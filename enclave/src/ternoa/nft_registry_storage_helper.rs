@@ -12,7 +12,7 @@
 */
 use codec::{Decode, Encode};
 use log::*;
-use my_node_primitives::{BlockNumber, NFTId};
+use my_node_primitives::{nfts::NFTId, BlockNumber};
 use std::collections::HashMap;
 use std::fs;
 use std::vec::Vec;

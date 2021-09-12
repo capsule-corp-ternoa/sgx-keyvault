@@ -18,7 +18,7 @@
 use super::keyvault_interaction::send_direct_request_to_keyvault;
 use crate::get_pair_from_str;
 use codec::Decode;
-use my_node_primitives::NFTId;
+use my_node_primitives::nfts::NFTId;
 use sp_core::{sr25519 as sr25519_core, Pair};
 use substratee_node_primitives::NFTData;
 use substratee_stf::{KeyPair, TrustedGetter, TrustedOperation};

@@ -13,8 +13,8 @@
 use super::nft_registry_storage_helper::NFTRegistryStorageHelper;
 use derive_more::Display;
 use log::*;
-use my_node_primitives::nfts::{NFTData as NFTDataPrimitives, NFTDetails};
-use my_node_primitives::{AccountId, BlockNumber, NFTId};
+use my_node_primitives::nfts::{NFTData as NFTDataPrimitives, NFTDetails, NFTId};
+use my_node_primitives::{AccountId, BlockNumber};
 use sgx_types::sgx_status_t;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicPtr, Ordering};

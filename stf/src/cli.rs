@@ -27,7 +27,7 @@ use sp_application_crypto::{ed25519, sr25519};
 use sp_core::{crypto::Ss58Codec, sr25519 as sr25519_core, Pair};
 use sp_runtime::traits::IdentifyAccount;
 use std::path::PathBuf;
-use substrate_client_keystore::LocalKeystore;
+use substrate_client_keystore::{KeystoreExt, LocalKeystore};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const KEYSTORE_PATH: &str = "my_trusted_keystore";

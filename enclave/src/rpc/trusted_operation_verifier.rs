@@ -128,7 +128,7 @@ pub mod tests {
         create_dummy_account, create_dummy_request, sign_trusted_call,
     };
     use codec::Encode;
-    use my_node_primitives::{AccountId, NFTId};
+    use my_node_primitives::{nfts::NFTId, AccountId};
     use sp_core::{ed25519 as ed25519_core, Pair, H256};
     use substratee_stf::{ShamirShare, TrustedCall};
 

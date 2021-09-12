@@ -21,7 +21,7 @@ use crate::ternoa_implementation::cipher;
 use crate::ternoa_implementation::keyvault::constants::KEYVAULT_NFT_URLLIST_FILENAME_PREFIX;
 use crate::ternoa_implementation::local_storage_handler::{LocalFileStorage, VecToLinesConverter};
 use log::*;
-use my_node_primitives::{AccountId, NFTId};
+use my_node_primitives::{nfts::NFTId, AccountId};
 use sharks::{Share, Sharks};
 use sp_core::{sr25519 as sr25519_core, Pair};
 use std::path::PathBuf;

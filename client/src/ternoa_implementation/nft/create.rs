@@ -6,11 +6,12 @@ use crate::{get_accountid_from_str, get_pair_from_str};
 use codec::Decode;
 use frame_system::Event as SystemEvent;
 use log::*;
-use my_node_primitives::NFTId;
+use my_node_primitives::nfts::NFTId;
 use my_node_runtime::Event;
 use sp_core::H256 as Hash;
 use sp_runtime::DispatchError;
 use std::sync::mpsc::channel;
+use substrate_api_client::rpc::WsRpcClient;
 use ternoa_pallet_nfts::Event as NFTEvent;
 
 //TODO: import it from ternoa chain instead
@@ -22,7 +23,11 @@ pub type NFTIdOf = NFTId;
 /// The NFT contains a filename of the capsule/ciphertext file.
 /// Returns the NFTid: u32
 /// Note: the series id, this nft belongs to, is hardcoded to 0 (the default series id) and the capsule flag is true
-pub fn create(owner_ss58: &str, filename: &str, chain_api: Api<sr25519::Pair>) -> Option<NFTId> {
+pub fn create(
+    owner_ss58: &str,
+    filename: &str,
+    chain_api: Api<sr25519::Pair, WsRpcClient>,
+) -> Option<NFTId> {
     let signer = get_pair_from_str(owner_ss58);
     let chain_api = chain_api.set_signer(sr25519_core::Pair::from(signer));
     // compose the extrinsic
@@ -53,7 +58,7 @@ pub fn create(owner_ss58: &str, filename: &str, chain_api: Api<sr25519::Pair>) -
                 for evr in &evts {
                     info!("decoded: phase{:?} event {:?}", evr.phase, evr.event);
                     match &evr.event {
-                        Event::ternoa_nfts(nfte) => {
+                        Event::Nfts(nfte) => {
                             info!("NFT event received: {:?}", nfte);
                             match &nfte {
                                 NFTEvent::Created(nft_id, account_id, nft_series_id) => {
@@ -70,7 +75,7 @@ pub fn create(owner_ss58: &str, filename: &str, chain_api: Api<sr25519::Pair>) -
                                 }
                             }
                         }
-                        Event::frame_system(fse) => {
+                        Event::System(fse) => {
                             info!("Other frame system event received: {:?}", fse);
                             match &fse {
                                 SystemEvent::ExtrinsicFailed(error, _info) => match error {
