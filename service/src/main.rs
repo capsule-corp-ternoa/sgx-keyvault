@@ -501,6 +501,33 @@ fn print_events(events: Events, _sender: Sender<String>) {
 	for evr in &events {
 		debug!("Decoded: phase = {:?}, event = {:?}", evr.phase, evr.event);
 		match &evr.event {
+			Event::Nfts(be) => {
+				info!("[+] Received nft event");
+				debug!("{:?}", be);
+				match &be {
+					my_node_runtime::ternoa_nfts::Event::Created(
+						nft_id,
+						account_id,
+						nft_series_id,
+						ipfs_reference,
+					) => {
+						info!("Created event received");
+						debug!("NFTId: {:?}", nft_id);
+						debug!("AccountId: {:?}", account_id);
+						debug!("NFTSeriesId: {:?}", nft_series_id);
+						debug!("IPFSReference: {:?}", ipfs_reference);
+					},
+					my_node_runtime::ternoa_nfts::Event::Transfer(nft_id, old_owner, new_owner) => {
+						info!("Transfer event received");
+						debug!("NFTId: {:?}", nft_id);
+						debug!("OldOwner: {:?}", old_owner);
+						debug!("NewOwner: {:?}", new_owner);
+					},
+					_ => {
+						debug!("ignoring unsupported NFT event");
+					},
+				}
+			},
 			Event::Balances(be) => {
 				info!("[+] Received balances event");
 				debug!("{:?}", be);
@@ -516,6 +543,7 @@ fn print_events(events: Events, _sender: Sender<String>) {
 				}
 			},
 			Event::Teerex(re) => {
+				info!("[+] Received Teerex event");
 				debug!("{:?}", re);
 				match &re {
 					my_node_runtime::pallet_teerex::RawEvent::AddedEnclave(sender, worker_url) => {
