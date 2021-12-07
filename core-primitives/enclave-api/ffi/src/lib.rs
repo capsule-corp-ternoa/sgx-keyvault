@@ -131,4 +131,11 @@ extern "C" {
 		sign_type: sgx_quote_sign_type_t,
 		skip_ra: c_int,
 	) -> sgx_status_t;
+
+	// NFTs
+	pub fn store_nft_data(
+		eid: sgx_enclave_id_t,
+		retval: *mut sgx_status_t,
+		num: u8,
+	) -> sgx_status_t;
 }
