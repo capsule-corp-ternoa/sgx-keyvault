@@ -513,10 +513,10 @@ where
 	for evr in &events {
 		debug!("Decoded: phase = {:?}, event = {:?}", evr.phase, evr.event);
 		match &evr.event {
-			Event::Nfts(be) => {
+			Event::Nfts(e) => {
 				info!("[+] Received nft event");
-				debug!("{:?}", be);
-				match &be {
+				debug!("{:?}", e);
+				match &e {
 					my_node_runtime::ternoa_nfts::Event::Created(
 						nft_id,
 						account_id,
@@ -528,13 +528,14 @@ where
 						debug!("AccountId: {:?}", account_id);
 						debug!("NFTSeriesId: {:?}", nft_series_id);
 						debug!("IPFSReference: {:?}", ipfs_reference);
-						enclave.store_nft_data(8).unwrap();
+						enclave.store_nft_data(*nft_id, account_id.clone()).unwrap();
 					},
 					my_node_runtime::ternoa_nfts::Event::Transfer(nft_id, old_owner, new_owner) => {
 						info!("Transfer event received");
 						debug!("NFTId: {:?}", nft_id);
 						debug!("OldOwner: {:?}", old_owner);
 						debug!("NewOwner: {:?}", new_owner);
+						enclave.update_nft_data(*nft_id, new_owner.clone()).unwrap();
 					},
 					_ => {
 						debug!("ignoring unsupported NFT event");

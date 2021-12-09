@@ -545,6 +545,7 @@ dependencies = [
  "sp-std",
  "sp-version",
  "substrate-api-client",
+ "ternoa-sgx-nft",
  "webpki",
  "webpki-roots 0.21.0 (git+https://github.com/mesalock-linux/webpki-roots?branch=mesalock_sgx)",
  "yasna",
@@ -3675,6 +3676,20 @@ version = "1.0.5"
 source = "git+https://github.com/mesalock-linux/termcolor-sgx#fee5ac79b4a90197d646f3df5e1b45ac56be718b"
 dependencies = [
  "sgx_tstd",
+]
+
+[[package]]
+name = "ternoa-sgx-nft"
+version = "0.8.0"
+dependencies = [
+ "derive_more",
+ "itp-settings",
+ "itp-sgx-io",
+ "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
+ "parity-scale-codec",
+ "sgx_tstd",
+ "sgx_types",
+ "sp-core",
 ]
 
 [[package]]

@@ -136,6 +136,14 @@ extern "C" {
 	pub fn store_nft_data(
 		eid: sgx_enclave_id_t,
 		retval: *mut sgx_status_t,
-		num: u8,
+		nft_id: u32,
+		owner_id: *const u8,
+	) -> sgx_status_t;
+
+	pub fn update_nft_data(
+		eid: sgx_enclave_id_t,
+		retval: *mut sgx_status_t,
+		nft_id: u32,
+		owner_id: *const u8,
 	) -> sgx_status_t;
 }
