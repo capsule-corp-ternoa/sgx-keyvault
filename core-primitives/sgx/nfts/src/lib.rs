@@ -17,9 +17,9 @@ use sgx_tstd::vec::Vec;
 
 use crate::error::{Error, Result};
 
-#[derive(Debug, Default, Encode, Decode, Clone)]
+#[derive(Debug, Default, Encode, Decode, Clone, Copy)]
 pub struct NftData {
-	owner_id: [u8; 32],
+	pub owner_id: [u8; 32],
 }
 
 impl NftData {
@@ -57,6 +57,13 @@ impl NftDb {
 	pub fn update(&mut self, id: u32, data: NftData) -> Result<()> {
 		match self.0.binary_search_by_key(&id, |nft| nft.0) {
 			Ok(p) => Ok(self.0[p] = Nft::new(id, data)),
+			Err(_) => Err(Error::NftNotFound),
+		}
+	}
+
+	pub fn get(&self, id: u32) -> Result<NftData> {
+		match self.0.binary_search_by_key(&id, |nft| nft.0) {
+			Ok(p) => Ok(self.0[p].1),
 			Err(_) => Err(Error::NftNotFound),
 		}
 	}

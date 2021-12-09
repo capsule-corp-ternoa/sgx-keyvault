@@ -146,4 +146,12 @@ extern "C" {
 		nft_id: u32,
 		owner_id: *const u8,
 	) -> sgx_status_t;
+
+	pub fn is_nft_owner(
+		eid: sgx_enclave_id_t,
+		retval: *mut sgx_status_t,
+		is_owner: *mut bool,
+		nft_id: u32,
+		account_id: *const u8,
+	) -> sgx_status_t;
 }

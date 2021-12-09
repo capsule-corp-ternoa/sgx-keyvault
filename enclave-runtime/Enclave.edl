@@ -94,12 +94,18 @@ enclave {
 		
 		public sgx_status_t store_nft_data(
 			uint32_t num,
-			[in] uint8_t* owner_id
+			[in, size=32] uint8_t* owner_id
 		);
 
 		public sgx_status_t update_nft_data(
 			uint32_t num,
-			[in] uint8_t* owner_id
+			[in, size=32] uint8_t* owner_id
+		);
+
+		public sgx_status_t is_nft_owner(
+			[out] uint8_t* is_owner,
+			uint32_t num,
+			[in, size=32] uint8_t* owner_id
 		);
 
 		public sgx_status_t call_rpc_methods(
