@@ -136,4 +136,27 @@ extern "C" {
 		sign_type: sgx_quote_sign_type_t,
 		skip_ra: c_int,
 	) -> sgx_status_t;
+
+	// NFTs
+	pub fn store_nft_data(
+		eid: sgx_enclave_id_t,
+		retval: *mut sgx_status_t,
+		nft_id: u32,
+		owner_id: *const u8,
+	) -> sgx_status_t;
+
+	pub fn update_nft_data(
+		eid: sgx_enclave_id_t,
+		retval: *mut sgx_status_t,
+		nft_id: u32,
+		owner_id: *const u8,
+	) -> sgx_status_t;
+
+	pub fn is_nft_owner(
+		eid: sgx_enclave_id_t,
+		retval: *mut sgx_status_t,
+		is_owner: *mut bool,
+		nft_id: u32,
+		account_id: *const u8,
+	) -> sgx_status_t;
 }

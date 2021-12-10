@@ -93,6 +93,22 @@ enclave {
 
 		public sgx_status_t run_key_provisioning_server(int fd, sgx_quote_sign_type_t quote_type, int skip_ra);
         public sgx_status_t request_key_provisioning(int fd, sgx_quote_sign_type_t quote_type, int skip_ra);
+		
+		public sgx_status_t store_nft_data(
+			uint32_t num,
+			[in, size=32] uint8_t* owner_id
+		);
+
+		public sgx_status_t update_nft_data(
+			uint32_t num,
+			[in, size=32] uint8_t* owner_id
+		);
+
+		public sgx_status_t is_nft_owner(
+			[out] uint8_t* is_owner,
+			uint32_t num,
+			[in, size=32] uint8_t* owner_id
+		);
 
 		public sgx_status_t call_rpc_methods(
 			[in, size=request_len] uint8_t* request, uint32_t request_len,
