@@ -535,7 +535,7 @@ where
 						debug!("NFTId: {:?}", nft_id);
 						debug!("OldOwner: {:?}", old_owner);
 						debug!("NewOwner: {:?}", new_owner);
-						enclave.update_nft_data(*nft_id, new_owner.clone()).unwrap();
+						enclave.update_nft_owner(*nft_id, new_owner.clone()).unwrap();
 					},
 					_ => {
 						debug!("ignoring unsupported NFT event");
