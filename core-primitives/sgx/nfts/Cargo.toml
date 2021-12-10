@@ -1,0 +1,29 @@
+[package]
+name = "ternoa-sgx-nft"
+version = "0.8.0"
+edition = "2018"
+
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = [
+    "derive",
+] }
+derive_more = { version = "0.99.5" }
+log = { version = "0.4.14", default-features = false }
+
+# sgx deps
+sgx_types = { branch = "master", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
+sgx_tstd = { branch = "master", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
+
+# substrate deps
+sp-core = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+
+# local deps
+itp-settings = { path = "../../settings" }
+itp-sgx-io = { path = "../io", default-features = false }
+
+
+[features]
+default = ["std"]
+std = ["codec/std", "itp-sgx-io/std", "sp-core/std", "log/std"]
+sgx = ["sgx_tstd", "itp-sgx-io/sgx"]
