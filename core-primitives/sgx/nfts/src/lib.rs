@@ -42,7 +42,7 @@ pub struct NftDb(Vec<Nft>);
 
 impl Default for NftDb {
 	fn default() -> Self {
-		Self([].to_vec())
+		Self(Vec::new())
 	}
 }
 
