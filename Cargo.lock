@@ -1984,7 +1984,7 @@ dependencies = [
 [[package]]
 name = "integritee-node-runtime"
 version = "1.0.5"
-source = "git+https://github.com/capsule-corp-ternoa/integritee-node.git?branch=ternoa#467f11f96118625607dfb6f54ea885bf232574d0"
+source = "git+https://github.com/capsule-corp-ternoa/integritee-node.git?branch=ternoa#61c0b8c895b950c72b49701991f4a4865b4a1586"
 dependencies = [
  "frame-executive",
  "frame-support",
@@ -6690,7 +6690,7 @@ checksum = "13a4ec180a2de59b57434704ccfad967f789b12737738798fa08798cd5824c16"
 [[package]]
 name = "ternoa-nfts"
 version = "0.3.0"
-source = "git+https://github.com/capsule-corp-ternoa/integritee-node.git?branch=ternoa#467f11f96118625607dfb6f54ea885bf232574d0"
+source = "git+https://github.com/capsule-corp-ternoa/integritee-node.git?branch=ternoa#61c0b8c895b950c72b49701991f4a4865b4a1586"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
