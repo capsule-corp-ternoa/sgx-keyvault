@@ -6,35 +6,21 @@ compile_error!("feature \"std\" and feature \"sgx\" cannot be enabled at the sam
 #[cfg(all(not(feature = "std"), feature = "sgx"))]
 extern crate sgx_tstd as std;
 
+#[cfg(feature = "sgx")]
+pub use sgx::*;
+
 pub mod error;
 
-use codec::{Decode, Encode};
-use derive_more::Display;
-
-use itp_settings::files::NFT_DB;
-use itp_sgx_io::{seal, unseal, SealedIO};
-use sgx_tstd::vec::Vec;
-
 use crate::error::{Error, Result};
+use codec::{Decode, Encode};
+use std::vec::Vec;
 
 #[derive(Debug, Default, Encode, Decode, Clone)]
-pub struct NftData {
-	pub owner_id: [u8; 32],
-	pub secret: Option<Vec<u8>>,
-}
-
-impl NftData {
-	pub fn new(owner_id: [u8; 32]) -> Self {
-		Self { owner_id, secret: None }
-	}
-}
-
-#[derive(Debug, Default, Encode, Decode, Clone)]
-pub struct Nft(u32, NftData);
+pub struct Nft(u32, Vec<u8>);
 
 impl Nft {
-	pub fn new(id: u32, data: NftData) -> Self {
-		Self(id, data)
+	pub fn new(id: u32, secret: Vec<u8>) -> Self {
+		Self(id, secret)
 	}
 }
 
@@ -48,28 +34,14 @@ impl Default for NftDb {
 }
 
 impl NftDb {
-	pub fn insert_sorted(&mut self, id: u32, data: NftData) -> Result<()> {
+	pub fn upsert_sorted(&mut self, id: u32, secret: Vec<u8>) {
 		match self.0.binary_search_by_key(&id, |nft| nft.0) {
-			Ok(_) => Err(Error::NftAlreadyExist),
-			Err(p) => Ok(self.0.insert(p, Nft::new(id, data))),
-		}
+			Ok(p) => self.0[p].1 = secret,
+			Err(p) => self.0.insert(p, Nft::new(id, secret)),
+		};
 	}
 
-	pub fn update_owner(&mut self, id: u32, owner_id: [u8; 32]) -> Result<()> {
-		match self.0.binary_search_by_key(&id, |nft| nft.0) {
-			Ok(p) => Ok(self.0[p].1.owner_id = owner_id),
-			Err(_) => Err(Error::NftNotFound),
-		}
-	}
-
-	pub fn update_secret(&mut self, id: u32, secret: &[u8]) -> Result<()> {
-		match self.0.binary_search_by_key(&id, |nft| nft.0) {
-			Ok(p) => Ok(self.0[p].1.secret = Some(secret.to_vec())),
-			Err(_) => Err(Error::NftNotFound),
-		}
-	}
-
-	pub fn get(&self, id: u32) -> Result<NftData> {
+	pub fn get(&mut self, id: u32) -> Result<Vec<u8>> {
 		match self.0.binary_search_by_key(&id, |nft| nft.0) {
 			Ok(p) => Ok(self.0[p].1.clone()),
 			Err(_) => Err(Error::NftNotFound),
@@ -77,18 +49,27 @@ impl NftDb {
 	}
 }
 
-#[derive(Copy, Clone, Debug, Display)]
-pub struct NftDbSeal;
+#[cfg(feature = "sgx")]
+mod sgx {
+	use super::*;
+	use derive_more::Display;
+	use itp_settings::files::NFT_DB;
+	use itp_sgx_io::{seal, unseal, SealedIO};
 
-impl SealedIO for NftDbSeal {
-	type Error = Error;
-	type Unsealed = NftDb;
+	#[derive(Copy, Clone, Debug, Display)]
+	pub struct NftDbSeal;
 
-	fn unseal() -> Result<Self::Unsealed> {
-		Ok(unseal(NFT_DB).map_or(Ok(NftDb::default()), |b| Decode::decode(&mut b.as_slice()))?)
-	}
+	impl SealedIO for NftDbSeal {
+		type Error = Error;
+		type Unsealed = NftDb;
 
-	fn seal(unsealed: Self::Unsealed) -> Result<()> {
-		Ok(unsealed.using_encoded(|bytes| seal(bytes, NFT_DB))?)
+		fn unseal() -> Result<Self::Unsealed> {
+			Ok(unseal(NFT_DB)
+				.map_or(Ok(NftDb::default()), |b| Decode::decode(&mut b.as_slice()))?)
+		}
+
+		fn seal(unsealed: Self::Unsealed) -> Result<()> {
+			Ok(unsealed.using_encoded(|bytes| seal(bytes, NFT_DB))?)
+		}
 	}
 }

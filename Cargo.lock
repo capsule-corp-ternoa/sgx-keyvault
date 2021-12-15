@@ -2133,6 +2133,7 @@ dependencies = [
  "hex",
  "integritee-node-runtime",
  "itp-settings",
+ "itp-sgx-io",
  "itp-storage",
  "itp-types",
  "its-primitives",
@@ -2152,6 +2153,7 @@ dependencies = [
  "sp-runtime",
  "substrate-api-client",
  "substrate-client-keystore",
+ "ternoa-sgx-nft",
 ]
 
 [[package]]
@@ -6700,6 +6702,20 @@ dependencies = [
  "serde 1.0.130",
  "sp-runtime",
  "sp-std",
+]
+
+[[package]]
+name = "ternoa-sgx-nft"
+version = "0.8.0"
+dependencies = [
+ "derive_more",
+ "itp-settings",
+ "itp-sgx-io",
+ "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parity-scale-codec",
+ "sgx_tstd",
+ "sgx_types",
+ "sp-core",
 ]
 
 [[package]]

@@ -1147,6 +1147,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "itp-settings",
+ "itp-sgx-io",
  "itp-storage",
  "itp-types",
  "its-primitives",
@@ -1161,6 +1162,7 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-runtime",
+ "ternoa-sgx-nft",
 ]
 
 [[package]]
