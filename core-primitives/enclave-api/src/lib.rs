@@ -20,7 +20,6 @@ pub mod direct_request;
 pub mod enclave_base;
 pub mod enclave_test;
 pub mod error;
-pub mod nfts;
 pub mod remote_attestation;
 pub mod sidechain;
 pub mod teerex_api;

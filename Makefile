@@ -262,6 +262,7 @@ help:
 	
 .PHONY: setup
 setup:
+	@ rm -rf bin/shards/*
 	@cd bin && ./integritee-service init-shard && ./integritee-service shielding-key && ./integritee-service signing-key
 
 .PHONY: run

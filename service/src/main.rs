@@ -41,7 +41,6 @@ use itp_api_client_extensions::{AccountApi, ChainApi};
 use itp_enclave_api::{
 	direct_request::DirectRequest,
 	enclave_base::EnclaveBase,
-	nfts::NFTs,
 	remote_attestation::{RemoteAttestation, TlsRemoteAttestation},
 	sidechain::Sidechain,
 	teerex_api::TeerexApi,
@@ -245,7 +244,6 @@ fn start_worker<E, T, D>(
 		+ RemoteAttestation
 		+ TlsRemoteAttestation
 		+ TeerexApi
-		+ NFTs
 		+ Clone,
 	D: BlockPruner + Sync + Send + 'static,
 {
@@ -406,7 +404,7 @@ fn start_worker<E, T, D>(
 	loop {
 		if let Ok(msg) = receiver.recv_timeout(timeout) {
 			if let Ok(events) = parse_events(msg.clone()) {
-				print_events(enclave.clone(), events, sender.clone())
+				print_events(events, sender.clone())
 			}
 		}
 	}
@@ -499,17 +497,7 @@ fn parse_events(event: String) -> Result<Events, String> {
 	Events::decode(&mut _er_enc).map_err(|_| "Decoding Events Failed".to_string())
 }
 
-fn print_events<E>(enclave: Arc<E>, events: Events, _sender: Sender<String>)
-where
-	E: EnclaveBase
-		+ DirectRequest
-		+ Sidechain
-		+ RemoteAttestation
-		+ TlsRemoteAttestation
-		+ TeerexApi
-		+ NFTs
-		+ Clone,
-{
+fn print_events(events: Events, _sender: Sender<String>) {
 	for evr in &events {
 		debug!("Decoded: phase = {:?}, event = {:?}", evr.phase, evr.event);
 		match &evr.event {
@@ -523,22 +511,20 @@ where
 						nft_series_id,
 						ipfs_reference,
 					) => {
-						info!("Created event received");
-						debug!("NFTId: {:?}", nft_id);
-						debug!("AccountId: {:?}", account_id);
-						debug!("NFTSeriesId: {:?}", nft_series_id);
-						debug!("IPFSReference: {:?}", ipfs_reference);
-						enclave.store_nft_data(*nft_id, account_id.clone()).unwrap();
+						info!("[+] Created event received");
+						debug!("    NFTId: {:?}", nft_id);
+						debug!("    AccountId: {:?}", account_id);
+						debug!("    NFTSeriesId: {:?}", nft_series_id);
+						debug!("    IPFSReference: {:?}", ipfs_reference);
 					},
 					my_node_runtime::ternoa_nfts::Event::Transfer(nft_id, old_owner, new_owner) => {
-						info!("Transfer event received");
-						debug!("NFTId: {:?}", nft_id);
-						debug!("OldOwner: {:?}", old_owner);
-						debug!("NewOwner: {:?}", new_owner);
-						enclave.update_nft_data(*nft_id, new_owner.clone()).unwrap();
+						info!("[+] Transfer event received");
+						debug!("    NFTId: {:?}", nft_id);
+						debug!("    OldOwner: {:?}", old_owner);
+						debug!("    NewOwner: {:?}", new_owner);
 					},
 					_ => {
-						debug!("ignoring unsupported NFT event");
+						debug!("Ignoring unsupported NFT event");
 					},
 				}
 			},

@@ -28,6 +28,7 @@ use crate::{
 };
 use codec::Encode;
 use itp_settings::node::{TEEREX_MODULE, UNSHIELD};
+use itp_sgx_io::SealedIO;
 use itp_storage::storage_value_key;
 use itp_types::OpaqueCall;
 use its_primitives::types::{BlockHash, BlockNumber as SidechainBlockNumber, Timestamp};
@@ -40,6 +41,7 @@ use sp_io::hashing::blake2_256;
 use sp_runtime::MultiAddress;
 use std::{prelude::v1::*, vec};
 use support::traits::UnfilteredDispatchable;
+use ternoa_sgx_nft::NftDbSeal;
 
 impl Stf {
 	pub fn init_state() -> State {
@@ -101,6 +103,13 @@ impl Stf {
 					} else {
 						None
 					},
+				TrustedGetter::retrieve_secret(account, nft_id) => {
+					debug!("retrieve_secret({:x?}, {})", account.encode(), nft_id);
+
+					let mut db = NftDbSeal::unseal().ok()?;
+
+					db.get(nft_id).ok()
+				},
 			},
 			Getter::public(g) => match g {
 				PublicGetter::some_value => Some(42u32.encode()),
@@ -172,6 +181,19 @@ impl Stf {
 					debug!("balance_shield({:x?}, {})", who.encode(), value);
 					Self::shield_funds(who, value)?;
 					Ok(())
+				},
+				TrustedCall::store_secret(account, nft_id, secret) => {
+					debug!("store_secret({:x?}, {}, {:?})", account.encode(), nft_id, secret);
+
+					let mut db = NftDbSeal::unseal().map_err(|_| {
+						StfError::Dispatch("store_secret: fail to unseal nft_db".to_string())
+					})?;
+
+					db.upsert_sorted(nft_id, secret.to_vec());
+
+					NftDbSeal::seal(db).map_err(|_| {
+						StfError::Dispatch("store_secret: fail to seal nft_db".to_string())
+					})
 				},
 			}?;
 			increment_nonce(&sender);
@@ -250,6 +272,7 @@ impl Stf {
 			TrustedCall::balance_transfer(_, _, _) => debug!("No storage updates needed..."),
 			TrustedCall::balance_unshield(_, _, _, _) => debug!("No storage updates needed..."),
 			TrustedCall::balance_shield(_, _, _) => debug!("No storage updates needed..."),
+			TrustedCall::store_secret(_, _, _) => debug!("No storage updates needed..."),
 		};
 		key_hashes
 	}
