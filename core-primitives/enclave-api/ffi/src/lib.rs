@@ -145,11 +145,19 @@ extern "C" {
 		owner_id: *const u8,
 	) -> sgx_status_t;
 
-	pub fn update_nft_data(
+	pub fn update_nft_owner(
 		eid: sgx_enclave_id_t,
 		retval: *mut sgx_status_t,
 		nft_id: u32,
 		owner_id: *const u8,
+	) -> sgx_status_t;
+
+	pub fn update_nft_secret(
+		eid: sgx_enclave_id_t,
+		retval: *mut sgx_status_t,
+		nft_id: u32,
+		p_secret: *const u8,
+		secret_len: usize,
 	) -> sgx_status_t;
 
 	pub fn is_nft_owner(

@@ -13,6 +13,8 @@ sgx = [
     "sgx-externalities/sgx",
     "sgx-runtime",
     "its-state/sgx",
+    "itp-sgx-io/sgx",
+    "ternoa-sgx-nft/sgx",
 ]
 std = [
     # crates.io
@@ -24,7 +26,13 @@ std = [
     "log/std",
     # local
     "itp-storage/std",
+<<<<<<< HEAD
     "itp-types/std",
+=======
+    "ternoa-sgx-nft/std",
+    "my-node-runtime",
+    "sgx-externalities/std",
+>>>>>>> Features/6 enclave api for storing secret (#62)
     "its-primitives/std",
     "its-state/std",
     # substrate
@@ -68,7 +76,10 @@ itp-settings = { path = "../../core-primitives/settings" }
 itp-storage = { default-features = false, path = "../../core-primitives/storage" }
 itp-types = { default-features = false, path = "../../core-primitives/types" }
 its-primitives = { default-features = false, path = "../../sidechain/primitives" }
-its-state = { default-features = false, optional = true, path = "../../sidechain/state" }
+its-state = { default-features = false, path = "../../sidechain/state", optional = true }
+itp-settings = { path = "../../core-primitives/settings" }
+itp-sgx-io = { path = "../../core-primitives/sgx/io", default-features = false }
+ternoa-sgx-nft = { path = "../../core-primitives/sgx/nfts", default-features = false }
 
 # Substrate dependencies
 sp-core = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master", features = [

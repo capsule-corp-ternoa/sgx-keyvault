@@ -95,8 +95,6 @@ mod ipfs;
 mod ocall;
 mod utils;
 
-mod nfts;
-
 pub mod cert;
 pub mod error;
 pub mod rpc;
