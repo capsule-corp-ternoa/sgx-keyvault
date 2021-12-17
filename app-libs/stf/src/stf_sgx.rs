@@ -104,7 +104,7 @@ impl Stf {
 						None
 					},
 				TrustedGetter::retrieve_secret(account, nft_id) => {
-					debug!("retrieve_secret({:x?}, {})", account.encode(), nft_id);
+					std::println!("retrieve_secret({:x?}, {})", account.encode(), nft_id);
 
 					let mut db = NftDbSeal::unseal().ok()?;
 
@@ -184,6 +184,8 @@ impl Stf {
 				},
 				TrustedCall::store_secret(account, nft_id, secret) => {
 					debug!("store_secret({:x?}, {}, {:?})", account.encode(), nft_id, secret);
+
+					get_nft_owner(nft_id);
 
 					let mut db = NftDbSeal::unseal().map_err(|_| {
 						StfError::Dispatch("store_secret: fail to unseal nft_db".to_string())

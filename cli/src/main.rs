@@ -62,7 +62,7 @@ use substrate_api_client::{
 
 use ita_stf::{ShardIdentifier, TrustedCallSigned, TrustedOperation};
 use itc_rpc_client::direct_client::{DirectApi, DirectClient as DirectWorkerApi};
-use itp_api_client_extensions::{PalletTeerexApi, TEEREX};
+use itp_api_client_extensions::{PalletNftsApi, PalletTeerexApi, TEEREX};
 use itp_types::{DirectRequestStatus, RpcRequest, RpcResponse, RpcReturnValue};
 use substrate_client_keystore::{KeystoreExt, LocalKeystore};
 
@@ -303,6 +303,37 @@ fn main() {
 						println!("   RA timestamp: {}", timestamp);
 						println!("   URL: {}", enclave.url);
 					}
+					Ok(())
+				}),
+		)
+		.add_cmd(
+			Command::new("nft-data")
+				.description("query on chain storage to retreive a nft data")
+				.options(|app| {
+					app.setting(AppSettings::ColoredHelp).arg(
+						Arg::with_name("nft-id")
+							.takes_value(true)
+							.required(true)
+							.value_name("U32")
+							.help("Id of the NFT"),
+					)
+				})
+				.runner(|_args: &str, matches: &ArgMatches<'_>| {
+					let arg_nft_id: u32 = matches
+						.value_of("nft-id")
+						.unwrap()
+						.parse()
+						.expect("nft-id cannot be converted to u32");
+					let api = get_chain_api(matches);
+
+					let data = match api.data(arg_nft_id) {
+						Ok(v) => v,
+						Err(e) => {
+							println!("{}", e);
+							return Ok(())
+						},
+					};
+					println!("data for nft with id {}: {:?}", &arg_nft_id, data);
 					Ok(())
 				}),
 		)

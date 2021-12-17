@@ -74,4 +74,19 @@ impl EnclaveOnChainOCallApi for OcallApi {
 
 		Ok(decoded_response)
 	}
+
+	// fn get_nft_owner(&self, nft_id: u32) -> SgxResult<AccountId> {
+	// 	let mut rt: sgx_status_t = sgx_status_t::SGX_ERROR_UNEXPECTED;
+
+	// 	let ret_owner_id = [u8; 32];
+
+	// 	let res = unsafe {
+	// 		ffi::ocall_get_nft_owner(&mut rt as *mut sgx_status_t, ret_owner_id.as_ptr(), nft_id)
+	// 	};
+
+	// 	ensure!(rt == sgx_status_t::SGX_SUCCESS, rt);
+	// 	ensure!(res == sgx_status_t::SGX_SUCCESS, res);
+
+	// 	Ok(AccountId(ret_owner_id))
+	// }
 }

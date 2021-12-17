@@ -418,7 +418,6 @@ pub fn cmd<'a>(
 					} else {
 						println!("None");
 					}
-					let _ = perform_operation(matches, &top);
 					Ok(())
 				}),
 		)

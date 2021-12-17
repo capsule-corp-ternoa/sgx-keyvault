@@ -22,7 +22,7 @@ pub extern crate alloc;
 use alloc::vec::Vec;
 use codec::{Decode, Encode};
 use core::fmt::Debug;
-use itp_types::{TrustedOperationStatus, WorkerRequest, WorkerResponse};
+use itp_types::{AccountId, TrustedOperationStatus, WorkerRequest, WorkerResponse};
 use sgx_types::*;
 use sp_runtime::OpaqueExtrinsic;
 
@@ -69,6 +69,8 @@ pub trait EnclaveOnChainOCallApi: Clone + Debug + Send + Sync {
 		&self,
 		req: Vec<WorkerRequest>,
 	) -> SgxResult<Vec<WorkerResponse<V>>>;
+
+	// fn get_nft_owner(&self, nft_id: u32) -> SgxResult<AccountId>;
 }
 
 pub trait EnclaveSidechainOCallApi: Clone + Debug + Send + Sync {
