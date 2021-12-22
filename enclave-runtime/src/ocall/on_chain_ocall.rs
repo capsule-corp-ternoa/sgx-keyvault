@@ -18,7 +18,6 @@
 
 use crate::ocall::{ffi, OcallApi};
 use codec::{Decode, Encode};
-use core::convert::TryInto;
 use frame_support::ensure;
 use itp_ocall_api::EnclaveOnChainOCallApi;
 use itp_types::{AccountId, WorkerRequest, WorkerResponse};
@@ -79,7 +78,7 @@ impl EnclaveOnChainOCallApi for OcallApi {
 	fn get_nft_owner(&self, nft_id: u32) -> SgxResult<AccountId> {
 		let mut rt: sgx_status_t = sgx_status_t::SGX_ERROR_UNEXPECTED;
 
-		let mut ret_owner_id = vec![0u8; 32];
+		let mut ret_owner_id = [0u8; 32];
 
 		let res = unsafe {
 			ffi::ocall_get_nft_owner(
@@ -92,7 +91,6 @@ impl EnclaveOnChainOCallApi for OcallApi {
 		ensure!(rt == sgx_status_t::SGX_SUCCESS, rt);
 		ensure!(res == sgx_status_t::SGX_SUCCESS, res);
 
-		let slice_ret: [u8; 32] = ret_owner_id.try_into().unwrap();
-		Ok(AccountId::new(slice_ret))
+		Ok(AccountId::new(ret_owner_id))
 	}
 }

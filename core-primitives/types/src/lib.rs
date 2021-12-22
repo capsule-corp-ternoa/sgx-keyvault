@@ -161,6 +161,35 @@ pub struct NFTData {
 }
 
 #[derive(Encode, Decode, Clone, Debug)]
+pub struct RetrieveNftSecretRequest {
+	pub nft_id: u32,
+}
+
+impl RetrieveNftSecretRequest {
+	pub fn sign(&self, pair: &KeyPair) -> RetrieveNftSecretRequestSigned {
+		let signature = pair.sign(self.encode().as_slice());
+		RetrieveNftSecretRequestSigned { request: self.clone(), signer: pair.public(), signature }
+	}
+}
+
+#[derive(Encode, Decode, Clone, Debug)]
+pub struct RetrieveNftSecretRequestSigned {
+	request: RetrieveNftSecretRequest,
+	pub signer: sp_core::sr25519::Public,
+	pub signature: Signature,
+}
+
+impl RetrieveNftSecretRequestSigned {
+	pub fn verify_signature(&self) -> bool {
+		self.signature.verify(self.request.encode().as_slice(), &self.signer)
+	}
+
+	pub fn get_request(&self) -> Option<RetrieveNftSecretRequest> {
+		self.verify_signature().then(|| self.request.clone())
+	}
+}
+
+#[derive(Encode, Decode, Clone, Debug)]
 pub struct StoreNftSecretRequest {
 	pub nft_id: u32,
 	pub secret: Vec<u8>,

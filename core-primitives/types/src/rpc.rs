@@ -32,6 +32,12 @@ impl RpcReturnValue {
 }
 
 #[derive(Clone, Encode, Decode, Serialize, Deserialize, Debug)]
+pub struct RpcError {
+	pub code: i64,
+	pub message: Option<String>,
+}
+
+#[derive(Clone, Encode, Decode, Serialize, Deserialize, Debug)]
 pub struct RpcResponse<T>
 where
 	T: Serialize,
@@ -39,6 +45,7 @@ where
 	pub jsonrpc: String,
 	pub result: T, // encoded RpcReturnValue
 	pub id: u32,
+	pub error: Option<RpcError>,
 }
 
 #[derive(Clone, Encode, Decode, Serialize, Deserialize)]

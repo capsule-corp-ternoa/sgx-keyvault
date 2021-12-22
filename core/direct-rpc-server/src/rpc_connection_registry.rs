@@ -137,11 +137,12 @@ pub mod tests {
 		assert!(registry.is_empty());
 	}
 
-	fn dummy_rpc_response() -> RpcResponse {
+	fn dummy_rpc_response() -> RpcResponse<Vec<u8>> {
 		RpcResponse {
 			jsonrpc: String::new(),
 			result: Vec::<u8>::new(), // encoded RpcReturnValue
 			id: 1u32,
+            error: None,
 		}
 	}
 }

@@ -64,7 +64,8 @@ use ita_stf::{ShardIdentifier, TrustedCallSigned, TrustedOperation};
 use itc_rpc_client::direct_client::{DirectApi, DirectClient as DirectWorkerApi};
 use itp_api_client_extensions::{PalletNftsApi, PalletTeerexApi, TEEREX};
 use itp_types::{
-	DirectRequestStatus, RpcRequest, RpcResponse, RpcReturnValue, StoreNftSecretRequest,
+	DirectRequestStatus, RetrieveNftSecretRequest, RpcRequest, RpcResponse, RpcReturnValue,
+	StoreNftSecretRequest,
 };
 use substrate_client_keystore::{KeystoreExt, LocalKeystore};
 
@@ -500,13 +501,29 @@ fn main() {
 					};
 
 					// Decode the response
-					let _: RpcResponse<Option<String>> = match serde_json::from_str(&response_str) {
-						Ok(resp) => resp,
-						Err(err_msg) =>
-							panic!("Error while deserialisation of the PpcResponse: {:?}", err_msg),
-					};
+					let response: RpcResponse<Option<String>> =
+						match serde_json::from_str(&response_str) {
+							Ok(resp) => resp,
+							Err(err_msg) => panic!(
+								"Error while deserialisation of the RpcResponse: {:?}",
+								err_msg
+							),
+						};
 
-					println!("Secret succesfully stored");
+					if let Some(error) = &response.error {
+						print!("Failed to store NFT secret");
+						println!(
+							"{}",
+							if let Some(message) = &error.message {
+								format!(": {:#?}", message)
+							} else {
+								"".to_string()
+							}
+						)
+					} else {
+						println!("Succes");
+					}
+
 					Ok(())
 				}),
 		)
@@ -538,6 +555,53 @@ fn main() {
 						.expect("nft-id cannot be converted to u32");
 
 					let account = get_pair_from_str(arg_account);
+
+					// compose jsonrpc call
+					let rpc_method = "nft_retrieveSecret".to_owned();
+					let data = RetrieveNftSecretRequest { nft_id: arg_nft_id }
+						.sign(&sr25519_core::Pair::from(account));
+					let jsonrpc_call: String =
+						RpcRequest::compose_jsonrpc_call(rpc_method, data.encode());
+
+					// call the api
+					let direct_api = get_worker_api_direct(matches);
+					let response_str = match direct_api.get(jsonrpc_call) {
+						Ok(resp) => resp,
+						Err(_) => panic!("Error when sending direct invocation call"),
+					};
+
+					// Decode the response
+					let response: RpcResponse<Option<Vec<u8>>> =
+						match serde_json::from_str(&response_str) {
+							Ok(resp) => resp,
+							Err(err_msg) => panic!(
+								"Error while deserialisation of the RpcResponse: {:?}",
+								err_msg
+							),
+						};
+
+					if let Some(error) = &response.error {
+						print!("Failed to retrieve NFT secret");
+						println!(
+							"{}",
+							if let Some(message) = &error.message {
+								format!(": {:#?}", message)
+							} else {
+								"".to_string()
+							}
+						);
+					} else {
+						print!("Succes");
+						println!(
+							"{}",
+							if let Some(result) = &response.result {
+								format!(": {:#?}", result)
+							} else {
+								"".to_string()
+							}
+						);
+					}
+
 					Ok(())
 				}),
 		)
