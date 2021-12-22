@@ -70,7 +70,7 @@ pub trait EnclaveOnChainOCallApi: Clone + Debug + Send + Sync {
 		req: Vec<WorkerRequest>,
 	) -> SgxResult<Vec<WorkerResponse<V>>>;
 
-	// fn get_nft_owner(&self, nft_id: u32) -> SgxResult<AccountId>;
+	fn get_nft_owner(&self, nft_id: u32) -> SgxResult<AccountId>;
 }
 
 pub trait EnclaveSidechainOCallApi: Clone + Debug + Send + Sync {

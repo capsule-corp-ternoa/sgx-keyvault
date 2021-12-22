@@ -21,7 +21,7 @@ use std::sync::SgxRwLock as RwLock;
 #[cfg(feature = "std")]
 use std::sync::RwLock;
 
-use crate::{RpcConnectionRegistry, RpcHash};
+use crate::{RpcConnectionRegistry, RpcHash, Vec};
 use itc_tls_websocket_server::WebSocketConnection;
 use itp_types::RpcResponse;
 use std::collections::HashMap;
@@ -35,7 +35,7 @@ where
 {
 	connection_map: HashMapLock<
 		<Self as RpcConnectionRegistry>::Hash,
-		(<Self as RpcConnectionRegistry>::Connection, RpcResponse),
+		(<Self as RpcConnectionRegistry>::Connection, RpcResponse<Vec<u8>>),
 	>,
 }
 
@@ -72,12 +72,17 @@ where
 	type Hash = Hash;
 	type Connection = Connection;
 
-	fn store(&self, hash: Self::Hash, connection: Self::Connection, rpc_response: RpcResponse) {
+	fn store(
+		&self,
+		hash: Self::Hash,
+		connection: Self::Connection,
+		rpc_response: RpcResponse<Vec<u8>>,
+	) {
 		let mut map = self.connection_map.write().unwrap();
 		map.insert(hash, (connection, rpc_response));
 	}
 
-	fn withdraw(&self, hash: &Self::Hash) -> Option<(Self::Connection, RpcResponse)> {
+	fn withdraw(&self, hash: &Self::Hash) -> Option<(Self::Connection, RpcResponse<Vec<u8>>)> {
 		let mut map = self.connection_map.write().unwrap();
 		map.remove(hash)
 	}

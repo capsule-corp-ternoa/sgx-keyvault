@@ -15,7 +15,7 @@
 
 */
 
-use crate::{DetermineWatch, DirectRpcError, DirectRpcResult, RpcHash};
+use crate::{DetermineWatch, DirectRpcError, DirectRpcResult, RpcHash, Vec};
 use codec::Decode;
 use itp_types::{DirectRequestStatus, RpcResponse, RpcReturnValue};
 use std::marker::PhantomData;
@@ -51,7 +51,10 @@ where
 {
 	type Hash = Hash;
 
-	fn must_be_watched(&self, rpc_response: &RpcResponse) -> DirectRpcResult<Option<Self::Hash>> {
+	fn must_be_watched(
+		&self,
+		rpc_response: &RpcResponse<Vec<u8>>,
+	) -> DirectRpcResult<Option<Self::Hash>> {
 		let rpc_return_value = RpcReturnValue::decode(&mut rpc_response.result.as_slice())
 			.map_err(DirectRpcError::EncodingError)?;
 
