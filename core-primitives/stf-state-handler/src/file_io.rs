@@ -24,7 +24,7 @@ use codec::{Decode, Encode};
 use ita_stf::{State as StfState, StateType as StfStateType, Stf};
 use itp_settings::files::{ENCRYPTED_STATE_FILE, SHARDS_PATH};
 use itp_sgx_crypto::{AesSeal, StateCrypto};
-use itp_sgx_io::{read as io_read, write as io_write, SealedIO};
+use itp_sgx_io::SealedIO;
 use itp_types::{ShardIdentifier, H256};
 use log::*;
 use sgx_tcrypto::rsgx_sha256_slice;
@@ -83,7 +83,7 @@ pub(crate) fn write(state: StfState, shard: &ShardIdentifier) -> Result<H256> {
 
 	debug!("new encrypted state with hash={:?} written to {}", state_hash, state_path);
 
-	io_write(&cyphertext, &state_path)?;
+	fs::write(&state_path, &cyphertext)?;
 	Ok(state_hash.into())
 }
 
@@ -100,7 +100,7 @@ pub(crate) fn init_shard(shard: &ShardIdentifier) -> Result<()> {
 }
 
 pub(crate) fn read(path: &str) -> Result<Vec<u8>> {
-	let mut bytes = io_read(path)?;
+	let mut bytes = fs::read(path)?;
 
 	if bytes.is_empty() {
 		return Ok(bytes)
@@ -123,7 +123,7 @@ pub(crate) fn read(path: &str) -> Result<Vec<u8>> {
 fn write_encrypted(bytes: &mut Vec<u8>, path: &str) -> Result<sgx_status_t> {
 	debug!("plaintext data to be written: {:?}", bytes);
 	AesSeal::unseal().map(|key| key.encrypt(bytes))?;
-	io_write(&bytes, path)?;
+	fs::write(path, &bytes)?;
 	Ok(sgx_status_t::SGX_SUCCESS)
 }
 

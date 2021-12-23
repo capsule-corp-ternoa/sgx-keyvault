@@ -27,7 +27,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use crate::{
-	cert, io,
+	cert,
 	ocall::OcallApi,
 	utils::{hash_from_slice, write_slice_and_whitespace_pad},
 	Error as EnclaveError, Result as EnclaveResult,
@@ -49,6 +49,7 @@ use sgx_tse::*;
 use sgx_types::*;
 use sp_core::{blake2_256, Pair};
 use std::{
+	fs,
 	io::{Read, Write},
 	net::TcpStream,
 	prelude::v1::*,
@@ -410,7 +411,7 @@ pub fn create_attestation_report<A: EnclaveAttestationOCallApi>(
 }
 
 fn load_spid(filename: &str) -> SgxResult<sgx_spid_t> {
-	match io::read_to_string(filename).map(|contents| decode_spid(&contents)) {
+	match fs::read_to_string(filename).map(|contents| decode_spid(&contents)) {
 		Ok(r) => r,
 		Err(e) => {
 			error!("Failed to load SPID: {:?}", e);
@@ -439,7 +440,7 @@ fn decode_spid(hex_encoded_string: &str) -> SgxResult<sgx_spid_t> {
 }
 
 fn get_ias_api_key() -> EnclaveResult<String> {
-	io::read_to_string(RA_API_KEY_FILE)
+	fs::read_to_string(RA_API_KEY_FILE)
 		.map(|key| key.trim_end().to_owned())
 		.map_err(|e| EnclaveError::Other(e.into()))
 }
@@ -562,7 +563,7 @@ pub unsafe extern "C" fn dump_ra_to_disk() -> sgx_status_t {
 		Err(e) => return e.into(),
 	};
 
-	if let Err(err) = io::write(&cert_der, RA_DUMP_CERT_DER_FILE) {
+	if let Err(err) = fs::write(RA_DUMP_CERT_DER_FILE, &cert_der) {
 		error!(
 			"    [Enclave] failed to write RA file ({}), status: {:?}",
 			RA_DUMP_CERT_DER_FILE, err

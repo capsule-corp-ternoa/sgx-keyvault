@@ -63,7 +63,6 @@ use itp_settings::node::{
 	REGISTER_ENCLAVE, RUNTIME_SPEC_VERSION, RUNTIME_TRANSACTION_VERSION, TEEREX_MODULE,
 };
 use itp_sgx_crypto::{aes, ed25519, rsa3072, Ed25519Seal, Rsa3072Seal};
-use itp_sgx_io as io;
 use itp_sgx_io::SealedIO;
 use itp_stf_executor::executor::StfExecutor;
 use itp_stf_state_handler::{

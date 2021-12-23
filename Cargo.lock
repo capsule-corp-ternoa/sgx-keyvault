@@ -5653,7 +5653,7 @@ dependencies = [
 [[package]]
 name = "sgx_rand"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git?branch=master#863378876c55025084572e22554bbedd57eead97"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?branch=master#a1dd97696ce8dff0f3fceadaefb39af92f10d20c"
 dependencies = [
  "sgx_trts",
  "sgx_tstd",
@@ -5737,7 +5737,7 @@ dependencies = [
 [[package]]
 name = "sgx_urts"
 version = "1.1.4"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git?branch=master#863378876c55025084572e22554bbedd57eead97"
+source = "git+https://github.com/apache/teaclave-sgx-sdk.git?branch=master#a1dd97696ce8dff0f3fceadaefb39af92f10d20c"
 dependencies = [
  "libc",
  "sgx_types",
