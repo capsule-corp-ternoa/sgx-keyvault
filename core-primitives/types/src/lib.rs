@@ -9,7 +9,7 @@ use sp_runtime::{
 	traits::BlakeTwo256,
 	OpaqueExtrinsic,
 };
-use std::vec::Vec;
+use std::{string::String, vec::Vec};
 
 use itp_storage::storage_entry::StorageEntry;
 pub use rpc::*;
@@ -141,6 +141,19 @@ impl From<WorkerResponse<Vec<u8>>> for StorageEntry<Vec<u8>> {
 			WorkerResponse::ChainStorage(key, value, proof) => StorageEntry { key, value, proof },
 		}
 	}
+}
+
+/// Data related to an NFT, such as who is its owner.
+#[derive(Encode, Decode, Clone, PartialEq, Eq, Debug)]
+pub struct NFTData {
+	// NFT owner
+	pub owner: AccountId,
+	// IPFS reference
+	pub ipfs_reference: String,
+	// Series ID
+	pub series_id: String,
+	// Is Locked
+	pub locked: bool,
 }
 
 #[cfg(test)]

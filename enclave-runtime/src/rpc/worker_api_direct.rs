@@ -15,17 +15,24 @@
 
 */
 
-use codec::Encode;
+use crate::ocall::OcallApi;
+use codec::{Decode, Encode};
 use core::result::Result;
+use itp_ocall_api::EnclaveOnChainOCallApi;
 use itp_sgx_crypto::Rsa3072Seal;
-use itp_types::{DirectRequestStatus, RpcReturnValue, H256};
+use itp_sgx_io::SealedIO;
+use itp_types::{
+	AccountId, DirectRequestStatus, RetrieveNftSecretRequest, RpcReturnValue, SignedRequest,
+	StoreNftSecretRequest, H256,
+};
 use its_sidechain::{
 	primitives::types::SignedBlock,
 	rpc_handler::{direct_top_pool_api, import_block_api},
 	top_pool_rpc_author::traits::AuthorApi,
 };
-use jsonrpc_core::{serde_json::json, IoHandler, Params, Value};
+use jsonrpc_core::{serde_json::json, Error, IoHandler, Params, Value};
 use std::{borrow::ToOwned, format, str, string::String, sync::Arc, vec::Vec};
+use ternoa_sgx_nft::NftDbSeal;
 
 fn compute_encoded_return_error(error_msg: &str) -> Vec<u8> {
 	RpcReturnValue::from_error_message(error_msg).encode()
@@ -72,6 +79,67 @@ where
 		let json_value =
 			RpcReturnValue::new(rsa_pubkey_json.encode(), false, DirectRequestStatus::Ok);
 		Ok(json!(json_value.encode()))
+	});
+
+	// nft_storeSecret
+	let nft_store_secret_name: &str = "nft_storeSecret";
+	io.add_sync_method(nft_store_secret_name, |params: Params| {
+		let encoded_params = params.parse::<Vec<u8>>()?;
+		let signed_req =
+			SignedRequest::<StoreNftSecretRequest>::decode(&mut encoded_params.as_slice())
+				.map_err(|_| Error::invalid_request())?;
+
+		let req = signed_req
+			.get_request()
+			.ok_or(Error::invalid_params("Invalid request signature"))?;
+
+		let owner_id: AccountId = OcallApi.get_nft_owner(req.nft_id).map_err(|_| {
+			Error::invalid_params(format!("NFT with id '{}' doesn't exist on chain", req.nft_id))
+		})?;
+
+		if owner_id != signed_req.signer.into() {
+			return Err(Error::invalid_params("Request sender is not the owner of the NFT"))
+		}
+
+		let mut db = NftDbSeal::unseal().map_err(|_| Error::internal_error())?;
+
+		db.upsert_sorted(req.nft_id, req.secret);
+
+		NftDbSeal::seal(db).map_err(|_| Error::internal_error())?;
+
+		Ok(Value::Null)
+	});
+
+	// nft_retrieveSecret
+	let nft_retrieve_secret_name: &str = "nft_retrieveSecret";
+	io.add_sync_method(nft_retrieve_secret_name, |params: Params| {
+		let encoded_params = params.parse::<Vec<u8>>()?;
+		let signed_req =
+			SignedRequest::<RetrieveNftSecretRequest>::decode(&mut encoded_params.as_slice())
+				.map_err(|_| Error::invalid_request())?;
+
+		let req = signed_req
+			.get_request()
+			.ok_or(Error::invalid_params("Invalid request signature"))?;
+
+		let owner_id: AccountId = OcallApi.get_nft_owner(req.nft_id).map_err(|_| {
+			Error::invalid_params(format!("NFT with id '{}' doesn't exist on chain", req.nft_id))
+		})?;
+
+		if owner_id != signed_req.signer.into() {
+			return Err(Error::invalid_params("Request sender is not the owner of the NFT"))
+		}
+
+		let mut db = NftDbSeal::unseal().map_err(|_| Error::internal_error())?;
+
+		let secret = db.get(req.nft_id).map_err(|_| {
+			Error::invalid_params(format!(
+				"There is no secret stored for NFT with id '{}'",
+				req.nft_id
+			))
+		})?;
+
+		Ok(secret.into())
 	});
 
 	// chain_subscribeAllHeads

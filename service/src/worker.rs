@@ -4,7 +4,7 @@
 /// from the main.rs should be covered by the worker struct here - hidden and split across
 /// multiple traits.
 use async_trait::async_trait;
-use itp_api_client_extensions::PalletTeerexApi;
+use itp_api_client_extensions::{PalletNftsApi, PalletTeerexApi};
 use itp_types::Enclave as EnclaveMetadata;
 use its_primitives::types::SignedBlock as SignedSidechainBlock;
 use jsonrpsee::{
@@ -56,7 +56,7 @@ pub trait WorkerT {
 impl<NodeApi, Enclave, WorkerApiDirect> WorkerT
 	for Worker<Config, NodeApi, Enclave, WorkerApiDirect>
 where
-	NodeApi: PalletTeerexApi + Send + Sync,
+	NodeApi: PalletTeerexApi + PalletNftsApi + Send + Sync,
 	Enclave: Send + Sync,
 	WorkerApiDirect: Send + Sync,
 {

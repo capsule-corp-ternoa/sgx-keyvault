@@ -2042,7 +2042,7 @@ dependencies = [
 [[package]]
 name = "integritee-node-runtime"
 version = "1.0.5"
-source = "git+https://github.com/integritee-network/integritee-node?branch=master#a97ddbce0048a9b48eef76799f3e42e37690c334"
+source = "git+https://github.com/capsule-corp-ternoa/integritee-node.git?branch=ternoa#61c0b8c895b950c72b49701991f4a4865b4a1586"
 dependencies = [
  "frame-executive",
  "frame-support",
@@ -2066,7 +2066,6 @@ dependencies = [
  "pallet-utility",
  "pallet-vesting",
  "parity-scale-codec",
- "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-aura",
@@ -2079,6 +2078,7 @@ dependencies = [
  "sp-transaction-pool",
  "sp-version",
  "substrate-wasm-builder",
+ "ternoa-nfts",
 ]
 
 [[package]]
@@ -2195,11 +2195,11 @@ dependencies = [
  "hex",
  "integritee-node-runtime",
  "itp-settings",
+ "itp-sgx-io",
  "itp-storage",
  "itp-types",
  "its-primitives",
  "its-state",
- "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "pallet-balances",
  "parity-scale-codec",
  "sc-keystore",
@@ -2213,6 +2213,7 @@ dependencies = [
  "sp-runtime",
  "substrate-api-client",
  "substrate-client-keystore",
+ "ternoa-sgx-nft",
 ]
 
 [[package]]
@@ -2443,6 +2444,7 @@ checksum = "b71991ff56294aa922b450139ee08b3bfc70982c6b2c7562771375cf73542dd4"
 name = "itp-api-client-extensions"
 version = "0.8.0"
 dependencies = [
+ "itp-storage",
  "itp-types",
  "parity-scale-codec",
  "sp-core",
@@ -6875,6 +6877,35 @@ name = "termtree"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13a4ec180a2de59b57434704ccfad967f789b12737738798fa08798cd5824c16"
+
+[[package]]
+name = "ternoa-nfts"
+version = "0.3.0"
+source = "git+https://github.com/capsule-corp-ternoa/integritee-node.git?branch=ternoa#61c0b8c895b950c72b49701991f4a4865b4a1586"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parity-scale-codec",
+ "serde 1.0.130",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "ternoa-sgx-nft"
+version = "0.8.0"
+dependencies = [
+ "derive_more",
+ "itp-settings",
+ "itp-sgx-io",
+ "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parity-scale-codec",
+ "sgx_tstd",
+ "sgx_types",
+ "sp-core",
+]
 
 [[package]]
 name = "test-utils"

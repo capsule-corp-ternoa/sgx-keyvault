@@ -23,16 +23,12 @@ std = [
     "clap-nested",
     "codec/std",
     "hex",
-    "log/std",
     # local
     "itp-storage/std",
-<<<<<<< HEAD
     "itp-types/std",
-=======
     "ternoa-sgx-nft/std",
     "my-node-runtime",
     "sgx-externalities/std",
->>>>>>> Features/6 enclave api for storing secret (#62)
     "its-primitives/std",
     "its-state/std",
     # substrate
@@ -72,7 +68,6 @@ sgx_tstd = { branch = "master", features = [
 ], git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 
 # local crates
-itp-settings = { path = "../../core-primitives/settings" }
 itp-storage = { default-features = false, path = "../../core-primitives/storage" }
 itp-types = { default-features = false, path = "../../core-primitives/types" }
 its-primitives = { default-features = false, path = "../../sidechain/primitives" }

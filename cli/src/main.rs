@@ -56,8 +56,11 @@ use teerex_primitives::Request;
 
 use ita_stf::{ShardIdentifier, TrustedCallSigned, TrustedOperation};
 use itc_rpc_client::direct_client::{DirectApi, DirectClient as DirectWorkerApi};
-use itp_api_client_extensions::{PalletTeerexApi, TEEREX};
-use itp_types::{DirectRequestStatus, RpcRequest, RpcResponse, RpcReturnValue};
+use itp_api_client_extensions::{PalletNftsApi, PalletTeerexApi, TEEREX};
+use itp_types::{
+	DirectRequestStatus, RetrieveNftSecretRequest, RpcRequest, RpcResponse, RpcReturnValue,
+	SignableRequest, StoreNftSecretRequest,
+};
 use substrate_client_keystore::{KeystoreExt, LocalKeystore};
 
 type AccountPublic = <Signature as Verify>::Signer;
@@ -301,6 +304,37 @@ fn main() {
 				}),
 		)
 		.add_cmd(
+			Command::new("nft-data")
+				.description("query on chain storage to retreive a nft data")
+				.options(|app| {
+					app.setting(AppSettings::ColoredHelp).arg(
+						Arg::with_name("nft-id")
+							.takes_value(true)
+							.required(true)
+							.value_name("U32")
+							.help("Id of the NFT"),
+					)
+				})
+				.runner(|_args: &str, matches: &ArgMatches<'_>| {
+					let arg_nft_id: u32 = matches
+						.value_of("nft-id")
+						.unwrap()
+						.parse()
+						.expect("nft-id cannot be converted to u32");
+					let api = get_chain_api(matches);
+
+					let data = match api.data(arg_nft_id) {
+						Ok(v) => v,
+						Err(e) => {
+							println!("{}", e);
+							return Ok(())
+						},
+					};
+					println!("data for nft with id {}: {:?}", &arg_nft_id, data);
+					Ok(())
+				}),
+		)
+		.add_cmd(
 			Command::new("listen")
 				.description("listen to on-chain events")
 				.options(|app| {
@@ -408,6 +442,163 @@ fn main() {
 					Ok(())
 				}),
 		)
+		.add_cmd(
+			Command::new("store-nft-secret")
+				.options(|app| {
+					app.arg(
+						Arg::with_name("account")
+							.takes_value(true)
+							.required(true)
+							.value_name("SS58")
+							.help("Sender's incognito AccountId in ss58check format"),
+					)
+					.arg(
+						Arg::with_name("nft-id")
+							.takes_value(true)
+							.required(true)
+							.value_name("U32")
+							.help("Id of the NFT"),
+					)
+					.arg(
+						Arg::with_name("secret")
+							.takes_value(true)
+							.required(true)
+							.value_name("string")
+							.help("Secret share to be stored"),
+					)
+				})
+				.description("Store a NFT secret share")
+				.runner(move |_args: &str, matches: &ArgMatches<'_>| {
+					let arg_account = matches.value_of("account").unwrap();
+					let arg_nft_id: u32 = matches
+						.value_of("nft-id")
+						.unwrap()
+						.parse()
+						.expect("nft-id cannot be converted to u32");
+					let arg_secret = matches.value_of("secret").unwrap();
+
+					let account = get_pair_from_str(arg_account);
+
+					// compose jsonrpc call
+					let rpc_method = "nft_storeSecret".to_owned();
+					let data =
+						StoreNftSecretRequest { nft_id: arg_nft_id, secret: arg_secret.into() }
+							.sign(&sr25519_core::Pair::from(account));
+					let jsonrpc_call: String =
+						RpcRequest::compose_jsonrpc_call(rpc_method, data.encode());
+
+					// call the api
+					let direct_api = get_worker_api_direct(matches);
+					let response_str = match direct_api.get(jsonrpc_call) {
+						Ok(resp) => resp,
+						Err(_) => panic!("Error when sending direct invocation call"),
+					};
+
+					// Decode the response
+					let response: RpcResponse<Option<String>> =
+						match serde_json::from_str(&response_str) {
+							Ok(resp) => resp,
+							Err(err_msg) => panic!(
+								"Error while deserialisation of the RpcResponse: {:?}",
+								err_msg
+							),
+						};
+
+					if let Some(error) = &response.error {
+						print!("Failed to store NFT secret");
+						println!(
+							"{}",
+							if let Some(message) = &error.message {
+								format!(": {:#?}", message)
+							} else {
+								"".to_string()
+							}
+						)
+					} else {
+						println!("Succes");
+					}
+
+					Ok(())
+				}),
+		)
+		.add_cmd(
+			Command::new("retrieve-nft-secret")
+				.options(|app| {
+					app.arg(
+						Arg::with_name("account")
+							.takes_value(true)
+							.required(true)
+							.value_name("SS58")
+							.help("Sender's incognito AccountId in ss58check format"),
+					)
+					.arg(
+						Arg::with_name("nft-id")
+							.takes_value(true)
+							.required(true)
+							.value_name("U32")
+							.help("Id of the NFT"),
+					)
+				})
+				.description("Retrieve the secret share associated with a NFT")
+				.runner(move |_args: &str, matches: &ArgMatches<'_>| {
+					let arg_account = matches.value_of("account").unwrap();
+					let arg_nft_id: u32 = matches
+						.value_of("nft-id")
+						.unwrap()
+						.parse()
+						.expect("nft-id cannot be converted to u32");
+
+					let account = get_pair_from_str(arg_account);
+
+					// compose jsonrpc call
+					let rpc_method = "nft_retrieveSecret".to_owned();
+					let data = RetrieveNftSecretRequest { nft_id: arg_nft_id }
+						.sign(&sr25519_core::Pair::from(account));
+					let jsonrpc_call: String =
+						RpcRequest::compose_jsonrpc_call(rpc_method, data.encode());
+
+					// call the api
+					let direct_api = get_worker_api_direct(matches);
+					let response_str = match direct_api.get(jsonrpc_call) {
+						Ok(resp) => resp,
+						Err(_) => panic!("Error when sending direct invocation call"),
+					};
+
+					// Decode the response
+					let response: RpcResponse<Option<Vec<u8>>> =
+						match serde_json::from_str(&response_str) {
+							Ok(resp) => resp,
+							Err(err_msg) => panic!(
+								"Error while deserialisation of the RpcResponse: {:?}",
+								err_msg
+							),
+						};
+
+					if let Some(error) = &response.error {
+						print!("Failed to retrieve NFT secret");
+						println!(
+							"{}",
+							if let Some(message) = &error.message {
+								format!(": {:#?}", message)
+							} else {
+								"".to_string()
+							}
+						);
+					} else {
+						print!("Succes");
+						println!(
+							"{}",
+							if let Some(result) = &response.result {
+								format!(": {:#?}", result)
+							} else {
+								"".to_string()
+							}
+						);
+					}
+
+					Ok(())
+				}),
+		)
 		.add_cmd(ita_stf::cli::cmd(&perform_trusted_operation))
 		.no_cmd(|_args, _matches| {
 			println!("No subcommand matched");
@@ -465,7 +656,7 @@ fn get_state(matches: &ArgMatches<'_>, getter: TrustedOperation) -> Option<Vec<u
 	loop {
 		match receiver.recv() {
 			Ok(response) => {
-				let response: RpcResponse = serde_json::from_str(&response).unwrap();
+				let response: RpcResponse<Vec<u8>> = serde_json::from_str(&response).unwrap();
 				if let Ok(return_value) = RpcReturnValue::decode(&mut response.result.as_slice()) {
 					if return_value.status == DirectRequestStatus::Error {
 						println!(
@@ -616,7 +807,7 @@ fn send_direct_request(
 		match receiver.recv() {
 			Ok(response) => {
 				debug!("received response");
-				let response: RpcResponse = serde_json::from_str(&response).unwrap();
+				let response: RpcResponse<Vec<u8>> = serde_json::from_str(&response).unwrap();
 				if let Ok(return_value) = RpcReturnValue::decode(&mut response.result.as_slice()) {
 					debug!("successfully decoded rpc response");
 					match return_value.status {

@@ -21,6 +21,7 @@
 /// These should just be wrappers that transform the C-API structures and call the
 /// actual implementation of the OCalls (using the traits defined in the bridge_api)
 pub mod get_ias_socket;
+pub mod get_nft_owner;
 pub mod get_quote;
 pub mod get_update_info;
 pub mod init_quote;

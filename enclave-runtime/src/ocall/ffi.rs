@@ -89,4 +89,10 @@ extern "C" {
 		cid: *mut u8,
 		cid_size: u32,
 	) -> sgx_status_t;
+
+	pub fn ocall_get_nft_owner(
+		ret_val: *mut sgx_status_t,
+		ret_owner_id: *const u8,
+		nft_id: u32,
+	) -> sgx_status_t;
 }

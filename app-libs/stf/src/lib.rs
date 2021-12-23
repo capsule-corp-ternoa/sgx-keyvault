@@ -173,7 +173,6 @@ pub enum TrustedCall {
 	balance_transfer(AccountId, AccountId, Balance),
 	balance_unshield(AccountId, AccountId, Balance, ShardIdentifier), // (AccountIncognito, BeneficiaryPublicAccount, Amount, Shard)
 	balance_shield(AccountId, AccountId, Balance), // (Root, AccountIncognito, Amount)
-	store_secret(AccountId, u32, alloc::vec::Vec<u8>), // (Account, nft_id, Secret share)
 }
 
 impl TrustedCall {
@@ -183,7 +182,6 @@ impl TrustedCall {
 			TrustedCall::balance_transfer(account, _, _) => account,
 			TrustedCall::balance_unshield(account, _, _, _) => account,
 			TrustedCall::balance_shield(account, _, _) => account,
-			TrustedCall::store_secret(account, _, _) => account,
 		}
 	}
 
@@ -209,7 +207,6 @@ pub enum TrustedGetter {
 	free_balance(AccountId),
 	reserved_balance(AccountId),
 	nonce(AccountId),
-	retrieve_secret(AccountId, u32), // (Account, nft_id)
 }
 
 impl TrustedGetter {
@@ -218,7 +215,6 @@ impl TrustedGetter {
 			TrustedGetter::free_balance(account) => account,
 			TrustedGetter::reserved_balance(account) => account,
 			TrustedGetter::nonce(account) => account,
-			TrustedGetter::retrieve_secret(account, _) => account,
 		}
 	}
 

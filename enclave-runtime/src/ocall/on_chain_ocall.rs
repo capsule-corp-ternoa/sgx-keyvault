@@ -20,7 +20,7 @@ use crate::ocall::{ffi, OcallApi};
 use codec::{Decode, Encode};
 use frame_support::ensure;
 use itp_ocall_api::EnclaveOnChainOCallApi;
-use itp_types::{WorkerRequest, WorkerResponse};
+use itp_types::{AccountId, WorkerRequest, WorkerResponse};
 use log::*;
 use sgx_types::*;
 use sp_runtime::OpaqueExtrinsic;
@@ -73,5 +73,24 @@ impl EnclaveOnChainOCallApi for OcallApi {
 			})?;
 
 		Ok(decoded_response)
+	}
+
+	fn get_nft_owner(&self, nft_id: u32) -> SgxResult<AccountId> {
+		let mut rt: sgx_status_t = sgx_status_t::SGX_ERROR_UNEXPECTED;
+
+		let mut ret_owner_id = [0u8; 32];
+
+		let res = unsafe {
+			ffi::ocall_get_nft_owner(
+				&mut rt as *mut sgx_status_t,
+				ret_owner_id.as_mut_ptr(),
+				nft_id,
+			)
+		};
+
+		ensure!(rt == sgx_status_t::SGX_SUCCESS, rt);
+		ensure!(res == sgx_status_t::SGX_SUCCESS, res);
+
+		Ok(AccountId::new(ret_owner_id))
 	}
 }
