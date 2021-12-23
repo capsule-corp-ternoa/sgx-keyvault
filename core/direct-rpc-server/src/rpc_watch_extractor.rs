@@ -15,7 +15,7 @@
 
 */
 
-use crate::{DetermineWatch, DirectRpcError, DirectRpcResult, RpcHash};
+use crate::{DetermineWatch, DirectRpcError, DirectRpcResult, RpcHash, Vec};
 use codec::Decode;
 use itp_types::{DirectRequestStatus, RpcResponse, RpcReturnValue};
 use std::marker::PhantomData;
@@ -51,7 +51,10 @@ where
 {
 	type Hash = Hash;
 
-	fn must_be_watched(&self, rpc_response: &RpcResponse) -> DirectRpcResult<Option<Self::Hash>> {
+	fn must_be_watched(
+		&self,
+		rpc_response: &RpcResponse<Vec<u8>>,
+	) -> DirectRpcResult<Option<Self::Hash>> {
 		let rpc_return_value = RpcReturnValue::decode(&mut rpc_response.result.as_slice())
 			.map_err(DirectRpcError::EncodingError)?;
 
@@ -83,8 +86,12 @@ pub mod tests {
 	#[test]
 	fn invalid_rpc_response_returns_encoding_error() {
 		let watch_extractor = RpcWatchExtractor::<String>::new();
-		let rpc_response =
-			RpcResponse { id: 1u32, jsonrpc: String::from("json"), result: vec![1u8, 2u8, 3u8] };
+		let rpc_response = RpcResponse {
+			id: 1u32,
+			jsonrpc: String::from("json"),
+			result: vec![1u8, 2u8, 3u8],
+			error: None,
+		};
 
 		assert_matches!(
 			watch_extractor.must_be_watched(&rpc_response),

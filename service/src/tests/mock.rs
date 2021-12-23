@@ -1,5 +1,5 @@
-use itp_api_client_extensions::{ApiResult, PalletTeerexApi};
-use itp_types::{Enclave, ShardIdentifier};
+use itp_api_client_extensions::{ApiResult, PalletNftsApi, PalletTeerexApi};
+use itp_types::{Enclave, NFTData, ShardIdentifier};
 
 pub struct TestNodeApi;
 
@@ -29,6 +29,20 @@ impl PalletTeerexApi for TestNodeApi {
 		unreachable!()
 	}
 	fn latest_ipfs_hash(&self, _: &ShardIdentifier) -> ApiResult<Option<[u8; 46]>> {
+		unreachable!()
+	}
+}
+
+impl PalletNftsApi for TestNodeApi {
+	fn data(&self, _nft_id: u32) -> ApiResult<Option<NFTData>> {
+		unreachable!()
+	}
+
+	fn owner(&self, _nft_id: u32) -> ApiResult<Option<sp_runtime::AccountId32>> {
+		unreachable!()
+	}
+
+	fn is_owner(&self, _nft_id: u32, _account: sp_runtime::AccountId32) -> ApiResult<Option<bool>> {
 		unreachable!()
 	}
 }

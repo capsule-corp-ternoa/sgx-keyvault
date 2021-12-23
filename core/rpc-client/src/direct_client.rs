@@ -156,7 +156,7 @@ impl DirectApi for DirectClient {
 	fn get_rsa_pubkey(&self) -> Result<Rsa3072PubKey, String> {
 		// compose jsonrpc call
 		let method = "author_getShieldingKey".to_owned();
-		let jsonrpc_call: String = RpcRequest::compose_jsonrpc_call(method, vec![]);
+		let jsonrpc_call: String = RpcRequest::compose_jsonrpc_call(method, Vec::<u8>::new());
 
 		let response_str = match Self::get(self, jsonrpc_call) {
 			Ok(resp) => resp,
@@ -165,7 +165,7 @@ impl DirectApi for DirectClient {
 		};
 
 		// decode result
-		let response: RpcResponse = match serde_json::from_str(&response_str) {
+		let response: RpcResponse<Vec<u8>> = match serde_json::from_str(&response_str) {
 			Ok(resp) => resp,
 			Err(err_msg) =>
 				return Err(format! {"Could not retrieve shielding pubkey: {:?}", err_msg}),
