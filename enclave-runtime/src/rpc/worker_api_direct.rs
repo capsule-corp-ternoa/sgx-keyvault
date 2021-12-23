@@ -22,8 +22,8 @@ use itp_ocall_api::EnclaveOnChainOCallApi;
 use itp_sgx_crypto::Rsa3072Seal;
 use itp_sgx_io::SealedIO;
 use itp_types::{
-	AccountId, DirectRequestStatus, RetrieveNftSecretRequestSigned, RpcReturnValue,
-	StoreNftSecretRequestSigned, H256,
+	AccountId, DirectRequestStatus, RetrieveNftSecretRequest, RpcReturnValue, SignedRequest,
+	StoreNftSecretRequest, H256,
 };
 use its_sidechain::{
 	primitives::types::SignedBlock,
@@ -85,8 +85,9 @@ where
 	let nft_store_secret_name: &str = "nft_storeSecret";
 	io.add_sync_method(nft_store_secret_name, |params: Params| {
 		let encoded_params = params.parse::<Vec<u8>>()?;
-		let signed_req = StoreNftSecretRequestSigned::decode(&mut encoded_params.as_slice())
-			.map_err(|_| Error::invalid_request())?;
+		let signed_req =
+			SignedRequest::<StoreNftSecretRequest>::decode(&mut encoded_params.as_slice())
+				.map_err(|_| Error::invalid_request())?;
 
 		let req = signed_req
 			.get_request()
@@ -113,8 +114,9 @@ where
 	let nft_retrieve_secret_name: &str = "nft_retrieveSecret";
 	io.add_sync_method(nft_retrieve_secret_name, |params: Params| {
 		let encoded_params = params.parse::<Vec<u8>>()?;
-		let signed_req = RetrieveNftSecretRequestSigned::decode(&mut encoded_params.as_slice())
-			.map_err(|_| Error::invalid_request())?;
+		let signed_req =
+			SignedRequest::<RetrieveNftSecretRequest>::decode(&mut encoded_params.as_slice())
+				.map_err(|_| Error::invalid_request())?;
 
 		let req = signed_req
 			.get_request()

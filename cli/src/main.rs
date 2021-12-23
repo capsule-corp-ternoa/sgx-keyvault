@@ -65,7 +65,7 @@ use itc_rpc_client::direct_client::{DirectApi, DirectClient as DirectWorkerApi};
 use itp_api_client_extensions::{PalletNftsApi, PalletTeerexApi, TEEREX};
 use itp_types::{
 	DirectRequestStatus, RetrieveNftSecretRequest, RpcRequest, RpcResponse, RpcReturnValue,
-	StoreNftSecretRequest,
+	SignableRequest, StoreNftSecretRequest,
 };
 use substrate_client_keystore::{KeystoreExt, LocalKeystore};
 
