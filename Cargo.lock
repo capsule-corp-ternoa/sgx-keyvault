@@ -2041,8 +2041,8 @@ dependencies = [
 
 [[package]]
 name = "integritee-node-runtime"
-version = "1.0.5"
-source = "git+https://github.com/capsule-corp-ternoa/integritee-node.git?branch=ternoa#61c0b8c895b950c72b49701991f4a4865b4a1586"
+version = "1.0.6"
+source = "git+https://github.com/capsule-corp-ternoa/integritee-node.git?branch=rebasing-ternoa#0654f667732b53dea22ad4a5403aa8ec10c47f92"
 dependencies = [
  "frame-executive",
  "frame-support",
@@ -2066,6 +2066,7 @@ dependencies = [
  "pallet-utility",
  "pallet-vesting",
  "parity-scale-codec",
+ "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-aura",
@@ -6881,13 +6882,14 @@ checksum = "13a4ec180a2de59b57434704ccfad967f789b12737738798fa08798cd5824c16"
 [[package]]
 name = "ternoa-nfts"
 version = "0.3.0"
-source = "git+https://github.com/capsule-corp-ternoa/integritee-node.git?branch=ternoa#61c0b8c895b950c72b49701991f4a4865b4a1586"
+source = "git+https://github.com/capsule-corp-ternoa/integritee-node.git?branch=rebasing-ternoa#0654f667732b53dea22ad4a5403aa8ec10c47f92"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
  "frame-system",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec",
+ "scale-info",
  "serde 1.0.130",
  "sp-runtime",
  "sp-std",

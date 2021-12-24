@@ -33,7 +33,7 @@ substrate-api-client = { features = [
     "ws-client",
 ], git = "https://github.com/scs/substrate-api-client", branch = "master" }
 substrate-client-keystore = { git = "https://github.com/scs/substrate-api-client", branch = "master" }
-my-node-runtime = { git = "https://github.com/capsule-corp-ternoa/integritee-node.git", branch = "ternoa", package = "integritee-node-runtime" }
+my-node-runtime = { git = "https://github.com/capsule-corp-ternoa/integritee-node.git", branch = "rebasing-ternoa", package = "integritee-node-runtime" }
 teerex-primitives = { git = "https://github.com/integritee-network/pallets.git", branch = "master" }
 
 # substrate dependencies

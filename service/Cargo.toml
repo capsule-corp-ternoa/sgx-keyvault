@@ -58,7 +58,7 @@ its-storage = { path = "../sidechain/storage" }
 
 # scs / integritee
 substrate-api-client = { git = "https://github.com/scs/substrate-api-client", branch = "master" }
-my-node-runtime = { package = "integritee-node-runtime", git = "https://github.com/capsule-corp-ternoa/integritee-node.git", branch = "ternoa" }
+my-node-runtime = { package = "integritee-node-runtime", git = "https://github.com/capsule-corp-ternoa/integritee-node.git", branch = "rebasing-ternoa" }
 teerex-primitives = { git = "https://github.com/integritee-network/pallets.git", branch = "master" }
 
 # Substrate dependencies
