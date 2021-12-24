@@ -68,8 +68,8 @@ mod sgx {
 				.map_or(Ok(NftDb::default()), |b| Decode::decode(&mut b.as_slice()))?)
 		}
 
-		fn seal(unsealed: Self::Unsealed) -> Result<()> {
-			Ok(unsealed.using_encoded(|bytes| seal(bytes, NFT_DB))?)
+		fn seal(nft_db: Self::Unsealed) -> Result<()> {
+			Ok(nft_db.using_encoded(|bytes| seal(bytes, NFT_DB))?)
 		}
 	}
 }
