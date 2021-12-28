@@ -15,7 +15,7 @@
 
 */
 
-use crate::ocall::OcallApi;
+use crate::{attestation::create_ra_report_and_signature, ocall::OcallApi};
 use codec::{Decode, Encode};
 use core::result::Result;
 use itp_ocall_api::EnclaveOnChainOCallApi;
@@ -31,6 +31,7 @@ use its_sidechain::{
 	top_pool_rpc_author::traits::AuthorApi,
 };
 use jsonrpc_core::{serde_json::json, Error, IoHandler, Params, Value};
+use sgx_types::sgx_quote_sign_type_t;
 use std::{borrow::ToOwned, format, str, string::String, sync::Arc, vec::Vec};
 use ternoa_sgx_nft::NftDbSeal;
 
@@ -79,6 +80,22 @@ where
 		let json_value =
 			RpcReturnValue::new(rsa_pubkey_json.encode(), false, DirectRequestStatus::Ok);
 		Ok(json!(json_value.encode()))
+	});
+
+	// ra
+	let ra_name: &str = "ra_test";
+	io.add_sync_method(ra_name, |_: Params| {
+		let sign_type = sgx_quote_sign_type_t::SGX_LINKABLE_SIGNATURE;
+		let (key_der, cert_der) = match create_ra_report_and_signature(sign_type, &OcallApi, false)
+		{
+			Ok(r) => r,
+			Err(e) => {
+				let error_msg = format!("Failed to create ra report and signature due to: {}", e);
+				return Ok(json!(compute_encoded_return_error(error_msg.as_str())))
+			},
+		};
+
+		Ok(json!((key_der, cert_der).encode()))
 	});
 
 	// nft_storeSecret

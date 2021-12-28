@@ -585,7 +585,7 @@ fn main() {
 						println!(
 							"{}",
 							if let Some(message) = &error.message {
-								format!(": {:#?}", message)
+								format!(": {:?}", message)
 							} else {
 								"".to_string()
 							}
@@ -606,6 +606,54 @@ fn main() {
 				}),
 		)
 		.add_cmd(ita_stf::cli::cmd(&perform_trusted_operation))
+		.add_cmd(Command::new("ra").description("Perform ra").runner(
+			move |_args: &str, matches: &ArgMatches<'_>| {
+				// compose jsonrpc call
+				let rpc_method = "ra_test".to_owned();
+				let jsonrpc_call: String =
+					RpcRequest::compose_jsonrpc_call(rpc_method, Vec::<u8>::new());
+
+				// call the api
+				let direct_api = get_worker_api_direct(matches);
+				let response_str = match direct_api.get(jsonrpc_call) {
+					Ok(resp) => resp,
+					Err(_) => panic!("Error when sending direct invocation call"),
+				};
+
+				let response: RpcResponse<Option<Vec<u8>>> =
+					match serde_json::from_str(&response_str) {
+						Ok(resp) => resp,
+						Err(err_msg) =>
+							panic!("Error while deserialisation of the RpcResponse: {:?}", err_msg),
+					};
+				if let Some(error) = &response.error {
+					print!("Failed to retrieve get ra");
+					println!(
+						"{}",
+						if let Some(message) = &error.message {
+							format!(": {:#?}", message)
+						} else {
+							"".to_string()
+						}
+					);
+				} else {
+					print!("Succes");
+					println!(
+						"{}",
+						if let Some(result) = &response.result {
+							let (key_der, cert_der) = <(Vec<u8>, Vec<u8>)>::decode(
+								&mut result.as_slice(),
+							)
+							.expect("Failed to decode response result into (Vec<u8>, Vec<u8>)");
+							format!(":\nkey: {:?}\ncert: {:?}", key_der, cert_der)
+						} else {
+							"".to_string()
+						}
+					);
+				}
+				Ok(())
+			},
+		))
 		.no_cmd(|_args, _matches| {
 			println!("No subcommand matched");
 			Ok(())

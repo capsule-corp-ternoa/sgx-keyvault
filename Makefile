@@ -271,5 +271,5 @@ run:
 	@rm -f bin/last_slot.bin
 	@rm -f bin/light_client_db.bin
 	@rm -f bin/light_client_db.bin.1
-	@cd bin && ./integritee-service run --skip-ra
+	@cd bin && ./integritee-service run
 
