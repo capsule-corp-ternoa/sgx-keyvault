@@ -50,10 +50,12 @@ arrayvec = { version = "0.7.1", default-features = false }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 ipfs-unixfs = { default-features = false, git = "https://github.com/whalelephant/rust-ipfs", branch = "w-nstd" }
 
+# Ternoa / Integritee
+sgx-externalities = { default-features = false, git = "https://github.com/capsule-corp-ternoa/sgx-runtime", tag = "SGX-0.0.1", features = ["sgx"] }
+sp-io = { default-features = false, features = ["disable_oom", "disable_panic_handler", "disable_allocator", "sgx"], git = "https://github.com/capsule-corp-ternoa/sgx-runtime", tag = "SGX-0.0.1", optional = true }
+
 # scs / integritee
-sp-io = { default-features = false, features = ["disable_oom", "disable_panic_handler", "disable_allocator", "sgx"], git = "https://github.com/integritee-network/sgx-runtime", branch = "master", optional = true}
 substrate-api-client = { default-features = false, git = "https://github.com/scs/substrate-api-client", branch = "master" }
-sgx-externalities = { default-features = false, git = "https://github.com/integritee-network/sgx-runtime", branch = "master", features = ["sgx"] }
 jsonrpc-core = { default-features = false, git = "https://github.com/scs/jsonrpc", branch = "no_std" }
 
 # mesalock
@@ -121,7 +123,7 @@ getrandom = { git = "https://github.com/integritee-network/getrandom-sgx", branc
 [patch."https://github.com/paritytech/substrate"]
 log = { git = "https://github.com/mesalock-linux/log-sgx" }
 env_logger = { git = "https://github.com/mesalock-linux/env_logger-sgx" }
-sp-io = { git = "https://github.com/integritee-network/sgx-runtime", branch = "master"}
+sp-io = { git = "https://github.com/capsule-corp-ternoa/sgx-runtime", tag = "SGX-0.0.1" }
 #sp-io = { path = "../../sgx-runtime/substrate-sgx/sp-io"}
 
 #[patch."https://github.com/integritee-network/sgx-runtime"]

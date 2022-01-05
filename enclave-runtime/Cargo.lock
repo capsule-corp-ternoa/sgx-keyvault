@@ -1102,7 +1102,7 @@ version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4551f042f3438e64dbd6226b20527fc84a6e1fe65688b58746a2f53623f25f5c"
 dependencies = [
- "serde 1.0.130",
+ "serde 1.0.133",
 ]
 
 [[package]]
@@ -1546,7 +1546,7 @@ dependencies = [
  "itp-storage",
  "parity-scale-codec",
  "primitive-types",
- "serde 1.0.130",
+ "serde 1.0.133",
  "serde_json 1.0.71",
  "sgx_tstd",
  "sp-core",
@@ -1695,7 +1695,7 @@ dependencies = [
  "its-primitives",
  "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
  "parity-scale-codec",
- "serde 1.0.130",
+ "serde 1.0.133",
  "sgx-externalities",
  "sgx_tstd",
  "sp-core",
@@ -1719,7 +1719,7 @@ dependencies = [
  "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
  "parity-scale-codec",
  "retain_mut",
- "serde 1.0.130",
+ "serde 1.0.133",
  "sgx_tstd",
  "sgx_types",
  "sp-application-crypto",
@@ -1840,7 +1840,7 @@ dependencies = [
  "libsecp256k1-gen-ecmult",
  "libsecp256k1-gen-genmult",
  "rand 0.8.4",
- "serde 1.0.130",
+ "serde 1.0.133",
  "sha2 0.9.8",
  "typenum",
 ]
@@ -2321,7 +2321,7 @@ dependencies = [
  "byte-slice-cast",
  "impl-trait-for-tuples",
  "parity-scale-codec-derive",
- "serde 1.0.130",
+ "serde 1.0.133",
 ]
 
 [[package]]
@@ -2425,7 +2425,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8863e251332eb18520388099b8b0acc4810ed6e602e3b6f674e8a46ba20e15c"
 dependencies = [
  "postcard-cobs",
- "serde 1.0.130",
+ "serde 1.0.133",
 ]
 
 [[package]]
@@ -2911,11 +2911,11 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.130"
+version = "1.0.133"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f12d06de37cf59146fbdecab66aa99f9fe4f78722e3607577a5375d66bd0c913"
+checksum = "97565067517b60e2d1ea8b268e59ce036de907ac523ad83a0475da04e818989a"
 dependencies = [
- "serde_derive 1.0.130",
+ "serde_derive 1.0.133",
 ]
 
 [[package]]
@@ -2939,9 +2939,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.130"
+version = "1.0.133"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7bc1a1ab1961464eae040d96713baa5a724a8152c1222492465b54322ec508b"
+checksum = "ed201699328568d8d08208fdd080e3ff594e6c422e438b6705905da01005d537"
 dependencies = [
  "proc-macro2",
  "quote 1.0.10",
@@ -2978,20 +2978,20 @@ checksum = "063bf466a64011ac24040a49009724ee60a57da1b437617ceb32e53ad61bfb19"
 dependencies = [
  "itoa 0.4.8",
  "ryu",
- "serde 1.0.130",
+ "serde 1.0.133",
 ]
 
 [[package]]
 name = "sgx-externalities"
 version = "0.4.0"
-source = "git+https://github.com/integritee-network/sgx-runtime?branch=master#a5e2d8b6bcb226acba0ca473b4fb028daa73278b"
+source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.1#2952158a10d7b33067a1e0e98968b4850f144b57"
 dependencies = [
  "derive_more",
  "environmental",
  "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
  "parity-scale-codec",
  "postcard",
- "serde 1.0.130",
+ "serde 1.0.133",
  "sgx_tstd",
  "sgx_types",
 ]
@@ -2999,7 +2999,7 @@ dependencies = [
 [[package]]
 name = "sgx-runtime"
 version = "0.8.0"
-source = "git+https://github.com/integritee-network/sgx-runtime?branch=master#a5e2d8b6bcb226acba0ca473b4fb028daa73278b"
+source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.1#2952158a10d7b33067a1e0e98968b4850f144b57"
 dependencies = [
  "frame-executive",
  "frame-support",
@@ -3027,6 +3027,7 @@ dependencies = [
  "sp-std",
  "sp-transaction-pool",
  "sp-version",
+ "ternoa-nfts",
 ]
 
 [[package]]
@@ -3493,7 +3494,7 @@ dependencies = [
 [[package]]
 name = "sp-io"
 version = "4.0.0-dev"
-source = "git+https://github.com/integritee-network/sgx-runtime?branch=master#a5e2d8b6bcb226acba0ca473b4fb028daa73278b"
+source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.1#2952158a10d7b33067a1e0e98968b4850f144b57"
 dependencies = [
  "environmental",
  "hash-db",
@@ -3704,7 +3705,7 @@ dependencies = [
  "Inflector",
  "proc-macro2",
  "quote 1.0.10",
- "serde 1.0.130",
+ "serde 1.0.133",
  "serde_json 1.0.71",
  "unicode-xid 0.2.2",
 ]
@@ -3796,6 +3797,47 @@ dependencies = [
 ]
 
 [[package]]
+name = "ternoa-common"
+version = "0.2.0"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+dependencies = [
+ "frame-support",
+ "sp-runtime",
+ "sp-std",
+ "ternoa-primitives",
+]
+
+[[package]]
+name = "ternoa-nfts"
+version = "0.3.0"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-runtime",
+ "sp-std",
+ "ternoa-common",
+ "ternoa-primitives",
+]
+
+[[package]]
+name = "ternoa-primitives"
+version = "0.2.0"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+dependencies = [
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-application-crypto",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "thiserror"
 version = "1.0.9"
 source = "git+https://github.com/mesalock-linux/thiserror-sgx?tag=sgx_1.1.3#c2f806b88616e06aab0af770366a76885d974fdc"
@@ -3858,7 +3900,7 @@ version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a31142970826733df8241ef35dc040ef98c679ab14d7c3e54d827099b3acecaa"
 dependencies = [
- "serde 1.0.130",
+ "serde 1.0.133",
 ]
 
 [[package]]

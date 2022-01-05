@@ -11,8 +11,10 @@ derive_more = { version = "0.99.5" }
 sgx_types = { branch = "master", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_tstd = { branch = "master", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 sgx-crypto-helper = { branch = "master", git = "https://github.com/apache/teaclave-sgx-sdk.git", package = "sgx_tcrypto_helper", optional = true }
-sgx-externalities = { default-features = false, git = "https://github.com/integritee-network/sgx-runtime", branch = "master", optional = true }
 jsonrpc-core_sgx = { package = "jsonrpc-core", git = "https://github.com/scs/jsonrpc", branch = "no_std", default-features = false, optional = true }
+
+# Ternoa / Integritee
+sgx-externalities = { default-features = false, git = "https://github.com/capsule-corp-ternoa/sgx-runtime", tag = "SGX-0.0.1", optional = true }
 
 # std-only deps
 jsonrpc-core = { version = "18", optional = true }
