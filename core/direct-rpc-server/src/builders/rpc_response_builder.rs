@@ -51,7 +51,7 @@ impl RpcResponseBuilder {
 	}
 
 	#[allow(unused)]
-	pub fn build(self) -> RpcResponse {
+	pub fn build(self) -> RpcResponse<Vec<u8>> {
 		let id = self.maybe_id.unwrap_or(1u32);
 		let json_rpc = self.maybe_json_rpc.unwrap_or(String::from("json_rpc"));
 		let result = self
@@ -59,6 +59,6 @@ impl RpcResponseBuilder {
 			.unwrap_or_else(|| RpcReturnValueBuilder::new().build())
 			.encode();
 
-		RpcResponse { result, jsonrpc: json_rpc, id }
+		RpcResponse { result, jsonrpc: json_rpc, id, error: None }
 	}
 }

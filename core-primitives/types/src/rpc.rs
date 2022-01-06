@@ -12,6 +12,7 @@ pub struct RpcReturnValue {
 	pub status: DirectRequestStatus,
 	//pub signature: Signature,
 }
+
 impl RpcReturnValue {
 	pub fn new(val: Vec<u8>, watch: bool, status: DirectRequestStatus) -> Self {
 		Self {
@@ -31,25 +32,36 @@ impl RpcReturnValue {
 	}
 }
 
-#[derive(Clone, Encode, Decode, Debug, Serialize, Deserialize)]
-// Todo: result should not be Vec<u8>, but `T: Serialize`
-pub struct RpcResponse {
+#[derive(Clone, Encode, Decode, Serialize, Deserialize, Debug)]
+pub struct RpcError {
+	pub code: i64,
+	pub message: Option<String>,
+}
+
+#[derive(Clone, Encode, Decode, Serialize, Deserialize, Debug)]
+pub struct RpcResponse<T>
+where
+	T: Serialize,
+{
 	pub jsonrpc: String,
-	pub result: Vec<u8>, // encoded RpcReturnValue
+	pub result: T, // encoded RpcReturnValue
 	pub id: u32,
+	pub error: Option<RpcError>,
 }
 
 #[derive(Clone, Encode, Decode, Serialize, Deserialize)]
-// Todo: params should not be Vec<u8>, but `T: Serialize`
-pub struct RpcRequest {
+pub struct RpcRequest<T>
+where
+	T: Serialize,
+{
 	pub jsonrpc: String,
 	pub method: String,
-	pub params: Vec<u8>,
+	pub params: T,
 	pub id: i32,
 }
 
-impl RpcRequest {
-	pub fn compose_jsonrpc_call(method: String, data: Vec<u8>) -> String {
+impl<T: Serialize> RpcRequest<T> {
+	pub fn compose_jsonrpc_call(method: String, data: T) -> String {
 		let direct_invocation_call =
 			RpcRequest { jsonrpc: "2.0".to_owned(), method, params: data, id: 1 };
 		serde_json::to_string(&direct_invocation_call).unwrap()

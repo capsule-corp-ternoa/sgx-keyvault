@@ -32,5 +32,5 @@ async fn test_client_calls() {
 		.await
 		.unwrap();
 
-	assert!(RpcResponse::decode(&mut response.as_slice()).is_ok());
+	assert!(RpcResponse::<Vec<u8>>::decode(&mut response.as_slice()).is_ok());
 }

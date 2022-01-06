@@ -462,7 +462,7 @@ fn get_state(matches: &ArgMatches<'_>, getter: TrustedOperation) -> Option<Vec<u
 	loop {
 		match receiver.recv() {
 			Ok(response) => {
-				let response: RpcResponse = serde_json::from_str(&response).unwrap();
+				let response: RpcResponse<Vec<u8>> = serde_json::from_str(&response).unwrap();
 				if let Ok(return_value) = RpcReturnValue::decode(&mut response.result.as_slice()) {
 					if return_value.status == DirectRequestStatus::Error {
 						println!(
@@ -610,7 +610,7 @@ fn send_direct_request(
 		match receiver.recv() {
 			Ok(response) => {
 				debug!("received response");
-				let response: RpcResponse = serde_json::from_str(&response).unwrap();
+				let response: RpcResponse<Vec<u8>> = serde_json::from_str(&response).unwrap();
 				if let Ok(return_value) = RpcReturnValue::decode(&mut response.result.as_slice()) {
 					debug!("successfully decoded rpc response");
 					match return_value.status {

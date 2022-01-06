@@ -116,7 +116,7 @@ where
 
 fn encode_and_send_response<Connection: WebSocketConnection>(
 	connection: &mut Connection,
-	rpc_response: &RpcResponse,
+	rpc_response: &RpcResponse<Vec<u8>>,
 ) -> DirectRpcResult<()> {
 	let string_response =
 		serde_json::to_string(&rpc_response).map_err(DirectRpcError::SerializationError)?;

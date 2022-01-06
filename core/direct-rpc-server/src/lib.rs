@@ -76,9 +76,14 @@ pub trait RpcConnectionRegistry: Send + Sync {
 	type Hash: RpcHash;
 	type Connection: WebSocketConnection;
 
-	fn store(&self, hash: Self::Hash, connection: Self::Connection, rpc_response: RpcResponse);
+	fn store(
+		&self,
+		hash: Self::Hash,
+		connection: Self::Connection,
+		rpc_response: RpcResponse<Vec<u8>>,
+	);
 
-	fn withdraw(&self, hash: &Self::Hash) -> Option<(Self::Connection, RpcResponse)>;
+	fn withdraw(&self, hash: &Self::Hash) -> Option<(Self::Connection, RpcResponse<Vec<u8>>)>;
 }
 
 /// sends an RPC response back to the client
@@ -99,7 +104,10 @@ pub trait SendRpcResponse: Send + Sync {
 pub trait DetermineWatch {
 	type Hash: RpcHash;
 
-	fn must_be_watched(&self, rpc_response: &RpcResponse) -> DirectRpcResult<Option<Self::Hash>>;
+	fn must_be_watched(
+		&self,
+		rpc_response: &RpcResponse<Vec<u8>>,
+	) -> DirectRpcResult<Option<Self::Hash>>;
 }
 
 /// convenience method to create a do_watch extractor

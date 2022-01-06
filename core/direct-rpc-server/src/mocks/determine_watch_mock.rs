@@ -46,7 +46,10 @@ where
 {
 	type Hash = Hash;
 
-	fn must_be_watched(&self, _rpc_response: &RpcResponse) -> DirectRpcResult<Option<Self::Hash>> {
+	fn must_be_watched(
+		&self,
+		_rpc_response: &RpcResponse<Vec<u8>>,
+	) -> DirectRpcResult<Option<Self::Hash>> {
 		Ok(self.watch_next.clone())
 	}
 }
