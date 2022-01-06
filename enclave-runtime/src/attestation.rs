@@ -506,8 +506,8 @@ pub unsafe extern "C" fn perform_ra(
 	unchecked_extrinsic: *mut u8,
 	unchecked_extrinsic_size: u32,
 ) -> sgx_status_t {
-	// our certificate is unlinkable
-	let sign_type = sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE;
+	// our certificate is linkable
+	let sign_type = sgx_quote_sign_type_t::SGX_LINKABLE_SIGNATURE;
 
 	let (_key_der, cert_der) = match create_ra_report_and_signature(sign_type, &OcallApi, false) {
 		Ok(r) => r,
@@ -554,8 +554,8 @@ pub unsafe extern "C" fn perform_ra(
 
 #[no_mangle]
 pub unsafe extern "C" fn dump_ra_to_disk() -> sgx_status_t {
-	// our certificate is unlinkable
-	let sign_type = sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE;
+	// our certificate is linkable
+	let sign_type = sgx_quote_sign_type_t::SGX_LINKABLE_SIGNATURE;
 
 	let (_key_der, cert_der) = match create_ra_report_and_signature(sign_type, &OcallApi, false) {
 		Ok(r) => r,

@@ -49,7 +49,7 @@ pub(crate) fn request_keys<E: TlsRemoteAttestation, NodeApi: PalletTeerexApi>(
 
 	enclave_request_key_provisioning(
 		enclave_api,
-		sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE,
+		sgx_quote_sign_type_t::SGX_LINKABLE_SIGNATURE,
 		&provider_url,
 		skip_ra,
 	)

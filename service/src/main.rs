@@ -212,7 +212,7 @@ fn main() {
 			println!("*** Running Enclave MU-RA TLS server\n");
 			enclave_run_key_provisioning_server(
 				enclave.as_ref(),
-				sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE,
+				sgx_quote_sign_type_t::SGX_LINKABLE_SIGNATURE,
 				&config.mu_ra_url(),
 				_matches.is_present("skip-ra"),
 			);
@@ -221,7 +221,7 @@ fn main() {
 			println!("*** Running Enclave MU-RA TLS client\n");
 			enclave_request_key_provisioning(
 				enclave.as_ref(),
-				sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE,
+				sgx_quote_sign_type_t::SGX_LINKABLE_SIGNATURE,
 				&config.mu_ra_url_external(),
 				_matches.is_present("skip-ra"),
 			)
@@ -275,7 +275,7 @@ fn start_worker<E, T, D>(
 	thread::spawn(move || {
 		enclave_run_key_provisioning_server(
 			enclave_api_key_prov.as_ref(),
-			sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE,
+			sgx_quote_sign_type_t::SGX_LINKABLE_SIGNATURE,
 			&ra_url,
 			skip_ra,
 		)
