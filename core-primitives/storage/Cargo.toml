@@ -6,7 +6,9 @@ edition = "2018"
 resolver = "2"
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["chain-error"] }
+codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = [
+    "chain-error",
+] }
 derive_more = { version = "0.99.5" }
 hash-db = { version = "0.15.2", default-features = false }
 thiserror = { version = "1.0.26", optional = true }
@@ -16,15 +18,19 @@ thiserror-sgx = { package = "thiserror", git = "https://github.com/mesalock-linu
 sgx_tstd = { branch = "master", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 
 # substrate deps
-frame-metadata = { version = "14.0.0", features = ["v13"], default-features = false, git = "https://github.com/paritytech/frame-metadata.git", branch = "main" }
-frame-support = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master"}
-sp-core = { version = "4.0.0-dev", default-features = false, features = ["full_crypto"], git = "https://github.com/paritytech/substrate.git", branch = "master"}
-sp-runtime = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master"}
-sp-std = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master"}
-sp-trie = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master"}
+frame-metadata = { version = "14.0.0", features = [
+    "v13",
+], default-features = false, git = "https://github.com/paritytech/frame-metadata.git", branch = "main" }
+frame-support = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sp-core = { version = "4.0.0-dev", default-features = false, features = [
+    "full_crypto",
+], git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sp-runtime = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sp-std = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sp-trie = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
 [dev-dependencies]
-sp-state-machine = { version = "0.10.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "master"}
+sp-state-machine = { version = "0.10.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
 [features]
 default = ["std"]
@@ -39,8 +45,5 @@ std = [
     "sp-trie/std",
     "thiserror",
 ]
-sgx = [
-    "sgx_tstd",
-    "thiserror-sgx"
-]
+sgx = ["sgx_tstd", "thiserror-sgx"]
 test = []

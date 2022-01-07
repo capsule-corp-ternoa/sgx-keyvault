@@ -5,7 +5,7 @@
 /// multiple traits.
 use async_trait::async_trait;
 use itc_rpc_client::direct_client::{DirectApi, DirectClient as DirectWorkerApi};
-use itp_api_client_extensions::PalletTeerexApi;
+use itp_api_client_extensions::{PalletNftsApi, PalletTeerexApi};
 use its_primitives::types::SignedBlock as SignedSidechainBlock;
 use jsonrpsee::{
 	types::{to_json_value, traits::Client},
@@ -89,7 +89,7 @@ pub trait UpdatePeers {
 
 impl<NodeApi, Enclave> UpdatePeers for Worker<Config, NodeApi, Enclave>
 where
-	NodeApi: PalletTeerexApi + Send + Sync,
+	NodeApi: PalletTeerexApi + PalletNftsApi + Send + Sync,
 {
 	fn search_peers(&self) -> WorkerResult<Vec<String>> {
 		let enclaves = self.node_api.all_enclaves(None)?;

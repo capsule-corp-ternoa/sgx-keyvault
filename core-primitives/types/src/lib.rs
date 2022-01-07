@@ -4,9 +4,13 @@
 use codec::{Decode, Encode};
 #[cfg(feature = "sgx")]
 use sgx_tstd as std;
+use sp_core::{
+	sr25519::{Pair as KeyPair, Signature},
+	Pair,
+};
 use sp_runtime::{
 	generic::{Block as BlockG, Header as HeaderG, SignedBlock as SignedBlockG},
-	traits::BlakeTwo256,
+	traits::{BlakeTwo256, Verify},
 	OpaqueExtrinsic,
 };
 use std::{string::String, vec::Vec};
@@ -155,6 +159,48 @@ pub struct NFTData {
 	// Is Locked
 	pub locked: bool,
 }
+
+pub trait SignableRequest
+where
+	Self: Encode + Sized + Clone,
+{
+	fn sign(&self, pair: &KeyPair) -> SignedRequest<Self> {
+		let signature = pair.sign(self.encode().as_slice());
+		SignedRequest { request: self.clone(), signer: pair.public(), signature }
+	}
+}
+
+#[derive(Encode, Decode, Clone, Debug)]
+pub struct SignedRequest<T> {
+	request: T,
+	pub signer: sp_core::sr25519::Public,
+	pub signature: Signature,
+}
+
+impl<T: SignableRequest> SignedRequest<T> {
+	pub fn verify_signature(&self) -> bool {
+		self.signature.verify(self.request.encode().as_slice(), &self.signer)
+	}
+
+	pub fn get_request(&self) -> Option<T> {
+		self.verify_signature().then(|| self.request.clone())
+	}
+}
+
+#[derive(Encode, Decode, Clone, Copy, Debug)]
+pub struct RetrieveNftSecretRequest {
+	pub nft_id: u32,
+}
+
+impl SignableRequest for RetrieveNftSecretRequest {}
+
+#[derive(Encode, Decode, Clone, Debug)]
+pub struct StoreNftSecretRequest {
+	pub nft_id: u32,
+	pub secret: Vec<u8>,
+}
+
+impl SignableRequest for StoreNftSecretRequest {}
 
 #[cfg(test)]
 mod tests {
