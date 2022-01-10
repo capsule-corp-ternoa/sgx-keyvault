@@ -4,7 +4,9 @@ version = "0.8.0"
 edition = "2018"
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = [
+    "derive",
+] }
 derive_more = { version = "0.99.5" }
 
 # sgx deps
@@ -14,15 +16,15 @@ sgx-crypto-helper = { branch = "master", git = "https://github.com/apache/teacla
 jsonrpc-core_sgx = { package = "jsonrpc-core", git = "https://github.com/scs/jsonrpc", branch = "no_std", default-features = false, optional = true }
 
 # Ternoa / Integritee
-sgx-externalities = { default-features = false, git = "https://github.com/capsule-corp-ternoa/sgx-runtime", tag = "SGX-0.0.1", optional = true }
+sgx-externalities = { default-features = false, git = "https://github.com/capsule-corp-ternoa/sgx-runtime", tag = "SGX-0.0.2", optional = true }
 
 # std-only deps
 jsonrpc-core = { version = "18", optional = true }
 
 # substrate deps
-sp-core = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master"}
-sp-runtime = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master"}
-sp-std = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master"}
+sp-core = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sp-runtime = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sp-std = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
 # local deps
 ita-stf = { path = "../../app-libs/stf", default-features = false }
@@ -32,7 +34,9 @@ itp-teerex-storage = { path = "../teerex-storage", default-features = false }
 itp-types = { path = "../types", default-features = false }
 itp-ocall-api = { path = "../ocall-api", default-features = false }
 itp-storage-verifier = { path = "../storage-verified", default-features = false }
-itp-storage = { path = "../storage", default-features = false, features = ["test"] }
+itp-storage = { path = "../storage", default-features = false, features = [
+    "test",
+] }
 its-top-pool = { path = "../../sidechain/top-pool", default-features = false }
 
 [features]

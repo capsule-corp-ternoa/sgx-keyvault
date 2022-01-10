@@ -2986,7 +2986,7 @@ dependencies = [
 [[package]]
 name = "sgx-externalities"
 version = "0.4.0"
-source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.1#2952158a10d7b33067a1e0e98968b4850f144b57"
+source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.2#abcde9a38b899d90c992f5235074b2eefff04ba8"
 dependencies = [
  "derive_more",
  "environmental",
@@ -3001,7 +3001,7 @@ dependencies = [
 [[package]]
 name = "sgx-runtime"
 version = "0.8.0"
-source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.1#2952158a10d7b33067a1e0e98968b4850f144b57"
+source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.2#abcde9a38b899d90c992f5235074b2eefff04ba8"
 dependencies = [
  "frame-executive",
  "frame-support",
@@ -3496,7 +3496,7 @@ dependencies = [
 [[package]]
 name = "sp-io"
 version = "4.0.0-dev"
-source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.1#2952158a10d7b33067a1e0e98968b4850f144b57"
+source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.2#abcde9a38b899d90c992f5235074b2eefff04ba8"
 dependencies = [
  "environmental",
  "hash-db",
@@ -3801,7 +3801,7 @@ dependencies = [
 [[package]]
 name = "ternoa-common"
 version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#3991509fc8a147fed719c3a6542af312f9d21419"
 dependencies = [
  "frame-support",
  "sp-runtime",
@@ -3812,7 +3812,7 @@ dependencies = [
 [[package]]
 name = "ternoa-nfts"
 version = "0.3.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#3991509fc8a147fed719c3a6542af312f9d21419"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -3828,7 +3828,7 @@ dependencies = [
 [[package]]
 name = "ternoa-primitives"
 version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#3991509fc8a147fed719c3a6542af312f9d21419"
 dependencies = [
  "frame-system",
  "parity-scale-codec",

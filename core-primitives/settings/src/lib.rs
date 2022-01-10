@@ -99,7 +99,7 @@ pub mod enclave {
 pub mod node {
 	// you may have to update these indices upon new builds of the runtime
 	// you can get the index from metadata, counting modules starting with zero
-	pub static TEEREX_MODULE: u8 = 50u8;
+	pub static TEEREX_MODULE: u8 = 130u8;
 	pub static REGISTER_ENCLAVE: u8 = 0u8;
 	//pub static UNREGISTER_ENCLAVE: u8 = 1u8;
 	pub static CALL_WORKER: u8 = 2u8;
@@ -107,7 +107,7 @@ pub mod node {
 	pub static PROPOSED_SIDECHAIN_BLOCK: u8 = 4u8;
 	pub static SHIELD_FUNDS: u8 = 5u8;
 	// bump this to be consistent with integritee-node runtime
-	pub static RUNTIME_SPEC_VERSION: u32 = 6;
-	pub static RUNTIME_TRANSACTION_VERSION: u32 = 2;
+	pub static RUNTIME_SPEC_VERSION: u32 = 43;
+	pub static RUNTIME_TRANSACTION_VERSION: u32 = 6;
 	pub static UNSHIELD: u8 = 6u8;
 }

@@ -2202,7 +2202,7 @@ dependencies = [
  "sgx_tstd",
  "sp-application-crypto",
  "sp-core",
- "sp-io 4.0.0-dev (git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.1)",
+ "sp-io 4.0.0-dev (git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.2)",
  "sp-keyring",
  "sp-runtime",
  "substrate-api-client",
@@ -2868,7 +2868,7 @@ dependencies = [
  "sgx-externalities",
  "sgx_tstd",
  "sp-core",
- "sp-io 4.0.0-dev (git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.1)",
+ "sp-io 4.0.0-dev (git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.2)",
  "sp-runtime",
  "sp-std",
  "thiserror 1.0.30",
@@ -5948,7 +5948,7 @@ dependencies = [
 [[package]]
 name = "sgx-externalities"
 version = "0.4.0"
-source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.1#2952158a10d7b33067a1e0e98968b4850f144b57"
+source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.2#abcde9a38b899d90c992f5235074b2eefff04ba8"
 dependencies = [
  "derive_more",
  "environmental",
@@ -5963,7 +5963,7 @@ dependencies = [
 [[package]]
 name = "sgx-runtime"
 version = "0.8.0"
-source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.1#2952158a10d7b33067a1e0e98968b4850f144b57"
+source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.2#abcde9a38b899d90c992f5235074b2eefff04ba8"
 dependencies = [
  "frame-executive",
  "frame-support",
@@ -6623,7 +6623,7 @@ dependencies = [
 [[package]]
 name = "sp-io"
 version = "4.0.0-dev"
-source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.1#2952158a10d7b33067a1e0e98968b4850f144b57"
+source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.2#abcde9a38b899d90c992f5235074b2eefff04ba8"
 dependencies = [
  "environmental",
  "futures 0.3.18",
@@ -7222,24 +7222,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13a4ec180a2de59b57434704ccfad967f789b12737738798fa08798cd5824c16"
 
 [[package]]
-name = "ternoa-account-store"
-version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "serde 1.0.133",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "ternoa-associated-accounts"
 version = "0.1.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#2e8f43aad9cfeb8ddb6ba8eb9ecf813c3dd38378"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -7257,7 +7242,7 @@ dependencies = [
 [[package]]
 name = "ternoa-capsules"
 version = "0.1.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#2e8f43aad9cfeb8ddb6ba8eb9ecf813c3dd38378"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -7276,7 +7261,7 @@ dependencies = [
 [[package]]
 name = "ternoa-common"
 version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#2e8f43aad9cfeb8ddb6ba8eb9ecf813c3dd38378"
 dependencies = [
  "frame-support",
  "sp-runtime",
@@ -7287,7 +7272,7 @@ dependencies = [
 [[package]]
 name = "ternoa-marketplace"
 version = "0.4.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#2e8f43aad9cfeb8ddb6ba8eb9ecf813c3dd38378"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -7298,7 +7283,6 @@ dependencies = [
  "serde 1.0.133",
  "sp-runtime",
  "sp-std",
- "ternoa-account-store",
  "ternoa-common",
  "ternoa-nfts",
  "ternoa-primitives",
@@ -7307,7 +7291,7 @@ dependencies = [
 [[package]]
 name = "ternoa-nfts"
 version = "0.3.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#2e8f43aad9cfeb8ddb6ba8eb9ecf813c3dd38378"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -7325,7 +7309,7 @@ dependencies = [
 [[package]]
 name = "ternoa-primitives"
 version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#2e8f43aad9cfeb8ddb6ba8eb9ecf813c3dd38378"
 dependencies = [
  "frame-system",
  "parity-scale-codec",
@@ -7340,7 +7324,7 @@ dependencies = [
 [[package]]
 name = "ternoa-runtime"
 version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#2e8f43aad9cfeb8ddb6ba8eb9ecf813c3dd38378"
 dependencies = [
  "frame-election-provider-support",
  "frame-executive",
@@ -7400,7 +7384,6 @@ dependencies = [
  "sp-version",
  "static_assertions",
  "substrate-wasm-builder",
- "ternoa-account-store",
  "ternoa-associated-accounts",
  "ternoa-capsules",
  "ternoa-marketplace",
@@ -7413,7 +7396,7 @@ dependencies = [
 [[package]]
 name = "ternoa-sgx"
 version = "0.1.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#2e8f43aad9cfeb8ddb6ba8eb9ecf813c3dd38378"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -7431,7 +7414,7 @@ dependencies = [
 [[package]]
 name = "ternoa-timed-escrow"
 version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.1#3991509fc8a147fed719c3a6542af312f9d21419"
+source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#2e8f43aad9cfeb8ddb6ba8eb9ecf813c3dd38378"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
