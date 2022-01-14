@@ -17,6 +17,7 @@ use std::{string::String, vec::Vec};
 
 use itp_storage::storage_entry::StorageEntry;
 pub use rpc::*;
+use ternoa_primitive::nfts::NFTData as GenericNFTData;
 pub mod rpc;
 
 /// Substrate runtimes provide no string type. Hence, for arbitrary data of varying length the
@@ -37,6 +38,7 @@ pub type Amount = u128;
 pub type Header = HeaderG<BlockNumber, BlakeTwo256>;
 pub type Block = BlockG<Header, OpaqueExtrinsic>;
 pub type SignedBlock = SignedBlockG<Block>;
+pub type NFTData = GenericNFTData<AccountId>;
 
 /// Simple blob to hold an encoded call
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
@@ -145,25 +147,6 @@ impl From<WorkerResponse<Vec<u8>>> for StorageEntry<Vec<u8>> {
 			WorkerResponse::ChainStorage(key, value, proof) => StorageEntry { key, value, proof },
 		}
 	}
-}
-
-/// Data related to an NFT, such as who is its owner.
-#[derive(Encode, Decode, Clone, PartialEq, Eq, Debug)]
-pub struct NFTData {
-	// NFT owner
-	pub owner: AccountId,
-	// NFT creator
-	pub creator: AccountId,
-	// IPFS reference
-	pub ipfs_reference: String,
-	// Series ID
-	pub series_id: String,
-	// Is listed for sale
-	pub listed_for_sale: bool,
-	// Is being transmitted
-	pub in_transmission: bool,
-	// Is NFT converted to capsule
-	pub converted_to_capsule: bool,
 }
 
 pub trait SignableRequest

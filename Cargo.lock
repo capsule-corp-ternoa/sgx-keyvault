@@ -2703,6 +2703,7 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "substrate-api-client",
+ "ternoa-primitives",
 ]
 
 [[package]]
