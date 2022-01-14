@@ -263,13 +263,14 @@ help:
 
 .PHONY: setup
 setup:
-	@ rm -rf bin/shards/*
-	@cd bin && ./integritee-service init-shard && ./integritee-service shielding-key && ./integritee-service signing-key
-
-.PHONY: run
-run:
+	@rm -rf bin/shards/*
 	@rm -f bin/sidechain_db/*
 	@rm -f bin/last_slot.bin
 	@rm -f bin/light_client_db.bin
 	@rm -f bin/light_client_db.bin.1
+	@rm -f bin/nft_db.bin
+	@cd bin && ./integritee-service init-shard && ./integritee-service shielding-key && ./integritee-service signing-key
+
+.PHONY: run
+run:
 	@cd bin && ./integritee-service run --skip-ra --dev

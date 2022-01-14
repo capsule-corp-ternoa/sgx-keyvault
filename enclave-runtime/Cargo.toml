@@ -159,6 +159,7 @@ itp-stf-state-handler = { path = "../core-primitives/stf-state-handler", default
     "sgx",
 ] }
 itp-teerex-storage = { path = "../core-primitives/teerex-storage", default-features = false }
+itp-nfts-storage = { path = "../core-primitives/nfts-storage", default-features = false }
 itp-test = { path = "../core-primitives/test", default-features = false, optional = true }
 itp-types = { path = "../core-primitives/types", default-features = false, features = [
     "sgx",

@@ -15,14 +15,18 @@
 
 */
 
+use crate::{EnclaveValidatorAccessor, OcallApi};
 use codec::{Decode, Encode};
 use core::result::Result;
+use itc_parentchain::light_client::{concurrent_access::ValidatorAccess, LightClientState};
+use itp_nfts_storage::{NFTsStorage, NFTsStorageKeys};
 use itp_primitives_cache::{GetPrimitives, GLOBAL_PRIMITIVES_CACHE};
 use itp_sgx_crypto::Rsa3072Seal;
 use itp_sgx_io::SealedIO;
+use itp_storage_verifier::GetStorageVerified;
 use itp_types::{
-	DirectRequestStatus, RetrieveNftSecretRequest, RpcReturnValue, SignedRequest,
-	StoreNftSecretRequest, H256,
+	AccountId, DirectRequestStatus, NFTData, RetrieveNftSecretRequest, RpcReturnValue,
+	SignedRequest, StoreNftSecretRequest, H256,
 };
 use its_sidechain::{
 	primitives::types::SignedBlock,
@@ -62,13 +66,20 @@ where
 		let encoded_params = params.parse::<Vec<u8>>()?;
 		let signed_req =
 			SignedRequest::<StoreNftSecretRequest>::decode(&mut encoded_params.as_slice())
-				.map_err(|_| Error::invalid_request())?;
+				.map_err(|_| Error::invalid_params("failed to decode signed_request"))?;
 
 		let req = signed_req
 			.get_request()
-			.ok_or(Error::invalid_params("Invalid request signature"))?;
+			.ok_or(Error::invalid_params("invalid request signature"))?;
 
-		// TODO: Get and compare owner
+		let owner = get_verified_nft_owner(req.nft_id)?;
+
+		if owner != signed_req.signer.into() {
+			return Err(Error::invalid_params(format!(
+				"sender does not own the nft with id {}",
+				&req.nft_id
+			)))
+		}
 
 		let mut db = NftDbSeal::unseal().map_err(|_| Error::internal_error())?;
 
@@ -85,21 +96,25 @@ where
 		let encoded_params = params.parse::<Vec<u8>>()?;
 		let signed_req =
 			SignedRequest::<RetrieveNftSecretRequest>::decode(&mut encoded_params.as_slice())
-				.map_err(|_| Error::invalid_request())?;
+				.map_err(|_| Error::invalid_params("failed to decode signed_request"))?;
 
 		let req = signed_req
 			.get_request()
-			.ok_or(Error::invalid_params("Invalid request signature"))?;
+			.ok_or(Error::invalid_params("invalid request signature"))?;
 
-		// TODO: Get and compare owner
+		let owner = get_verified_nft_owner(req.nft_id)?;
+
+		if owner != signed_req.signer.into() {
+			return Err(Error::invalid_params(format!(
+				"sender does not own the nft with id {}",
+				&req.nft_id
+			)))
+		}
 
 		let mut db = NftDbSeal::unseal().map_err(|_| Error::internal_error())?;
 
 		let secret = db.get(req.nft_id).map_err(|_| {
-			Error::invalid_params(format!(
-				"There is no secret stored for NFT with id '{}'",
-				req.nft_id
-			))
+			Error::invalid_params(format!("no secret stored for NFT with id '{}'", req.nft_id))
 		})?;
 
 		Ok(secret.into())
@@ -222,6 +237,28 @@ where
 {
 	let io = IoHandler::new();
 	import_block_api::add_import_block_rpc_method(import_fn, io)
+}
+
+pub fn get_verified_nft_owner(nft_id: u32) -> Result<AccountId, Error> {
+	// Get last header from light client
+	let validator = Arc::new(EnclaveValidatorAccessor::default());
+	let header = validator
+		.execute_on_validator(|v| v.latest_finalized_header(v.num_relays()))
+		.map_err(|e| Error::invalid_params(format!("failed to get header: {}", e)))?;
+
+	// Get verified owner
+	let ocall_api = Arc::new(OcallApi);
+	let (_key, data): (Vec<u8>, Option<NFTData>) = ocall_api
+		.get_storage_verified(NFTsStorage::data(nft_id), &header)
+		.map_err(|_| Error::invalid_params("failed to get storage verified NFTData"))?
+		.into_tuple();
+	let owner = data
+		.ok_or(Error::invalid_params(format!(
+			"there is no nft with id {} in parentchain storage",
+			&nft_id
+		)))?
+		.owner;
+	Ok(owner)
 }
 
 #[cfg(feature = "test")]

@@ -152,12 +152,18 @@ impl From<WorkerResponse<Vec<u8>>> for StorageEntry<Vec<u8>> {
 pub struct NFTData {
 	// NFT owner
 	pub owner: AccountId,
+	// NFT creator
+	pub creator: AccountId,
 	// IPFS reference
 	pub ipfs_reference: String,
 	// Series ID
 	pub series_id: String,
-	// Is Locked
-	pub locked: bool,
+	// Is listed for sale
+	pub listed_for_sale: bool,
+	// Is being transmitted
+	pub in_transmission: bool,
+	// Is NFT converted to capsule
+	pub converted_to_capsule: bool,
 }
 
 pub trait SignableRequest
