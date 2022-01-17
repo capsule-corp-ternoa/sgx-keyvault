@@ -21,27 +21,20 @@ use crate::{
 	sync::tests::{enclave_rw_lock_works, sidechain_rw_lock_works},
 	test::{
 		cert_tests::*, fixtures::initialize_test_state::init_state,
-		mocks::rpc_responder_mock::RpcResponderMock, sidechain_aura_tests,
+		mocks::rpc_responder_mock::RpcResponderMock,
 	},
 };
 use codec::{Decode, Encode};
 use ita_stf::{
-	helpers::{
-		get_parentchain_blockhash, get_parentchain_number,
-		get_parentchain_parenthash,
-	},
+	helpers::{get_parentchain_blockhash, get_parentchain_number, get_parentchain_parenthash},
 	test_genesis::endowed_account as funded_pair,
-	ShardIdentifier, State, StatePayload, StateTypeDiff, Stf, TrustedCall,
-	TrustedCallSigned, TrustedGetter, TrustedOperation,
+	ShardIdentifier, State, StatePayload, StateTypeDiff, Stf, TrustedCall, TrustedCallSigned,
+	TrustedGetter, TrustedOperation,
 };
 use itp_ocall_api::EnclaveAttestationOCallApi;
-use itp_settings::{
-	node::{PROPOSED_SIDECHAIN_BLOCK, TEEREX_MODULE},
-};
+use itp_settings::node::{PROPOSED_SIDECHAIN_BLOCK, TEEREX_MODULE};
 use itp_sgx_crypto::{Aes, StateCrypto};
-use itp_stf_executor::{
-	executor_tests as stf_executor_tests,
-};
+use itp_stf_executor::executor_tests as stf_executor_tests;
 use itp_stf_state_handler::handle_state::HandleState;
 use itp_test::mock::{
 	handle_state_mock, handle_state_mock::HandleStateMock,
@@ -120,7 +113,6 @@ pub extern "C" fn test_main_entrance() -> size_t {
 		stf_executor_tests::propose_state_update_executes_only_one_trusted_call_given_not_enough_time,
 		stf_executor_tests::propose_state_update_executes_all_calls_given_enough_time,
 		// sidechain integration tests
-		sidechain_aura_tests::produce_sidechain_block_and_import_it,
 		// these unit test (?) need an ipfs node running..
 		// ipfs::test_creates_ipfs_content_struct_works,
 		// ipfs::test_verification_ok_for_correct_content,

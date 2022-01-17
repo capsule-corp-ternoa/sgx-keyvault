@@ -37,7 +37,6 @@ use enclave::{
 	api::enclave_init,
 	tls_ra::{enclave_request_key_provisioning, enclave_run_key_provisioning_server},
 };
-use futures::executor::block_on;
 use itp_api_client_extensions::{AccountApi, ChainApi, PalletTeerexApi};
 use itp_enclave_api::{
 	direct_request::DirectRequest,
@@ -51,10 +50,8 @@ use itp_settings::{
 		ENCRYPTED_STATE_FILE, SHARDS_PATH, SHIELDING_KEY_FILE, SIDECHAIN_PURGE_INTERVAL,
 		SIDECHAIN_PURGE_LIMIT, SIDECHAIN_STORAGE_PATH, SIGNING_KEY_FILE,
 	},
-	sidechain::SLOT_DURATION,
 	worker::{EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS, REGISTERING_FEE_FACTOR_FOR_INIT_FUNDS},
 };
-use its_consensus_slots::start_slot_worker;
 use its_primitives::types::SignedBlock as SignedSidechainBlock;
 use its_storage::{start_sidechain_pruning_loop, BlockPruner, SidechainStorageLock};
 use log::*;
@@ -372,20 +369,6 @@ fn start_worker<E, T, D>(
 	}
 
 	// ------------------------------------------------------------------------
-	// Start interval sidechain block production (execution of trusted calls, sidechain block production).
-	let sidechain_enclave_api = enclave.clone();
-	thread::Builder::new()
-		.name("interval_block_production_timer".to_owned())
-		.spawn(move || {
-			let future = start_slot_worker(
-				|| execute_trusted_calls(sidechain_enclave_api.as_ref()),
-				SLOT_DURATION,
-			);
-			block_on(future);
-		})
-		.unwrap();
-
-	// ------------------------------------------------------------------------
 	// start parentchain syncing loop (subscribe to header updates)
 	let api4 = node_api.clone();
 	let parentchain_sync_enclave_api = enclave.clone();
@@ -566,15 +549,6 @@ fn subscribe_to_parentchain_new_headers<E: EnclaveBase + Sidechain>(
 
 		last_synced_header = parentchain_block_syncer.sync_parentchain(last_synced_header);
 	}
-}
-
-/// Execute trusted operations in the enclave
-///
-///
-fn execute_trusted_calls<E: Sidechain>(enclave_api: &E) {
-	if let Err(e) = enclave_api.execute_trusted_calls() {
-		error!("{:?}", e);
-	};
 }
 
 fn init_shard(shard: &ShardIdentifier) {
