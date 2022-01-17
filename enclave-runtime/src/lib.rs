@@ -57,7 +57,6 @@ use itc_parentchain::{
 	},
 	block_import_queue::BlockImportQueue,
 	block_importer::ParentchainBlockImporter,
-	indirect_calls_executor::IndirectCallsExecutor,
 	light_client::{concurrent_access::ValidatorAccess, LightClientState},
 };
 use itc_tls_websocket_server::{connection::TungsteniteWsConnection, run_ws_server};
@@ -494,13 +493,6 @@ pub unsafe extern "C" fn init_light_client(
 			return sgx_status_t::SGX_ERROR_UNEXPECTED
 		},
 	};
-	let shielding_key = match Rsa3072Seal::unseal() {
-		Ok(s) => s,
-		Err(e) => {
-			error!("Error retrieving shielding key: {:?}", e);
-			return sgx_status_t::SGX_ERROR_UNEXPECTED
-		},
-	};
 	let state_key = match AesSeal::unseal() {
 		Ok(k) => k,
 		Err(e) => {
@@ -531,15 +523,8 @@ pub unsafe extern "C" fn init_light_client(
 	let stf_executor = Arc::new(StfExecutor::new(ocall_api.clone(), file_state_handler.clone()));
 	let extrinsics_factory =
 		Arc::new(ExtrinsicsFactory::new(genesis_hash, signer.clone(), GLOBAL_NONCE_CACHE.clone()));
-	let indirect_calls_executor =
-		Arc::new(IndirectCallsExecutor::new(shielding_key, stf_executor.clone()));
-	let parentchain_block_importer = ParentchainBlockImporter::new(
-		validator_access,
-		ocall_api.clone(),
-		stf_executor.clone(),
-		extrinsics_factory,
-		indirect_calls_executor,
-	);
+	let parentchain_block_importer =
+		ParentchainBlockImporter::new(validator_access, ocall_api.clone(), extrinsics_factory);
 	let block_queue = BlockImportQueue::<SignedBlock>::default();
 	let block_import_dispatcher =
 		Arc::new(TriggeredDispatcher::new(parentchain_block_importer, block_queue));

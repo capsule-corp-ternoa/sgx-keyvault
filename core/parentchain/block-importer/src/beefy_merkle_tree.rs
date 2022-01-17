@@ -59,49 +59,6 @@ mod keccak256 {
 }
 pub use keccak256::Keccak256;
 
-/// Construct a root hash of a Binary Merkle Tree created from given leaves.
-///
-/// See crate-level docs for details about Merkle Tree construction.
-///
-/// In case an empty list of leaves is passed the function returns a 0-filled hash.
-pub fn merkle_root<H, I, T>(leaves: I) -> Hash
-where
-	H: Hasher,
-	I: IntoIterator<Item = T>,
-	T: AsRef<[u8]>,
-{
-	let iter = leaves.into_iter().map(|l| H::hash(l.as_ref()));
-	merkelize::<H, _, _>(iter, &mut ())
-}
-
-fn merkelize<H, V, I>(leaves: I, visitor: &mut V) -> Hash
-where
-	H: Hasher,
-	V: Visitor,
-	I: Iterator<Item = Hash>,
-{
-	let upper = Vec::with_capacity(leaves.size_hint().0);
-	let mut next = match merkelize_row::<H, _, _>(leaves, upper, visitor) {
-		Ok(root) => return root,
-		Err(next) if next.is_empty() => return Hash::default(),
-		Err(next) => next,
-	};
-
-	let mut upper = Vec::with_capacity((next.len() + 1) / 2);
-	loop {
-		visitor.move_up();
-
-		match merkelize_row::<H, _, _>(next.drain(..), upper, visitor) {
-			Ok(root) => return root,
-			Err(t) => {
-				// swap collections to avoid allocations
-				upper = next;
-				next = t;
-			},
-		};
-	}
-}
-
 /// A generated merkle proof.
 ///
 /// The structure contains all necessary data to later on verify the proof and the leaf itself.
@@ -169,61 +126,5 @@ impl<'a, T: AsRef<[u8]>> From<&'a T> for Leaf<'a> {
 impl<'a> From<Hash> for Leaf<'a> {
 	fn from(v: Hash) -> Self {
 		Leaf::Hash(v)
-	}
-}
-
-/// Processes a single row (layer) of a tree by taking pairs of elements,
-/// concatenating them, hashing and placing into resulting vector.
-///
-/// In case only one element is provided it is returned via `Ok` result, in any other case (also an
-/// empty iterator) an `Err` with the inner nodes of upper layer is returned.
-fn merkelize_row<H, V, I>(
-	mut iter: I,
-	mut next: Vec<Hash>,
-	visitor: &mut V,
-) -> Result<Hash, Vec<Hash>>
-where
-	H: Hasher,
-	V: Visitor,
-	I: Iterator<Item = Hash>,
-{
-	#[cfg(feature = "debug")]
-	log::debug!("[merkelize_row]");
-	next.clear();
-
-	let mut index = 0;
-	let mut combined = [0_u8; 64];
-	loop {
-		let a = iter.next();
-		let b = iter.next();
-		visitor.visit(index, &a, &b);
-
-		#[cfg(feature = "debug")]
-		log::debug!("  {:?}\n  {:?}", a.as_ref().map(hex::encode), b.as_ref().map(hex::encode));
-
-		index += 2;
-		match (a, b) {
-			(Some(a), Some(b)) => {
-				combined[0..32].copy_from_slice(&a);
-				combined[32..64].copy_from_slice(&b);
-
-				next.push(H::hash(&combined));
-			},
-			// Odd number of items. Promote the item to the upper layer.
-			(Some(a), None) if !next.is_empty() => {
-				next.push(a);
-			},
-			// Last item = root.
-			(Some(a), None) => return Ok(a),
-			// Finish up, no more items.
-			_ => {
-				#[cfg(feature = "debug")]
-				log::debug!(
-					"[merkelize_row] Next: {:?}",
-					next.iter().map(hex::encode).collect::<Vec<_>>()
-				);
-				return Err(next)
-			},
-		}
 	}
 }

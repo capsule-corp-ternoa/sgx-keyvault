@@ -17,20 +17,13 @@
 
 //! Imports parentchain blocks and executes any indirect calls found in the extrinsics.
 
-use crate::{
-	beefy_merkle_tree::{merkle_root, Keccak256},
-	error::Result,
-	ImportParentchainBlocks,
-};
+use crate::{error::Result, ImportParentchainBlocks};
 use ita_stf::ParentchainHeader;
-use itc_parentchain_indirect_calls_executor::ExecuteIndirectCalls;
 use itc_parentchain_light_client::{
 	concurrent_access::ValidatorAccess, BlockNumberOps, LightClientState, Validator,
 };
 use itp_extrinsics_factory::CreateExtrinsics;
 use itp_ocall_api::{EnclaveAttestationOCallApi, EnclaveOnChainOCallApi};
-use itp_settings::node::{PROCESSED_PARENTCHAIN_BLOCK, TEEREX_MODULE};
-use itp_stf_executor::traits::{StfExecuteShieldFunds, StfExecuteTrustedCall, StfUpdateState};
 use itp_types::{OpaqueCall, H256};
 use log::*;
 use sp_runtime::{
@@ -40,82 +33,51 @@ use sp_runtime::{
 use std::{marker::PhantomData, sync::Arc, vec::Vec};
 
 /// Parentchain block import implementation.
-pub struct ParentchainBlockImporter<
-	PB,
-	ValidatorAccessor,
-	OCallApi,
-	StfExecutor,
-	ExtrinsicsFactory,
-	IndirectCallsExecutor,
-> where
+pub struct ParentchainBlockImporter<PB, ValidatorAccessor, OCallApi, ExtrinsicsFactory>
+where
 	PB: BlockT<Hash = H256>,
 	NumberFor<PB>: BlockNumberOps,
 	ValidatorAccessor: ValidatorAccess<PB>,
 	OCallApi: EnclaveOnChainOCallApi + EnclaveAttestationOCallApi,
-	StfExecutor: StfUpdateState + StfExecuteTrustedCall + StfExecuteShieldFunds,
 	ExtrinsicsFactory: CreateExtrinsics,
-	IndirectCallsExecutor: ExecuteIndirectCalls,
 {
 	validator_accessor: Arc<ValidatorAccessor>,
 	ocall_api: Arc<OCallApi>,
-	stf_executor: Arc<StfExecutor>,
 	extrinsics_factory: Arc<ExtrinsicsFactory>,
-	indirect_calls_executor: Arc<IndirectCallsExecutor>,
 	_phantom: PhantomData<PB>,
 }
 
-impl<PB, ValidatorAccessor, OCallApi, StfExecutor, ExtrinsicsFactory, IndirectCallsExecutor>
-	ParentchainBlockImporter<
-		PB,
-		ValidatorAccessor,
-		OCallApi,
-		StfExecutor,
-		ExtrinsicsFactory,
-		IndirectCallsExecutor,
-	> where
+impl<PB, ValidatorAccessor, OCallApi, ExtrinsicsFactory>
+	ParentchainBlockImporter<PB, ValidatorAccessor, OCallApi, ExtrinsicsFactory>
+where
 	PB: BlockT<Hash = H256, Header = ParentchainHeader>,
 	NumberFor<PB>: BlockNumberOps,
 	ValidatorAccessor: ValidatorAccess<PB>,
 	OCallApi: EnclaveOnChainOCallApi + EnclaveAttestationOCallApi,
-	StfExecutor: StfUpdateState + StfExecuteTrustedCall + StfExecuteShieldFunds,
 	ExtrinsicsFactory: CreateExtrinsics,
-	IndirectCallsExecutor: ExecuteIndirectCalls,
 {
 	pub fn new(
 		validator_accessor: Arc<ValidatorAccessor>,
 		ocall_api: Arc<OCallApi>,
-		stf_executor: Arc<StfExecutor>,
 		extrinsics_factory: Arc<ExtrinsicsFactory>,
-		indirect_calls_executor: Arc<IndirectCallsExecutor>,
 	) -> Self {
 		ParentchainBlockImporter {
 			validator_accessor,
 			ocall_api,
-			stf_executor,
 			extrinsics_factory,
-			indirect_calls_executor,
 			_phantom: Default::default(),
 		}
 	}
 }
 
-impl<PB, ValidatorAccessor, OCallApi, StfExecutor, ExtrinsicsFactory, IndirectCallsExecutor>
-	ImportParentchainBlocks
-	for ParentchainBlockImporter<
-		PB,
-		ValidatorAccessor,
-		OCallApi,
-		StfExecutor,
-		ExtrinsicsFactory,
-		IndirectCallsExecutor,
-	> where
+impl<PB, ValidatorAccessor, OCallApi, ExtrinsicsFactory> ImportParentchainBlocks
+	for ParentchainBlockImporter<PB, ValidatorAccessor, OCallApi, ExtrinsicsFactory>
+where
 	PB: BlockT<Hash = H256, Header = ParentchainHeader>,
 	NumberFor<PB>: BlockNumberOps,
 	ValidatorAccessor: ValidatorAccess<PB>,
 	OCallApi: EnclaveOnChainOCallApi + EnclaveAttestationOCallApi,
-	StfExecutor: StfUpdateState + StfExecuteTrustedCall + StfExecuteShieldFunds,
 	ExtrinsicsFactory: CreateExtrinsics,
-	IndirectCallsExecutor: ExecuteIndirectCalls,
 {
 	type SignedBlockType = SignedBlockG<PB>;
 
@@ -123,7 +85,7 @@ impl<PB, ValidatorAccessor, OCallApi, StfExecutor, ExtrinsicsFactory, IndirectCa
 		&self,
 		blocks_to_import: Vec<Self::SignedBlockType>,
 	) -> Result<()> {
-		let mut calls = Vec::<OpaqueCall>::new();
+		let calls = Vec::<OpaqueCall>::new();
 
 		debug!("Import blocks to light-client!");
 		for signed_block in blocks_to_import.into_iter() {
@@ -140,27 +102,6 @@ impl<PB, ValidatorAccessor, OCallApi, StfExecutor, ExtrinsicsFactory, IndirectCa
 				error!("[Validator] Header submission failed: {:?}", e);
 				return Err(e.into())
 			}
-
-			// Perform state updates.
-			if let Err(e) = self.stf_executor.update_states(block.header()) {
-				error!("Error performing state updates upon block import");
-				return Err(e.into())
-			}
-
-			// Execute indirect calls that were found in the extrinsics of the block,
-			// incl. shielding and unshielding.
-			match self.indirect_calls_executor.execute_indirect_calls_in_extrinsics(&block) {
-				Ok((unshielding_call_confirmations, executed_shielding_calls)) => {
-					// Include all unshielding confirmations that need to be executed on the parentchain.
-					calls.extend(unshielding_call_confirmations.into_iter());
-					// Include a processed parentchain block confirmation for each block.
-					calls.push(create_processed_parentchain_block_call(
-						block.hash(),
-						executed_shielding_calls,
-					));
-				},
-				Err(_) => error!("Error executing relevant extrinsics"),
-			};
 		}
 
 		// Create extrinsics for all `unshielding` and `block processed` calls we've gathered.
@@ -173,14 +114,6 @@ impl<PB, ValidatorAccessor, OCallApi, StfExecutor, ExtrinsicsFactory, IndirectCa
 
 		Ok(())
 	}
-}
-
-/// Creates a processed_parentchain_block extrinsic for a given parentchain block hash and the merkle executed extrinsics.
-///
-/// Calculates the merkle root of the extrinsics. In case no extrinsics are supplied, the root will be a hash filled with zeros.
-fn create_processed_parentchain_block_call(block_hash: H256, extrinsics: Vec<H256>) -> OpaqueCall {
-	let root: H256 = merkle_root::<Keccak256, _, _>(extrinsics).into();
-	OpaqueCall::from_tuple(&([TEEREX_MODULE, PROCESSED_PARENTCHAIN_BLOCK], block_hash, root))
 }
 
 #[cfg(test)]
