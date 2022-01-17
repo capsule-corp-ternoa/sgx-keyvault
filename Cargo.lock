@@ -2050,7 +2050,6 @@ dependencies = [
  "frame-system",
  "geojson",
  "hex",
- "ita-stf",
  "itc-rpc-client",
  "itp-api-client-extensions",
  "itp-types",

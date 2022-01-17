@@ -50,5 +50,4 @@ sp-core = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrat
 #local dependencies
 itp-types = { path = "../core-primitives/types" }
 itp-api-client-extensions = { path = "../core-primitives/api-client-extensions" }
-ita-stf = { path = "../app-libs/stf" }
 itc-rpc-client = { path = "../core/rpc-client" }
