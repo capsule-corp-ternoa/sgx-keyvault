@@ -39,7 +39,7 @@ use itp_sgx_io::SealedIO;
 use itp_stf_executor::executor::StfExecutor;
 use itp_stf_state_handler::{query_shard_state::QueryShardState, GlobalFileStateHandler};
 use itp_storage_verifier::GetStorageVerified;
-use itp_time_utils::{duration_now, remaining_time};
+use itp_time_utils::duration_now;
 use itp_types::{Block, OpaqueCall, H256};
 use its_sidechain::{
 	aura::{proposer_factory::ProposerFactory, Aura, SlotClaimStrategy},
@@ -50,7 +50,7 @@ use its_sidechain::{
 		types::block::SignedBlock as SignedSidechainBlock,
 	},
 	slots::{sgx::LastSlotSeal, yield_next_slot, PerShardSlotWorkerScheduler, SlotInfo},
-	top_pool_executor::{TopPoolGetterOperator, TopPoolOperationHandler},
+	top_pool_executor::TopPoolOperationHandler,
 	top_pool_rpc_author::global_author_container::GLOBAL_RPC_AUTHOR_COMPONENT,
 	validateer_fetch::ValidateerFetch,
 };
@@ -61,61 +61,6 @@ use sp_runtime::{
 	generic::SignedBlock as SignedParentchainBlock, traits::Block as BlockTrait, MultiSignature,
 };
 use std::{sync::Arc, vec::Vec};
-
-#[no_mangle]
-pub unsafe extern "C" fn execute_trusted_getters() -> sgx_status_t {
-	if let Err(e) = execute_top_pool_trusted_getters_on_all_shards() {
-		return e.into()
-	}
-
-	sgx_status_t::SGX_SUCCESS
-}
-
-/// Internal [`execute_trusted_getters`] function to be able to use the `?` operator.
-///
-/// Executes trusted getters for a scheduled amount of time (defined by settings).
-fn execute_top_pool_trusted_getters_on_all_shards() -> Result<()> {
-	use itp_settings::enclave::MAX_TRUSTED_GETTERS_EXEC_DURATION;
-
-	let rpc_author = GLOBAL_RPC_AUTHOR_COMPONENT.get().ok_or_else(|| {
-		error!("Failed to retrieve author mutex. It might not be initialized?");
-		Error::MutexAccess
-	})?;
-
-	let state_handler = Arc::new(GlobalFileStateHandler);
-	let stf_executor = Arc::new(StfExecutor::new(Arc::new(OcallApi), state_handler.clone()));
-
-	let shards = state_handler.list_shards()?;
-	let mut remaining_shards = shards.len() as u32;
-	let ends_at = duration_now() + MAX_TRUSTED_GETTERS_EXEC_DURATION;
-
-	let top_pool_executor =
-		TopPoolOperationHandler::<Block, SignedSidechainBlock, _, _>::new(rpc_author, stf_executor);
-
-	// Execute trusted getters for each shard. Each shard gets equal amount of time to execute
-	// getters.
-	for shard in shards.into_iter() {
-		let shard_exec_time = match remaining_time(ends_at)
-			.map(|r| r.checked_div(remaining_shards))
-			.flatten()
-		{
-			Some(t) => t,
-			None => {
-				info!("[Enclave] Could not execute trusted operations for all shards. Remaining number of shards: {}.", remaining_shards);
-				break
-			},
-		};
-
-		match top_pool_executor.execute_trusted_getters_on_shard(&shard, shard_exec_time) {
-			Ok(()) => {},
-			Err(e) => error!("Error in trusted getter execution for shard {:?}: {:?}", shard, e),
-		}
-
-		remaining_shards -= 1;
-	}
-
-	Ok(())
-}
 
 #[no_mangle]
 pub unsafe extern "C" fn execute_trusted_calls() -> sgx_status_t {
@@ -168,11 +113,9 @@ fn execute_top_pool_trusted_calls_internal() -> Result<()> {
 	let extrinsics_factory =
 		ExtrinsicsFactory::new(genesis_hash, authority.clone(), GLOBAL_NONCE_CACHE.clone());
 
-	let top_pool_executor =
-		Arc::new(TopPoolOperationHandler::<Block, SignedSidechainBlock, _, _>::new(
-			rpc_author.clone(),
-			stf_executor.clone(),
-		));
+	let top_pool_executor = Arc::new(
+		TopPoolOperationHandler::<Block, SignedSidechainBlock, _>::new(rpc_author.clone()),
+	);
 
 	let block_composer = Arc::new(BlockComposer::new(authority.clone(), state_key, rpc_author));
 

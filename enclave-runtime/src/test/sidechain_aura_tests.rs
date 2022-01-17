@@ -84,8 +84,7 @@ pub fn produce_sidechain_block_and_import_it() {
 		state_handler.clone(),
 		shielding_key,
 	));
-	let top_pool_operation_handler =
-		Arc::new(TestTopPoolExecutor::new(rpc_author.clone(), stf_executor.clone()));
+	let top_pool_operation_handler = Arc::new(TestTopPoolExecutor::new(rpc_author.clone()));
 	let parentchain_block_import_trigger = Arc::new(TestParentchainBlockImportTrigger::default());
 	let block_importer = Arc::new(TestBlockImporter::new(
 		state_handler.clone(),

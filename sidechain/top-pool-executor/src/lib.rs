@@ -39,45 +39,36 @@ pub mod sgx_reexport_prelude {
 
 pub mod call_operator;
 pub mod error;
-pub mod getter_operator;
 
 #[cfg(feature = "mocks")]
 pub mod call_operator_mock;
 
 // Re-exports
 pub use call_operator::TopPoolCallOperator;
-pub use getter_operator::TopPoolGetterOperator;
 
-use itp_stf_executor::traits::{StateUpdateProposer, StfExecuteTimedGettersBatch};
 use itp_types::H256;
 use its_primitives::traits::{Block as SidechainBlockT, SignedBlock as SignedBlockT};
-use its_state::{SidechainState, SidechainSystemExt, StateHash};
 use its_top_pool_rpc_author::traits::{AuthorApi, OnBlockCreated, SendState};
-use sgx_externalities::SgxExternalitiesTrait;
 use sp_runtime::{traits::Block as BlockT, MultiSignature};
 use std::{marker::PhantomData, sync::Arc};
 
 /// Executes operations on the top pool
 ///
 /// Operations can either be Getters or Calls
-pub struct TopPoolOperationHandler<PB, SB, RpcAuthor, StfExecutor> {
+pub struct TopPoolOperationHandler<PB, SB, RpcAuthor> {
 	rpc_author: Arc<RpcAuthor>,
-	stf_executor: Arc<StfExecutor>,
 	_phantom: PhantomData<(PB, SB)>,
 }
 
-impl<PB, SB, RpcAuthor, StfExecutor> TopPoolOperationHandler<PB, SB, RpcAuthor, StfExecutor>
+impl<PB, SB, RpcAuthor> TopPoolOperationHandler<PB, SB, RpcAuthor>
 where
 	PB: BlockT<Hash = H256>,
 	SB: SignedBlockT<Public = sp_core::ed25519::Public, Signature = MultiSignature>,
 	SB::Block: SidechainBlockT<ShardIdentifier = H256, Public = sp_core::ed25519::Public>,
 	RpcAuthor:
 		AuthorApi<H256, PB::Hash> + OnBlockCreated<Hash = PB::Hash> + SendState<Hash = PB::Hash>,
-	StfExecutor: StateUpdateProposer + StfExecuteTimedGettersBatch,
-	<StfExecutor as StateUpdateProposer>::Externalities:
-		SgxExternalitiesTrait + SidechainState + SidechainSystemExt + StateHash,
 {
-	pub fn new(rpc_author: Arc<RpcAuthor>, stf_executor: Arc<StfExecutor>) -> Self {
-		TopPoolOperationHandler { rpc_author, stf_executor, _phantom: Default::default() }
+	pub fn new(rpc_author: Arc<RpcAuthor>) -> Self {
+		TopPoolOperationHandler { rpc_author, _phantom: Default::default() }
 	}
 }

@@ -17,15 +17,12 @@
 
 use crate::{error::Result, TopPoolOperationHandler};
 use ita_stf::TrustedCallSigned;
-use itp_stf_executor::traits::{StateUpdateProposer, StfExecuteTimedGettersBatch};
 use itp_types::{ShardIdentifier, H256};
 use its_primitives::traits::{
 	Block as SidechainBlockT, ShardIdentifierFor, SignedBlock as SignedBlockT,
 };
-use its_state::{SidechainState, SidechainSystemExt, StateHash};
 use its_top_pool_rpc_author::traits::{AuthorApi, OnBlockCreated, SendState};
 use log::*;
-use sgx_externalities::SgxExternalitiesTrait;
 use sp_runtime::{traits::Block as BlockT, MultiSignature};
 use std::{vec, vec::Vec};
 
@@ -46,17 +43,13 @@ pub trait TopPoolCallOperator<PB: BlockT, SB: SignedBlockT> {
 	) -> Vec<ExecutedOperation>;
 }
 
-impl<PB, SB, RpcAuthor, StfExecutor> TopPoolCallOperator<PB, SB>
-	for TopPoolOperationHandler<PB, SB, RpcAuthor, StfExecutor>
+impl<PB, SB, RpcAuthor> TopPoolCallOperator<PB, SB> for TopPoolOperationHandler<PB, SB, RpcAuthor>
 where
 	PB: BlockT<Hash = H256>,
 	SB: SignedBlockT<Public = sp_core::ed25519::Public, Signature = MultiSignature>,
 	SB::Block: SidechainBlockT<ShardIdentifier = H256, Public = sp_core::ed25519::Public>,
 	RpcAuthor:
 		AuthorApi<H256, PB::Hash> + OnBlockCreated<Hash = PB::Hash> + SendState<Hash = PB::Hash>,
-	StfExecutor: StateUpdateProposer + StfExecuteTimedGettersBatch,
-	<StfExecutor as StateUpdateProposer>::Externalities:
-		SgxExternalitiesTrait + SidechainState + SidechainSystemExt + StateHash,
 {
 	fn get_trusted_calls(&self, shard: &ShardIdentifier) -> Result<Vec<TrustedCallSigned>> {
 		Ok(self.rpc_author.get_pending_tops_separated(*shard)?.0)

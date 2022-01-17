@@ -66,7 +66,7 @@ pub type TestTopPool =
 pub type TestRpcAuthor = Author<TestTopPool, AuthorTopFilter, TestStateHandler, TestShieldingKey>;
 
 pub type TestTopPoolExecutor =
-	TopPoolOperationHandler<ParentchainBlock, SignedSidechainBlock, TestRpcAuthor, TestStfExecutor>;
+	TopPoolOperationHandler<ParentchainBlock, SignedSidechainBlock, TestRpcAuthor>;
 
 pub type TestBlockComposer =
 	BlockComposer<ParentchainBlock, SignedSidechainBlock, TestSigner, TestStateKey, TestRpcAuthor>;

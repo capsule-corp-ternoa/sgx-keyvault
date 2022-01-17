@@ -27,30 +27,27 @@ use crate::{
 use codec::{Decode, Encode};
 use ita_stf::{
 	helpers::{
-		account_key_hash, get_parentchain_blockhash, get_parentchain_number,
+		get_parentchain_blockhash, get_parentchain_number,
 		get_parentchain_parenthash,
 	},
 	test_genesis::endowed_account as funded_pair,
-	AccountInfo, ShardIdentifier, State, StatePayload, StateTypeDiff, Stf, TrustedCall,
+	ShardIdentifier, State, StatePayload, StateTypeDiff, Stf, TrustedCall,
 	TrustedCallSigned, TrustedGetter, TrustedOperation,
 };
 use itp_ocall_api::EnclaveAttestationOCallApi;
 use itp_settings::{
-	enclave::MAX_TRUSTED_OPS_EXEC_DURATION,
 	node::{PROPOSED_SIDECHAIN_BLOCK, TEEREX_MODULE},
 };
 use itp_sgx_crypto::{Aes, StateCrypto};
 use itp_stf_executor::{
-	executor::StfExecutor,
 	executor_tests as stf_executor_tests,
-	traits::{StatePostProcessing, StateUpdateProposer, StfExecuteTrustedCall},
 };
 use itp_stf_state_handler::handle_state::HandleState;
 use itp_test::mock::{
 	handle_state_mock, handle_state_mock::HandleStateMock,
 	shielding_crypto_mock::ShieldingCryptoMock,
 };
-use itp_types::{AccountId, Block, Header, MrEnclave, OpaqueCall};
+use itp_types::{Block, Header, MrEnclave, OpaqueCall};
 use its_sidechain::{
 	block_composer::{BlockComposer, ComposeBlockAndConfirmation},
 	primitives::{
@@ -59,7 +56,6 @@ use its_sidechain::{
 	},
 	state::{SidechainDB, SidechainState, SidechainSystemExt},
 	top_pool::{basic_pool::BasicPool, pool::ExtrinsicHash},
-	top_pool_executor::{TopPoolCallOperator, TopPoolOperationHandler},
 	top_pool_rpc_author::{
 		api::SidechainApi,
 		author::Author,
@@ -68,7 +64,7 @@ use its_sidechain::{
 		top_filter::AllowAllTopsFilter,
 	},
 };
-use sgx_externalities::{SgxExternalities, SgxExternalitiesTrait};
+use sgx_externalities::SgxExternalitiesTrait;
 use sgx_tunittest::*;
 use sgx_types::size_t;
 use sp_core::{crypto::Pair, ed25519 as spEd25519, hashing::blake2_256, H256};
@@ -92,14 +88,9 @@ pub extern "C" fn test_main_entrance() -> size_t {
 		test_submit_trusted_call_to_top_pool,
 		test_submit_trusted_getter_to_top_pool,
 		test_differentiate_getter_and_call_works,
-		test_create_block_and_confirmation_works,
 		// needs node to be running.. unit tests?
 		// test_ocall_worker_request,
-		test_create_state_diff,
-		test_executing_call_updates_account_nonce,
 		test_call_set_update_parentchain_block,
-		test_invalid_nonce_call_is_not_executed,
-		test_non_root_shielding_call_is_not_executed,
 		rpc::worker_api_direct::tests::test_given_io_handler_methods_then_retrieve_all_names_as_string,
 		author_tests::top_encryption_works,
 		author_tests::submitting_to_author_inserts_in_pool,
@@ -263,195 +254,6 @@ fn test_differentiate_getter_and_call_works() {
 	assert_eq!(getters[0], signed_getter);
 }
 
-fn test_create_block_and_confirmation_works() {
-	// given
-	let (rpc_author, _, shard, mrenclave, shielding_key, state_handler) = test_setup();
-	let stf_executor = Arc::new(StfExecutor::new(Arc::new(OcallApi), state_handler.clone()));
-	let top_pool_executor = TopPoolOperationHandler::<Block, SignedBlock, _, _>::new(
-		rpc_author.clone(),
-		stf_executor.clone(),
-	);
-	let block_composer = BlockComposer::<Block, SignedBlock, _, _, _>::new(
-		test_account(),
-		state_key(),
-		rpc_author.clone(),
-	);
-
-	let sender = funded_pair();
-	let receiver = unfunded_public();
-
-	let signed_call = TrustedCall::balance_transfer(sender.public().into(), receiver.into(), 1000)
-		.sign(&sender.into(), 0, &mrenclave, &shard);
-
-	let top_hash = submit_operation_to_top_pool(
-		rpc_author.as_ref(),
-		&direct_top(signed_call),
-		&shielding_key,
-		shard,
-	)
-	.unwrap();
-
-	// when
-	let top_pool_calls = top_pool_executor.get_trusted_calls(&shard).unwrap();
-	let execution_result = stf_executor
-		.propose_state_update(
-			&top_pool_calls,
-			&latest_parentchain_header(),
-			&shard,
-			MAX_TRUSTED_OPS_EXEC_DURATION,
-			|s| {
-				let mut sidechain_db = SidechainDB::<SignedBlock, SgxExternalities>::new(s);
-				sidechain_db
-					.set_block_number(&sidechain_db.get_block_number().map_or(1, |n| n + 1));
-				sidechain_db.ext
-			},
-		)
-		.unwrap();
-
-	let executed_operation_hashes =
-		execution_result.get_executed_operation_hashes().iter().copied().collect();
-
-	let (opaque_call, signed_block) = block_composer
-		.compose_block_and_confirmation(
-			&latest_parentchain_header(),
-			executed_operation_hashes,
-			shard,
-			execution_result.state_hash_before_execution,
-			execution_result.state_after_execution,
-		)
-		.unwrap();
-
-	// then
-	let expected_call = OpaqueCall::from_tuple(&(
-		[TEEREX_MODULE, PROPOSED_SIDECHAIN_BLOCK],
-		shard,
-		blake2_256(&signed_block.block().encode()),
-	));
-
-	assert!(signed_block.verify_signature());
-	assert_eq!(signed_block.block().block_number(), 1);
-	assert_eq!(signed_block.block().signed_top_hashes()[0], top_hash);
-	assert!(opaque_call.encode().starts_with(&expected_call.encode()));
-}
-
-fn test_create_state_diff() {
-	// given
-	let (rpc_author, _, shard, mrenclave, shielding_key, state_handler) = test_setup();
-	let stf_executor = Arc::new(StfExecutor::new(Arc::new(OcallApi), state_handler.clone()));
-	let top_pool_executor = TopPoolOperationHandler::<Block, SignedBlock, _, _>::new(
-		rpc_author.clone(),
-		stf_executor.clone(),
-	);
-	let block_composer = BlockComposer::<Block, SignedBlock, _, _, _>::new(
-		test_account(),
-		state_key(),
-		rpc_author.clone(),
-	);
-
-	let sender = funded_pair();
-	let receiver = unfunded_public();
-
-	let signed_call = TrustedCall::balance_transfer(sender.public().into(), receiver.into(), 1000)
-		.sign(&sender.clone().into(), 0, &mrenclave, &shard);
-
-	submit_operation_to_top_pool(
-		rpc_author.as_ref(),
-		&direct_top(signed_call),
-		&shielding_key,
-		shard,
-	)
-	.unwrap();
-
-	// when
-	let top_pool_calls = top_pool_executor.get_trusted_calls(&shard).unwrap();
-	let execution_result = stf_executor
-		.propose_state_update(
-			&top_pool_calls,
-			&latest_parentchain_header(),
-			&shard,
-			MAX_TRUSTED_OPS_EXEC_DURATION,
-			|s| {
-				let mut sidechain_db = SidechainDB::<SignedBlock, SgxExternalities>::new(s);
-				sidechain_db
-					.set_block_number(&sidechain_db.get_block_number().map_or(1, |n| n + 1));
-				sidechain_db.ext
-			},
-		)
-		.unwrap();
-
-	let executed_operation_hashes =
-		execution_result.get_executed_operation_hashes().iter().copied().collect();
-
-	let (_, signed_block) = block_composer
-		.compose_block_and_confirmation(
-			&latest_parentchain_header(),
-			executed_operation_hashes,
-			shard,
-			execution_result.state_hash_before_execution,
-			execution_result.state_after_execution,
-		)
-		.unwrap();
-
-	let state_payload = state_payload_from_encrypted(signed_block.block().state_payload());
-	let state_diff = state_payload.state_update();
-
-	// then
-	let sender_acc_info: AccountInfo =
-		get_from_state_diff(&state_diff, &account_key_hash(&sender.public().into()));
-
-	let receiver_acc_info: AccountInfo =
-		get_from_state_diff(&state_diff, &account_key_hash(&receiver.into()));
-
-	// state diff should consist of the following updates:
-	// (last_hash, sidechain block_number, sender_funds, receiver_funds)
-	assert_eq!(state_diff.len(), 4);
-	assert_eq!(receiver_acc_info.data.free, 1000);
-	assert_eq!(sender_acc_info.data.free, 1000);
-}
-
-fn test_executing_call_updates_account_nonce() {
-	// given
-	let (rpc_author, _, shard, mrenclave, shielding_key, state_handler) = test_setup();
-	let stf_executor = Arc::new(StfExecutor::new(Arc::new(OcallApi), state_handler.clone()));
-	let top_pool_executor = TopPoolOperationHandler::<Block, SignedBlock, _, _>::new(
-		rpc_author.clone(),
-		stf_executor.clone(),
-	);
-
-	let sender = funded_pair();
-	let receiver = unfunded_public();
-
-	let signed_call = TrustedCall::balance_transfer(sender.public().into(), receiver.into(), 1000)
-		.sign(&sender.clone().into(), 0, &mrenclave, &shard);
-
-	submit_operation_to_top_pool(
-		rpc_author.as_ref(),
-		&direct_top(signed_call),
-		&shielding_key,
-		shard,
-	)
-	.unwrap();
-
-	// when
-	let top_pool_calls = top_pool_executor.get_trusted_calls(&shard).unwrap();
-	for call in top_pool_calls {
-		let _execution_result = stf_executor
-			.execute_trusted_call(
-				&mut Vec::new(),
-				&call,
-				&latest_parentchain_header(),
-				&shard,
-				StatePostProcessing::Prune,
-			)
-			.unwrap();
-	}
-
-	// then
-	let mut state = state_handler.load_initialized(&shard).unwrap();
-	let nonce = Stf::account_nonce(&mut state, &sender.public().into());
-	assert_eq!(nonce, 1);
-}
-
 fn test_call_set_update_parentchain_block() {
 	let (_, _, shard, _, _, state_handler) = test_setup();
 	let mut state = state_handler.load_initialized(&shard).unwrap();
@@ -472,84 +274,6 @@ fn test_call_set_update_parentchain_block() {
 	assert_eq!(header.hash(), state.execute_with(|| get_parentchain_blockhash().unwrap()));
 	assert_eq!(parent_hash, state.execute_with(|| get_parentchain_parenthash().unwrap()));
 	assert_eq!(block_number, state.execute_with(|| get_parentchain_number().unwrap()));
-}
-
-fn test_invalid_nonce_call_is_not_executed() {
-	// given
-	let (rpc_author, _, shard, mrenclave, shielding_key, state_handler) = test_setup();
-	let stf_executor = Arc::new(StfExecutor::new(Arc::new(OcallApi), state_handler.clone()));
-	let top_pool_executor = TopPoolOperationHandler::<Block, SignedBlock, _, _>::new(
-		rpc_author.clone(),
-		stf_executor.clone(),
-	);
-
-	// create accounts
-	let sender = funded_pair();
-	let receiver = unfunded_public();
-
-	let signed_call = TrustedCall::balance_transfer(sender.public().into(), receiver.into(), 1000)
-		.sign(&sender.clone().into(), 10, &mrenclave, &shard);
-
-	submit_operation_to_top_pool(
-		rpc_author.as_ref(),
-		&direct_top(signed_call),
-		&shielding_key,
-		shard,
-	)
-	.unwrap();
-
-	// when
-	let top_pool_calls = top_pool_executor.get_trusted_calls(&shard).unwrap();
-	let executed_batch = stf_executor
-		.propose_state_update(
-			&top_pool_calls,
-			&latest_parentchain_header(),
-			&shard,
-			MAX_TRUSTED_OPS_EXEC_DURATION,
-			|state| state,
-		)
-		.unwrap();
-
-	// then
-	assert!(!executed_batch.executed_operations[0].is_success());
-}
-
-fn test_non_root_shielding_call_is_not_executed() {
-	// given
-	let (rpc_author, _state, shard, mrenclave, shielding_key, state_handler) = test_setup();
-	let stf_executor = Arc::new(StfExecutor::new(Arc::new(OcallApi), state_handler.clone()));
-	let top_pool_executor = TopPoolOperationHandler::<Block, SignedBlock, _, _>::new(
-		rpc_author.clone(),
-		stf_executor.clone(),
-	);
-
-	let sender = funded_pair();
-	let sender_acc: AccountId = sender.public().into();
-
-	let signed_call = TrustedCall::balance_shield(sender_acc.clone(), sender_acc.clone(), 1000)
-		.sign(&sender.into(), 0, &mrenclave, &shard);
-
-	submit_operation_to_top_pool(
-		rpc_author.as_ref(),
-		&direct_top(signed_call),
-		&shielding_key,
-		shard,
-	)
-	.unwrap();
-
-	// when
-	let top_pool_calls = top_pool_executor.get_trusted_calls(&shard).unwrap();
-	let executed_batch = stf_executor
-		.propose_state_update(
-			&top_pool_calls,
-			&latest_parentchain_header(),
-			&shard,
-			MAX_TRUSTED_OPS_EXEC_DURATION,
-			|state| state,
-		)
-		.unwrap();
-	// then
-	assert!(!executed_batch.executed_operations[0].is_success());
 }
 
 // helper functions

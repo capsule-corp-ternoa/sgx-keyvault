@@ -76,7 +76,7 @@ use std::{
 		Arc,
 	},
 	thread,
-	time::{Duration, Instant},
+	time::Duration,
 };
 use substrate_api_client::{
 	rpc::WsRpcClient, utils::FromHexString, Api, GenericAddress, Header as HeaderTrait, XtStatus,
@@ -403,16 +403,6 @@ fn start_worker<E, T, D>(
 		})
 		.unwrap();
 
-	//-------------------------------------------------------------------------
-	// start execution of trusted getters
-	let trusted_getters_enclave_api = enclave;
-	thread::Builder::new()
-		.name("trusted_getters_execution".to_owned())
-		.spawn(move || {
-			start_interval_trusted_getter_execution(trusted_getters_enclave_api.as_ref())
-		})
-		.unwrap();
-
 	// ------------------------------------------------------------------------
 	// start sidechain pruning loop
 	thread::Builder::new()
@@ -445,47 +435,6 @@ fn start_worker<E, T, D>(
 			if let Ok(events) = parse_events(msg.clone()) {
 				print_events(events, sender.clone())
 			}
-		}
-	}
-}
-
-/// Starts the execution of trusted getters in repeating intervals.
-///
-/// The getters are executed in a pre-defined slot duration.
-fn start_interval_trusted_getter_execution<E: Sidechain>(enclave_api: &E) {
-	use itp_settings::enclave::TRUSTED_GETTERS_SLOT_DURATION;
-
-	schedule_on_repeating_intervals(
-		|| {
-			if let Err(e) = enclave_api.execute_trusted_getters() {
-				error!("Execution of trusted getters failed: {:?}", e);
-			}
-		},
-		TRUSTED_GETTERS_SLOT_DURATION,
-	);
-}
-
-/// Schedules a task on perpetually looping intervals.
-///
-/// In case the task takes longer than is scheduled by the interval duration,
-/// the interval timing will drift. The task is responsible for
-/// ensuring it does not use up more time than is scheduled.
-fn schedule_on_repeating_intervals<T>(task: T, interval_duration: Duration)
-where
-	T: Fn(),
-{
-	let mut interval_start = Instant::now();
-	loop {
-		let elapsed = interval_start.elapsed();
-
-		if elapsed >= interval_duration {
-			// update interval time
-			interval_start = Instant::now();
-			task();
-		} else {
-			// sleep for the rest of the interval
-			let sleep_time = interval_duration - elapsed;
-			thread::sleep(sleep_time);
 		}
 	}
 }

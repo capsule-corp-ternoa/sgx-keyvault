@@ -71,7 +71,6 @@ use itp_settings::node::{
 use itp_sgx_crypto::{aes, ed25519, rsa3072, AesSeal, Ed25519Seal, Rsa3072Seal};
 use itp_sgx_io as io;
 use itp_sgx_io::SealedIO;
-use itp_stf_executor::executor::StfExecutor;
 use itp_stf_state_handler::{
 	handle_state::HandleState, query_shard_state::QueryShardState, GlobalFileStateHandler,
 };
@@ -520,7 +519,6 @@ pub unsafe extern "C" fn init_light_client(
 
 	let file_state_handler = Arc::new(GlobalFileStateHandler);
 	let ocall_api = Arc::new(OcallApi);
-	let stf_executor = Arc::new(StfExecutor::new(ocall_api.clone(), file_state_handler.clone()));
 	let extrinsics_factory =
 		Arc::new(ExtrinsicsFactory::new(genesis_hash, signer.clone(), GLOBAL_NONCE_CACHE.clone()));
 	let parentchain_block_importer =
@@ -531,9 +529,8 @@ pub unsafe extern "C" fn init_light_client(
 
 	GLOBAL_PARENTCHAIN_IMPORT_DISPATCHER_COMPONENT.initialize(block_import_dispatcher.clone());
 
-	let top_pool_executor = Arc::<EnclaveTopPoolOperationHandler>::new(
-		TopPoolOperationHandler::new(rpc_author, stf_executor),
-	);
+	let top_pool_executor =
+		Arc::<EnclaveTopPoolOperationHandler>::new(TopPoolOperationHandler::new(rpc_author));
 	let sidechain_block_importer = Arc::<EnclaveSidechainBlockImporter>::new(BlockImporter::new(
 		file_state_handler,
 		state_key,
