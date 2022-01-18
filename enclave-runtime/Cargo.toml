@@ -16,7 +16,6 @@ crate-type = ["staticlib"]
 default = []
 production = ["itp-settings/production"]
 test = [
-    "ita-stf/test",
     "itc-parentchain/mocks",
     "itp-extrinsics-factory/mocks",
     "itp-stf-executor/test",
@@ -110,9 +109,6 @@ cid = { git = "https://github.com/whalelephant/rust-cid", branch = "nstd", defau
 multibase = { git = "https://github.com/whalelephant/rust-multibase", branch = "nstd", default-features = false }
 
 # local deps
-ita-stf = { path = "../app-libs/stf", default-features = false, features = [
-    "sgx",
-] }
 itc-tls-websocket-server = { path = "../core/tls-websocket-server", default-features = false, features = [
     "sgx",
 ] }

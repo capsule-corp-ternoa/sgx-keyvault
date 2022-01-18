@@ -17,7 +17,6 @@
 */
 
 pub mod cert_tests;
-pub mod fixtures;
 pub mod ipfs_tests;
 pub mod mocks;
 pub mod on_chain_ocall_tests;

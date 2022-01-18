@@ -504,7 +504,6 @@ dependencies = [
  "hex",
  "httparse",
  "ipfs-unixfs",
- "ita-stf",
  "itc-direct-rpc-server",
  "itc-parentchain",
  "itc-tls-websocket-server",
