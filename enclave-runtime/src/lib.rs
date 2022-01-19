@@ -46,7 +46,6 @@ use crate::{
 };
 use base58::ToBase58;
 use codec::{alloc::string::String, Decode, Encode};
-use ita_stf::{Getter, ShardIdentifier, Stf};
 use itc_direct_rpc_server::{
 	create_determine_watch, rpc_connection_registry::ConnectionRegistry,
 	rpc_ws_handler::RpcWsHandler,
@@ -73,9 +72,7 @@ use itp_sgx_crypto::{aes, ed25519, rsa3072, Ed25519Seal, Rsa3072Seal};
 use itp_sgx_io as io;
 use itp_sgx_io::SealedIO;
 use itp_stf_executor::executor::StfExecutor;
-use itp_stf_state_handler::{
-	handle_state::HandleState, query_shard_state::QueryShardState, GlobalFileStateHandler,
-};
+use itp_stf_state_handler::{query_shard_state::QueryShardState, GlobalFileStateHandler};
 use itp_storage::StorageProof;
 use itp_types::{Block, Header, SignedBlock};
 use its_sidechain::{
@@ -346,44 +343,6 @@ fn sidechain_rpc_int(request: &str) -> Result<String> {
 	Ok(io
 		.handle_request_sync(request)
 		.unwrap_or_else(|| format!("Empty rpc response for request: {}", request)))
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn get_state(
-	trusted_op: *const u8,
-	trusted_op_size: u32,
-	shard: *const u8,
-	shard_size: u32,
-	value: *mut u8,
-	value_size: u32,
-) -> sgx_status_t {
-	let shard = ShardIdentifier::from_slice(slice::from_raw_parts(shard, shard_size as usize));
-	let mut trusted_op_slice = slice::from_raw_parts(trusted_op, trusted_op_size as usize);
-	let value_slice = slice::from_raw_parts_mut(value, value_size as usize);
-	let getter = Getter::decode(&mut trusted_op_slice).unwrap();
-
-	if let Getter::trusted(trusted_getter_signed) = getter.clone() {
-		debug!("verifying signature of TrustedGetterSigned");
-		if let false = trusted_getter_signed.verify_signature() {
-			error!("bad signature");
-			return sgx_status_t::SGX_ERROR_UNEXPECTED
-		}
-	}
-
-	let state_handler = GlobalFileStateHandler;
-
-	let mut state = match state_handler.load_initialized(&shard) {
-		Ok(s) => s,
-		Err(e) => return Error::StfStateHandler(e).into(),
-	};
-
-	debug!("calling into STF to get state");
-	let value_opt = Stf::get_state(&mut state, getter);
-
-	debug!("returning getter result");
-	write_slice_and_whitespace_pad(value_slice, value_opt.encode());
-
-	sgx_status_t::SGX_SUCCESS
 }
 
 /// Call this once at worker startup to initialize the TOP pool and direct invocation RPC server.
