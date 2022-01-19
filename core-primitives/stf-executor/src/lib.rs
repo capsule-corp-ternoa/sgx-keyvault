@@ -40,9 +40,6 @@ pub mod traits;
 #[cfg(feature = "sgx")]
 pub mod executor;
 
-#[cfg(all(feature = "sgx", feature = "test"))]
-pub mod executor_tests;
-
 /// Execution status of a trusted operation
 ///
 /// In case of success, it includes the operation hash, as well as
