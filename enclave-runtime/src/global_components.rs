@@ -22,9 +22,13 @@
 
 use crate::ocall::OcallApi;
 use itc_parentchain::{
-	block_import_dispatcher::triggered_dispatcher::TriggeredDispatcher,
-	block_import_queue::BlockImportQueue, block_importer::ParentchainBlockImporter,
-	indirect_calls_executor::IndirectCallsExecutor, light_client::ValidatorAccessor,
+	block_import_dispatcher::{
+		immediate_dispatcher::ImmediateDispatcher, triggered_dispatcher::TriggeredDispatcher,
+	},
+	block_import_queue::BlockImportQueue,
+	block_importer::ParentchainBlockImporter,
+	indirect_calls_executor::IndirectCallsExecutor,
+	light_client::ValidatorAccessor,
 };
 use itp_component_container::ComponentContainer;
 use itp_extrinsics_factory::ExtrinsicsFactory;
@@ -62,6 +66,8 @@ pub type EnclaveParentChainBlockImporter = ParentchainBlockImporter<
 pub type EnclaveBlockImportQueue = BlockImportQueue<SignedParentchainBlock>;
 pub type EnclaveParentchainBlockImportDispatcher =
 	TriggeredDispatcher<EnclaveParentChainBlockImporter, EnclaveBlockImportQueue>;
+pub type EnclaveParentchainBlockImportImmediateDispatcher =
+	ImmediateDispatcher<EnclaveParentChainBlockImporter>;
 
 /// Sidechain types
 pub type EnclaveSidechainState =
@@ -86,6 +92,10 @@ pub type EnclaveSidechainBlockImporter = SidechainBlockImporter<
 
 pub static GLOBAL_PARENTCHAIN_IMPORT_DISPATCHER_COMPONENT: ComponentContainer<
 	EnclaveParentchainBlockImportDispatcher,
+> = ComponentContainer::new();
+
+pub static GLOBAL_PARENTCHAIN_IMPORT_IMMEDIATE_DISPATCHER_COMPONENT: ComponentContainer<
+	EnclaveParentchainBlockImportImmediateDispatcher,
 > = ComponentContainer::new();
 
 pub static GLOBAL_SIDECHAIN_BLOCK_IMPORTER_COMPONENT: ComponentContainer<
