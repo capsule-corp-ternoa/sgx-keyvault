@@ -27,7 +27,6 @@ use itc_parentchain::{
 	},
 	block_import_queue::BlockImportQueue,
 	block_importer::ParentchainBlockImporter,
-	indirect_calls_executor::IndirectCallsExecutor,
 	light_client::ValidatorAccessor,
 };
 use itp_component_container::ComponentContainer;
@@ -47,21 +46,17 @@ use its_sidechain::{
 	top_pool_executor::TopPoolOperationHandler,
 	top_pool_rpc_author::global_author_container::EnclaveRpcAuthor,
 };
-use sgx_crypto_helper::rsa3072::Rsa3072KeyPair;
 use sgx_externalities::SgxExternalities;
 use sp_core::ed25519::Pair;
 
 pub type EnclaveStfExecutor = StfExecutor<OcallApi, GlobalFileStateHandler, SgxExternalities>;
 pub type EnclaveExtrinsicsFactory = ExtrinsicsFactory<Pair, NonceCache>;
-pub type EnclaveIndirectCallsExecutor = IndirectCallsExecutor<Rsa3072KeyPair, EnclaveStfExecutor>;
 pub type EnclaveValidatorAccessor = ValidatorAccessor<ParentchainBlock>;
 pub type EnclaveParentChainBlockImporter = ParentchainBlockImporter<
 	ParentchainBlock,
 	EnclaveValidatorAccessor,
 	OcallApi,
-	EnclaveStfExecutor,
 	EnclaveExtrinsicsFactory,
-	EnclaveIndirectCallsExecutor,
 >;
 pub type EnclaveBlockImportQueue = BlockImportQueue<SignedParentchainBlock>;
 pub type EnclaveParentchainBlockImportDispatcher =

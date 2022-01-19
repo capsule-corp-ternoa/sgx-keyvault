@@ -56,7 +56,6 @@ use itc_parentchain::{
 		triggered_dispatcher::TriggerParentchainBlockImport, DispatchBlockImport,
 	},
 	block_importer::ParentchainBlockImporter,
-	indirect_calls_executor::IndirectCallsExecutor,
 	light_client::{concurrent_access::ValidatorAccess, LightClientState},
 };
 use itc_tls_websocket_server::{connection::TungsteniteWsConnection, run_ws_server};
@@ -71,7 +70,6 @@ use itp_settings::node::{
 use itp_sgx_crypto::{aes, ed25519, rsa3072, Ed25519Seal, Rsa3072Seal};
 use itp_sgx_io as io;
 use itp_sgx_io::SealedIO;
-use itp_stf_executor::executor::StfExecutor;
 use itp_stf_state_handler::{query_shard_state::QueryShardState, GlobalFileStateHandler};
 use itp_storage::StorageProof;
 use itp_types::{Block, Header, SignedBlock};
@@ -452,13 +450,6 @@ pub unsafe extern "C" fn init_light_client(
 			return sgx_status_t::SGX_ERROR_UNEXPECTED
 		},
 	};
-	let shielding_key = match Rsa3072Seal::unseal() {
-		Ok(s) => s,
-		Err(e) => {
-			error!("Error retrieving shielding key: {:?}", e);
-			return sgx_status_t::SGX_ERROR_UNEXPECTED
-		},
-	};
 
 	let validator_access = Arc::new(EnclaveValidatorAccessor::default());
 	let genesis_hash =
@@ -470,19 +461,13 @@ pub unsafe extern "C" fn init_light_client(
 			},
 		};
 
-	let file_state_handler = Arc::new(GlobalFileStateHandler);
 	let ocall_api = Arc::new(OcallApi);
-	let stf_executor = Arc::new(StfExecutor::new(ocall_api.clone(), file_state_handler.clone()));
 	let extrinsics_factory =
 		Arc::new(ExtrinsicsFactory::new(genesis_hash, signer.clone(), GLOBAL_NONCE_CACHE.clone()));
-	let indirect_calls_executor =
-		Arc::new(IndirectCallsExecutor::new(shielding_key, stf_executor.clone()));
 	let parentchain_block_importer = Arc::new(ParentchainBlockImporter::new(
 		validator_access,
 		ocall_api.clone(),
-		stf_executor.clone(),
 		extrinsics_factory,
-		indirect_calls_executor,
 	));
 	let block_import_dispatcher = Arc::new(ImmediateDispatcher::new(parentchain_block_importer));
 
