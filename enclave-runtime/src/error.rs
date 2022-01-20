@@ -34,8 +34,6 @@ pub enum Error {
 	Sgx(sgx_status_t),
 	Consensus(its_sidechain::consensus_common::Error),
 	Stf(String),
-	StfStateHandler(itp_stf_state_handler::error::Error),
-	StfExecution(itp_stf_executor::error::Error),
 	ParentchainBlockImportDispatch(itc_parentchain::block_import_dispatcher::error::Error),
 	PrimitivesAccess(itp_primitives_cache::error::Error),
 	MutexAccess,

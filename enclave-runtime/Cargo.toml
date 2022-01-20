@@ -18,8 +18,6 @@ production = ["itp-settings/production"]
 test = [
     "itc-parentchain/mocks",
     "itp-extrinsics-factory/mocks",
-    "itp-stf-executor/test",
-    "itp-stf-state-handler/test",
     "itp-storage/test",
     "itp-test/sgx",
     "its-sidechain/test",
@@ -146,12 +144,6 @@ itp-sgx-crypto = { path = "../core-primitives/sgx/crypto", default-features = fa
     "sgx",
 ] }
 ternoa-sgx-nft = { path = "../core-primitives/sgx/nfts", default-features = false, features = [
-    "sgx",
-] }
-itp-stf-executor = { path = "../core-primitives/stf-executor", default-features = false, features = [
-    "sgx",
-] }
-itp-stf-state-handler = { path = "../core-primitives/stf-state-handler", default-features = false, features = [
     "sgx",
 ] }
 itp-teerex-storage = { path = "../core-primitives/teerex-storage", default-features = false }

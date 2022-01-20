@@ -41,7 +41,6 @@ use crate::{
 	rpc::worker_api_direct::public_api_rpc_handler,
 	utils::{hash_from_slice, write_slice_and_whitespace_pad, DecodeRaw},
 };
-use base58::ToBase58;
 use codec::{alloc::string::String, Decode, Encode};
 use itc_direct_rpc_server::{
 	create_determine_watch, rpc_connection_registry::ConnectionRegistry,
@@ -64,7 +63,6 @@ use itp_settings::node::{
 use itp_sgx_crypto::{aes, ed25519, rsa3072, Ed25519Seal, Rsa3072Seal};
 use itp_sgx_io as io;
 use itp_sgx_io::SealedIO;
-use itp_stf_state_handler::{query_shard_state::QueryShardState, GlobalFileStateHandler};
 use itp_storage::StorageProof;
 use itp_types::{Block, Header, SignedBlock};
 use its_sidechain::top_pool_rpc_author::global_author_container::GLOBAL_RPC_AUTHOR_COMPONENT;
@@ -132,15 +130,6 @@ pub unsafe extern "C" fn init(
 	// It will be overwritten anyway if mutual remote attastation is performed with the primary worker.
 	if let Err(e) = aes::create_sealed_if_absent().map_err(Error::Crypto) {
 		return e.into()
-	}
-
-	let state_handler = GlobalFileStateHandler;
-
-	// For debug purposes, list shards. no problem to panic if fails.
-	let shards = state_handler.list_shards().unwrap();
-	debug!("found the following {} shards on disk:", shards.len());
-	for s in shards {
-		debug!("{}", s.encode().to_base58())
 	}
 
 	let mu_ra_url =
