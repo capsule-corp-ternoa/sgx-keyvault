@@ -11,12 +11,10 @@ sgx_types = { branch = "master", git = "https://github.com/apache/teaclave-sgx-s
 sgx_tstd = { branch = "master", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 
 # local dependencies
-ita-stf = { path = "../../../app-libs/stf", default-features = false }
 itc-parentchain-light-client = { path = "../light-client", default-features = false }
 itp-extrinsics-factory = { path = "../../../core-primitives/extrinsics-factory", default-features = false }
 itp-ocall-api = { path = "../../../core-primitives/ocall-api", default-features = false }
 itp-settings = { path = "../../../core-primitives/settings" }
-itp-stf-executor = { path = "../../../core-primitives/stf-executor", default-features = false }
 itp-types = { path = "../../../core-primitives/types", default-features = false }
 
 # sgx enabled external libraries
@@ -39,11 +37,9 @@ tiny-keccak = { version = "2.0.2", features = ["keccak"] }
 default = ["std"]
 std = [
     # local
-    "ita-stf/std",
     "itc-parentchain-light-client/std",
     "itp-extrinsics-factory/std",
     "itp-ocall-api/std",
-    "itp-stf-executor/std",
     "itp-types/std",
     # no-std compatible libraries
     "codec/std",
@@ -56,10 +52,8 @@ sgx = [
     # sgx
     "sgx_tstd",
     # local
-    "ita-stf/sgx",
     "itc-parentchain-light-client/sgx",
     "itp-extrinsics-factory/sgx",
-    "itp-stf-executor/sgx",
     "itp-types/sgx",
     # sgx enabled external libraries
     "thiserror_sgx",

@@ -2268,12 +2268,10 @@ dependencies = [
 name = "itc-parentchain-block-importer"
 version = "0.8.0"
 dependencies = [
- "ita-stf",
  "itc-parentchain-light-client",
  "itp-extrinsics-factory",
  "itp-ocall-api",
  "itp-settings",
- "itp-stf-executor",
  "itp-types",
  "log 0.4.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec",

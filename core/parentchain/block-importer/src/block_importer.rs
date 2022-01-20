@@ -22,14 +22,13 @@ use crate::{
 	error::Result,
 	ImportParentchainBlocks,
 };
-use ita_stf::ParentchainHeader;
 use itc_parentchain_light_client::{
 	concurrent_access::ValidatorAccess, BlockNumberOps, LightClientState, Validator,
 };
 use itp_extrinsics_factory::CreateExtrinsics;
 use itp_ocall_api::{EnclaveAttestationOCallApi, EnclaveOnChainOCallApi};
 use itp_settings::node::{PROCESSED_PARENTCHAIN_BLOCK, TEEREX_MODULE};
-use itp_types::{OpaqueCall, H256};
+use itp_types::{Header, OpaqueCall, H256};
 use log::*;
 use sp_runtime::{
 	generic::SignedBlock as SignedBlockG,
@@ -55,7 +54,7 @@ where
 impl<PB, ValidatorAccessor, OCallApi, ExtrinsicsFactory>
 	ParentchainBlockImporter<PB, ValidatorAccessor, OCallApi, ExtrinsicsFactory>
 where
-	PB: BlockT<Hash = H256, Header = ParentchainHeader>,
+	PB: BlockT<Hash = H256, Header = Header>,
 	NumberFor<PB>: BlockNumberOps,
 	ValidatorAccessor: ValidatorAccess<PB>,
 	OCallApi: EnclaveOnChainOCallApi + EnclaveAttestationOCallApi,
@@ -78,7 +77,7 @@ where
 impl<PB, ValidatorAccessor, OCallApi, ExtrinsicsFactory> ImportParentchainBlocks
 	for ParentchainBlockImporter<PB, ValidatorAccessor, OCallApi, ExtrinsicsFactory>
 where
-	PB: BlockT<Hash = H256, Header = ParentchainHeader>,
+	PB: BlockT<Hash = H256, Header = Header>,
 	NumberFor<PB>: BlockNumberOps,
 	ValidatorAccessor: ValidatorAccess<PB>,
 	OCallApi: EnclaveOnChainOCallApi + EnclaveAttestationOCallApi,
