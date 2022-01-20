@@ -46,10 +46,6 @@ pub trait EnclaveBase: Send + Sync + 'static {
 		authority_proof: Vec<Vec<u8>>,
 	) -> EnclaveResult<SpHeader>;
 
-	/// Trigger the import of parentchain block explicitly. Used when initializing a light-client
-	/// with a triggered import dispatcher.
-	fn trigger_parentchain_block_import(&self) -> EnclaveResult<()>;
-
 	fn set_nonce(&self, nonce: u32) -> EnclaveResult<()>;
 
 	fn get_rsa_shielding_pubkey(&self) -> EnclaveResult<Rsa3072PubKey>;
@@ -127,17 +123,6 @@ impl EnclaveBase for Enclave {
 		info!("Latest Header {:?}", latest);
 
 		Ok(latest)
-	}
-
-	fn trigger_parentchain_block_import(&self) -> EnclaveResult<()> {
-		let mut retval = sgx_status_t::SGX_SUCCESS;
-
-		let result = unsafe { ffi::trigger_parentchain_block_import(self.eid, &mut retval) };
-
-		ensure!(result == sgx_status_t::SGX_SUCCESS, Error::Sgx(result));
-		ensure!(retval == sgx_status_t::SGX_SUCCESS, Error::Sgx(retval));
-
-		Ok(())
 	}
 
 	fn set_nonce(&self, nonce: u32) -> EnclaveResult<()> {

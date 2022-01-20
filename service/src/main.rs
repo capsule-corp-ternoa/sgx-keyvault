@@ -18,7 +18,7 @@ use crate::{
 	error::Error,
 	global_peer_updater::GlobalPeerUpdater,
 	globals::{
-		tokio_handle::{GetTokioHandle, GlobalTokioHandle},
+		tokio_handle::GlobalTokioHandle,
 		worker::{GlobalWorker, Worker},
 	},
 	node_api_factory::{CreateNodeApi, GlobalUrlNodeApiFactory},
@@ -39,7 +39,6 @@ use enclave::{
 };
 use itp_api_client_extensions::{AccountApi, ChainApi, PalletTeerexApi};
 use itp_enclave_api::{
-	direct_request::DirectRequest,
 	enclave_base::EnclaveBase,
 	remote_attestation::{RemoteAttestation, TlsRemoteAttestation},
 	sidechain::Sidechain,
@@ -73,7 +72,7 @@ use std::{
 		Arc,
 	},
 	thread,
-	time::{Duration, Instant},
+	time::Duration,
 };
 use substrate_api_client::{
 	rpc::WsRpcClient, utils::FromHexString, Api, GenericAddress, Header as HeaderTrait, XtStatus,
@@ -153,16 +152,7 @@ fn main() {
 			Vec::new(),
 		));
 
-		start_worker(
-			config,
-			&shard,
-			enclave,
-			sidechain_blockstorage,
-			skip_ra,
-			dev,
-			node_api,
-			tokio_handle,
-		);
+		start_worker(config, &shard, enclave, sidechain_blockstorage, skip_ra, dev, node_api);
 	} else if let Some(smatches) = matches.subcommand_matches("request-keys") {
 		println!("*** Requesting keys from a registered worker \n");
 		let node_api = node_api_factory.create_api().set_signer(AccountKeyring::Alice.pair());
@@ -234,7 +224,7 @@ fn main() {
 
 /// FIXME: needs some discussion (restructuring?)
 #[allow(clippy::too_many_arguments)]
-fn start_worker<E, T, D>(
+fn start_worker<E, D>(
 	config: Config,
 	shard: &ShardIdentifier,
 	enclave: Arc<E>,
@@ -242,16 +232,8 @@ fn start_worker<E, T, D>(
 	skip_ra: bool,
 	dev: bool,
 	mut node_api: Api<sr25519::Pair, WsRpcClient>,
-	tokio_handle: Arc<T>,
 ) where
-	T: GetTokioHandle,
-	E: EnclaveBase
-		+ DirectRequest
-		+ Sidechain
-		+ RemoteAttestation
-		+ TlsRemoteAttestation
-		+ TeerexApi
-		+ Clone,
+	E: EnclaveBase + Sidechain + RemoteAttestation + TlsRemoteAttestation + TeerexApi + Clone,
 	D: BlockPruner + Sync + Send + 'static,
 {
 	println!("IntegriTEE Worker v{}", VERSION);
@@ -291,20 +273,6 @@ fn start_worker<E, T, D>(
 			.init_direct_invocation_server(direct_invocation_server_addr)
 			.unwrap();
 		println!("[+] RPC direction invocation server shut down");
-	});
-
-	// ------------------------------------------------------------------------
-	// Start untrusted worker rpc server.
-	let handle = tokio_handle.get_handle();
-	// FIXME: this should be removed - this server should only handle untrusted things.
-	// i.e move sidechain block importing to trusted worker.
-	let enclave_for_block_gossip_rpc_server = enclave.clone();
-	let untrusted_url = config.untrusted_worker_url();
-	println!("[+] Untrusted RPC server listening on {}", &untrusted_url);
-	handle.spawn(async move {
-		itc_rpc_server::run_server(&untrusted_url, enclave_for_block_gossip_rpc_server)
-			.await
-			.unwrap()
 	});
 
 	// ------------------------------------------------------------------------
@@ -385,16 +353,6 @@ fn start_worker<E, T, D>(
 		})
 		.unwrap();
 
-	//-------------------------------------------------------------------------
-	// start execution of trusted getters
-	let trusted_getters_enclave_api = enclave;
-	thread::Builder::new()
-		.name("trusted_getters_execution".to_owned())
-		.spawn(move || {
-			start_interval_trusted_getter_execution(trusted_getters_enclave_api.as_ref())
-		})
-		.unwrap();
-
 	// ------------------------------------------------------------------------
 	// start sidechain pruning loop
 	thread::Builder::new()
@@ -427,47 +385,6 @@ fn start_worker<E, T, D>(
 			if let Ok(events) = parse_events(msg.clone()) {
 				print_events(events, sender.clone())
 			}
-		}
-	}
-}
-
-/// Starts the execution of trusted getters in repeating intervals.
-///
-/// The getters are executed in a pre-defined slot duration.
-fn start_interval_trusted_getter_execution<E: Sidechain>(enclave_api: &E) {
-	use itp_settings::enclave::TRUSTED_GETTERS_SLOT_DURATION;
-
-	schedule_on_repeating_intervals(
-		|| {
-			if let Err(e) = enclave_api.execute_trusted_getters() {
-				error!("Execution of trusted getters failed: {:?}", e);
-			}
-		},
-		TRUSTED_GETTERS_SLOT_DURATION,
-	);
-}
-
-/// Schedules a task on perpetually looping intervals.
-///
-/// In case the task takes longer than is scheduled by the interval duration,
-/// the interval timing will drift. The task is responsible for
-/// ensuring it does not use up more time than is scheduled.
-fn schedule_on_repeating_intervals<T>(task: T, interval_duration: Duration)
-where
-	T: Fn(),
-{
-	let mut interval_start = Instant::now();
-	loop {
-		let elapsed = interval_start.elapsed();
-
-		if elapsed >= interval_duration {
-			// update interval time
-			interval_start = Instant::now();
-			task();
-		} else {
-			// sleep for the rest of the interval
-			let sleep_time = interval_duration - elapsed;
-			thread::sleep(sleep_time);
 		}
 	}
 }

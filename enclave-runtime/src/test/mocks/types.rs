@@ -19,11 +19,10 @@
 //! Type definitions for testing. Includes various mocks.
 
 use crate::test::mocks::rpc_responder_mock::RpcResponderMock;
-use itc_parentchain::block_import_dispatcher::trigger_parentchain_block_import_mock::TriggerParentchainBlockImportMock;
 use itp_sgx_crypto::Aes;
 use itp_stf_executor::executor::StfExecutor;
 use itp_test::mock::{handle_state_mock::HandleStateMock, onchain_mock::OnchainMock};
-use itp_types::{Block as ParentchainBlock, SignedBlock as SignedParentchainBlock};
+use itp_types::Block as ParentchainBlock;
 use its_sidechain::{
 	aura::block_importer::BlockImporter,
 	block_composer::BlockComposer,
@@ -53,9 +52,6 @@ pub type TestSidechainDb = SidechainDB<SidechainBlock, SgxExternalities>;
 
 pub type TestOCallApi = OnchainMock;
 
-pub type TestParentchainBlockImportTrigger =
-	TriggerParentchainBlockImportMock<SignedParentchainBlock>;
-
 pub type TestStfExecutor = StfExecutor<TestOCallApi, TestStateHandler, SgxExternalities>;
 
 pub type TestRpcResponder = RpcResponderMock<H256>;
@@ -80,5 +76,4 @@ pub type TestBlockImporter = BlockImporter<
 	HandleStateMock,
 	Aes,
 	TestTopPoolExecutor,
-	TestParentchainBlockImportTrigger,
 >;

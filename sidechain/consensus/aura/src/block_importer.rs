@@ -22,7 +22,6 @@ pub use its_consensus_common::BlockImport;
 
 use crate::{AuraVerifier, SidechainBlockT};
 use ita_stf::hash::TrustedOperationOrHash;
-use itc_parentchain_block_import_dispatcher::triggered_dispatcher::TriggerParentchainBlockImport;
 use itp_ocall_api::EnclaveSidechainOCallApi;
 use itp_settings::sidechain::SLOT_DURATION;
 use itp_sgx_crypto::StateCrypto;
@@ -38,9 +37,7 @@ use its_validateer_fetch::ValidateerFetch;
 use log::*;
 use sgx_externalities::SgxExternalities;
 use sp_core::Pair;
-use sp_runtime::{
-	generic::SignedBlock as SignedParentchainBlockGeneric, traits::Block as ParentchainBlockTrait,
-};
+use sp_runtime::traits::Block as ParentchainBlockTrait;
 use std::{marker::PhantomData, sync::Arc, vec::Vec};
 
 /// Implements `BlockImport`.
@@ -54,39 +51,18 @@ pub struct BlockImporter<
 	StateHandler,
 	StateKey,
 	TopPoolExecutor,
-	ParentchainBlockImportTrigger,
 > {
 	state_handler: Arc<StateHandler>,
 	state_key: StateKey,
 	authority: Authority,
 	top_pool_executor: Arc<TopPoolExecutor>,
-	parentchain_block_import_trigger: Arc<ParentchainBlockImportTrigger>,
 	ocall_api: Arc<OCallApi>,
 	_phantom: PhantomData<(PB, SB, SidechainState)>,
 }
 
-impl<
-		Authority,
-		PB,
-		SB,
-		OCallApi,
-		SidechainState,
-		StateHandler,
-		StateKey,
-		TopPoolExecutor,
-		ParentchainBlockImportTrigger,
-	>
-	BlockImporter<
-		Authority,
-		PB,
-		SB,
-		OCallApi,
-		SidechainState,
-		StateHandler,
-		StateKey,
-		TopPoolExecutor,
-		ParentchainBlockImportTrigger,
-	> where
+impl<Authority, PB, SB, OCallApi, SidechainState, StateHandler, StateKey, TopPoolExecutor>
+	BlockImporter<Authority, PB, SB, OCallApi, SidechainState, StateHandler, StateKey, TopPoolExecutor>
+where
 	Authority: Pair,
 	Authority::Public: std::fmt::Debug,
 	PB: ParentchainBlockTrait<Hash = H256>,
@@ -96,15 +72,12 @@ impl<
 	StateHandler: HandleState<StateT = SgxExternalities>,
 	StateKey: StateCrypto + Copy,
 	TopPoolExecutor: TopPoolCallOperator<PB, SB> + Send + Sync + 'static,
-	ParentchainBlockImportTrigger:
-		TriggerParentchainBlockImport<SignedParentchainBlockGeneric<PB>> + Send + Sync,
 {
 	pub fn new(
 		state_handler: Arc<StateHandler>,
 		state_key: StateKey,
 		authority: Authority,
 		top_pool_executor: Arc<TopPoolExecutor>,
-		parentchain_block_import_trigger: Arc<ParentchainBlockImportTrigger>,
 		ocall_api: Arc<OCallApi>,
 	) -> Self {
 		Self {
@@ -112,7 +85,6 @@ impl<
 			state_key,
 			authority,
 			top_pool_executor,
-			parentchain_block_import_trigger,
 			ocall_api,
 			_phantom: Default::default(),
 		}
@@ -147,16 +119,7 @@ impl<
 	}
 }
 
-impl<
-		Authority,
-		PB,
-		SB,
-		OCallApi,
-		StateHandler,
-		StateKey,
-		TopPoolExecutor,
-		ParentchainBlockImportTrigger,
-	> BlockImport<PB, SB>
+impl<Authority, PB, SB, OCallApi, StateHandler, StateKey, TopPoolExecutor> BlockImport<PB, SB>
 	for BlockImporter<
 		Authority,
 		PB,
@@ -166,7 +129,6 @@ impl<
 		StateHandler,
 		StateKey,
 		TopPoolExecutor,
-		ParentchainBlockImportTrigger,
 	> where
 	Authority: Pair,
 	Authority::Public: std::fmt::Debug,
@@ -177,8 +139,6 @@ impl<
 	StateHandler: HandleState<StateT = SgxExternalities>,
 	StateKey: StateCrypto + Copy,
 	TopPoolExecutor: TopPoolCallOperator<PB, SB> + Send + Sync + 'static,
-	ParentchainBlockImportTrigger:
-		TriggerParentchainBlockImport<SignedParentchainBlockGeneric<PB>> + Send + Sync,
 {
 	type Verifier =
 		AuraVerifier<Authority, PB, SB, SidechainDB<SB::Block, SgxExternalities>, OCallApi>;
@@ -222,21 +182,10 @@ impl<
 
 	fn import_parentchain_block(
 		&self,
-		sidechain_block: &SB::Block,
-		last_imported_parentchain_header: &PB::Header,
+		_sidechain_block: &SB::Block,
+		_last_imported_parentchain_header: &PB::Header,
 	) -> Result<PB::Header, ConsensusError> {
-		// We trigger the import of parentchain blocks up until the last one we've seen in the
-		// sidechain block that we're importing. This is done to prevent forks in the sidechain (#423)
-		let maybe_latest_imported_block = self
-			.parentchain_block_import_trigger
-			.import_until(|signed_parentchain_block| {
-				signed_parentchain_block.block.hash() == sidechain_block.layer_one_head()
-			})
-			.map_err(|e| ConsensusError::Other(format!("{:?}", e).into()))?;
-
-		Ok(maybe_latest_imported_block
-			.map(|b| b.block.header().clone())
-			.unwrap_or_else(|| last_imported_parentchain_header.clone()))
+		unimplemented!()
 	}
 
 	fn cleanup(&self, signed_sidechain_block: &SB) -> Result<(), ConsensusError> {

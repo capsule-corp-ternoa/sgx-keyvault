@@ -11,7 +11,6 @@ members = [
     "core/parentchain/parentchain-crate",
     "core/rest-client",
     "core/rpc-client",
-    "core/rpc-server",
     "core/tls-websocket-server",
     "core-primitives/api-client-extensions",
     "core-primitives/component-container",

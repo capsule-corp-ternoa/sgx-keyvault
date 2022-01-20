@@ -273,7 +273,6 @@ fn slot_author<P: Pair>(slot: Slot, authorities: &[AuthorityId<P>]) -> Option<&A
 mod tests {
 	use super::*;
 	use crate::mock::{default_header, validateer, EnvironmentMock, TestAura, SLOT_DURATION};
-	use itc_parentchain_block_import_dispatcher::trigger_parentchain_block_import_mock::TriggerParentchainBlockImportMock;
 	use itp_test::{
 		builders::{
 			parentchain_block_builder::ParentchainBlockBuilder,

@@ -22,34 +22,15 @@
 
 use crate::ocall::OcallApi;
 use itc_parentchain::{
-	block_import_dispatcher::{
-		immediate_dispatcher::ImmediateDispatcher, triggered_dispatcher::TriggeredDispatcher,
-	},
-	block_import_queue::BlockImportQueue,
-	block_importer::ParentchainBlockImporter,
-	light_client::ValidatorAccessor,
+	block_import_dispatcher::immediate_dispatcher::ImmediateDispatcher,
+	block_importer::ParentchainBlockImporter, light_client::ValidatorAccessor,
 };
 use itp_component_container::ComponentContainer;
 use itp_extrinsics_factory::ExtrinsicsFactory;
 use itp_nonce_cache::NonceCache;
-use itp_sgx_crypto::Aes;
-use itp_stf_executor::executor::StfExecutor;
-use itp_stf_state_handler::GlobalFileStateHandler;
-use itp_types::{Block as ParentchainBlock, SignedBlock as SignedParentchainBlock};
-use its_sidechain::{
-	aura::block_importer::BlockImporter as SidechainBlockImporter,
-	primitives::{
-		traits::SignedBlock as SignedSidechainBlockTrait,
-		types::SignedBlock as SignedSidechainBlock,
-	},
-	state::SidechainDB,
-	top_pool_executor::TopPoolOperationHandler,
-	top_pool_rpc_author::global_author_container::EnclaveRpcAuthor,
-};
-use sgx_externalities::SgxExternalities;
+use itp_types::Block as ParentchainBlock;
 use sp_core::ed25519::Pair;
 
-pub type EnclaveStfExecutor = StfExecutor<OcallApi, GlobalFileStateHandler, SgxExternalities>;
 pub type EnclaveExtrinsicsFactory = ExtrinsicsFactory<Pair, NonceCache>;
 pub type EnclaveValidatorAccessor = ValidatorAccessor<ParentchainBlock>;
 pub type EnclaveParentChainBlockImporter = ParentchainBlockImporter<
@@ -58,41 +39,9 @@ pub type EnclaveParentChainBlockImporter = ParentchainBlockImporter<
 	OcallApi,
 	EnclaveExtrinsicsFactory,
 >;
-pub type EnclaveBlockImportQueue = BlockImportQueue<SignedParentchainBlock>;
-pub type EnclaveParentchainBlockImportDispatcher =
-	TriggeredDispatcher<EnclaveParentChainBlockImporter, EnclaveBlockImportQueue>;
 pub type EnclaveParentchainBlockImportImmediateDispatcher =
 	ImmediateDispatcher<EnclaveParentChainBlockImporter>;
 
-/// Sidechain types
-pub type EnclaveSidechainState =
-	SidechainDB<<SignedSidechainBlock as SignedSidechainBlockTrait>::Block, SgxExternalities>;
-pub type EnclaveTopPoolOperationHandler = TopPoolOperationHandler<
-	ParentchainBlock,
-	SignedSidechainBlock,
-	EnclaveRpcAuthor,
-	EnclaveStfExecutor,
->;
-pub type EnclaveSidechainBlockImporter = SidechainBlockImporter<
-	Pair,
-	ParentchainBlock,
-	SignedSidechainBlock,
-	OcallApi,
-	EnclaveSidechainState,
-	GlobalFileStateHandler,
-	Aes,
-	EnclaveTopPoolOperationHandler,
-	EnclaveParentchainBlockImportDispatcher,
->;
-
-pub static GLOBAL_PARENTCHAIN_IMPORT_DISPATCHER_COMPONENT: ComponentContainer<
-	EnclaveParentchainBlockImportDispatcher,
-> = ComponentContainer::new();
-
 pub static GLOBAL_PARENTCHAIN_IMPORT_IMMEDIATE_DISPATCHER_COMPONENT: ComponentContainer<
 	EnclaveParentchainBlockImportImmediateDispatcher,
-> = ComponentContainer::new();
-
-pub static GLOBAL_SIDECHAIN_BLOCK_IMPORTER_COMPONENT: ComponentContainer<
-	EnclaveSidechainBlockImporter,
 > = ComponentContainer::new();

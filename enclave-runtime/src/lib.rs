@@ -35,14 +35,11 @@ use sgx_types::size_t;
 use crate::{
 	error::{Error, Result},
 	global_components::{
-		EnclaveValidatorAccessor, GLOBAL_PARENTCHAIN_IMPORT_DISPATCHER_COMPONENT,
-		GLOBAL_PARENTCHAIN_IMPORT_IMMEDIATE_DISPATCHER_COMPONENT,
-		GLOBAL_SIDECHAIN_BLOCK_IMPORTER_COMPONENT,
+		EnclaveValidatorAccessor, GLOBAL_PARENTCHAIN_IMPORT_IMMEDIATE_DISPATCHER_COMPONENT,
 	},
 	ocall::OcallApi,
-	rpc::worker_api_direct::{public_api_rpc_handler, sidechain_io_handler},
-	sync::{EnclaveLock, EnclaveStateRWLock},
-	utils::{hash_from_slice, utf8_str_from_raw, write_slice_and_whitespace_pad, DecodeRaw},
+	rpc::worker_api_direct::public_api_rpc_handler,
+	utils::{hash_from_slice, write_slice_and_whitespace_pad, DecodeRaw},
 };
 use base58::ToBase58;
 use codec::{alloc::string::String, Decode, Encode};
@@ -51,10 +48,7 @@ use itc_direct_rpc_server::{
 	rpc_ws_handler::RpcWsHandler,
 };
 use itc_parentchain::{
-	block_import_dispatcher::{
-		immediate_dispatcher::ImmediateDispatcher,
-		triggered_dispatcher::TriggerParentchainBlockImport, DispatchBlockImport,
-	},
+	block_import_dispatcher::{immediate_dispatcher::ImmediateDispatcher, DispatchBlockImport},
 	block_importer::ParentchainBlockImporter,
 	light_client::{concurrent_access::ValidatorAccess, LightClientState},
 };
@@ -73,10 +67,7 @@ use itp_sgx_io::SealedIO;
 use itp_stf_state_handler::{query_shard_state::QueryShardState, GlobalFileStateHandler};
 use itp_storage::StorageProof;
 use itp_types::{Block, Header, SignedBlock};
-use its_sidechain::{
-	aura::block_importer::BlockImport,
-	top_pool_rpc_author::global_author_container::GLOBAL_RPC_AUTHOR_COMPONENT,
-};
+use its_sidechain::top_pool_rpc_author::global_author_container::GLOBAL_RPC_AUTHOR_COMPONENT;
 use log::*;
 use sgx_types::sgx_status_t;
 use sp_core::crypto::Pair;
@@ -95,7 +86,6 @@ pub mod error;
 pub mod rpc;
 mod sync;
 pub mod tls_ra;
-pub mod top_pool_execution;
 
 #[cfg(feature = "test")]
 pub mod test;
@@ -291,58 +281,6 @@ pub unsafe extern "C" fn mock_register_enclave_xt(
 	sgx_status_t::SGX_SUCCESS
 }
 
-/// this is reduced to the side chain block import RPC interface (i.e. worker-worker communication)
-/// the entire rest of the RPC server is run inside the enclave and does not use this e-call function anymore
-#[no_mangle]
-pub unsafe extern "C" fn call_rpc_methods(
-	request: *const u8,
-	request_len: u32,
-	response: *mut u8,
-	response_len: u32,
-) -> sgx_status_t {
-	let request = match utf8_str_from_raw(request, request_len as usize) {
-		Ok(req) => req,
-		Err(e) => {
-			error!("[SidechainRpc] FFI: Invalid utf8 request: {:?}", e);
-			return sgx_status_t::SGX_ERROR_UNEXPECTED
-		},
-	};
-
-	let res = match sidechain_rpc_int(request) {
-		Ok(res) => res,
-		Err(e) => return e.into(),
-	};
-
-	let response_slice = slice::from_raw_parts_mut(response, response_len as usize);
-	write_slice_and_whitespace_pad(response_slice, res.into_bytes());
-
-	sgx_status_t::SGX_SUCCESS
-}
-
-fn sidechain_rpc_int(request: &str) -> Result<String> {
-	let _sidechain_lock = EnclaveLock::write_all()?;
-
-	let validator_access = Arc::new(EnclaveValidatorAccessor::default());
-
-	let latest_parentchain_header = validator_access.execute_on_validator(|v| {
-		let latest_parentchain_header = v.latest_finalized_header(v.num_relays())?;
-		Ok(latest_parentchain_header)
-	})?;
-
-	let sidechain_block_importer = GLOBAL_SIDECHAIN_BLOCK_IMPORTER_COMPONENT
-		.get()
-		.ok_or(Error::ComponentNotInitialized)?;
-
-	let io = sidechain_io_handler(move |signed_block| {
-		sidechain_block_importer.import_block(signed_block, &latest_parentchain_header)
-	});
-
-	// note: errors are still returned as Option<String>
-	Ok(io
-		.handle_request_sync(request)
-		.unwrap_or_else(|| format!("Empty rpc response for request: {}", request)))
-}
-
 /// Call this once at worker startup to initialize the TOP pool and direct invocation RPC server.
 ///
 /// This function will run the RPC server on the same thread as it is called and will loop there.
@@ -508,23 +446,4 @@ fn sync_parentchain_internal(blocks_to_sync: Vec<SignedBlock>) -> Result<()> {
 		.ok_or(Error::ComponentNotInitialized)?;
 
 	block_import_dispatcher.dispatch_import(blocks_to_sync).map_err(|e| e.into())
-}
-
-/// Triggers the import of parentchain blocks when using a queue to sync parentchain block import
-/// with sidechain block production.
-///
-/// This trigger is only useful in combination with a `TriggeredDispatcher` and sidechain. In case no
-/// sidechain and the `ImmediateDispatcher` are used, this function is obsolete.
-#[no_mangle]
-pub unsafe extern "C" fn trigger_parentchain_block_import() -> sgx_status_t {
-	match GLOBAL_PARENTCHAIN_IMPORT_DISPATCHER_COMPONENT.get() {
-		Some(dispatcher) => match dispatcher.import_all() {
-			Ok(_) => sgx_status_t::SGX_SUCCESS,
-			Err(e) => {
-				error!("Failed to trigger import of parentchain blocks: {:?}", e);
-				sgx_status_t::SGX_ERROR_UNEXPECTED
-			},
-		},
-		None => (Error::ComponentNotInitialized).into(),
-	}
 }
