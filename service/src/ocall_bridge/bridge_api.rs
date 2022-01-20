@@ -54,14 +54,6 @@ impl Bridge {
 			.get_ra_api()
 	}
 
-	pub fn get_sidechain_api() -> Arc<dyn SidechainBridge> {
-		COMPONENT_FACTORY
-			.read()
-			.as_ref()
-			.expect("Component factory has not been set. Use `initialize()`")
-			.get_sidechain_api()
-	}
-
 	pub fn get_oc_api() -> Arc<dyn WorkerOnChainBridge> {
 		debug!("Requesting WorkerOnChain OCall API instance");
 
