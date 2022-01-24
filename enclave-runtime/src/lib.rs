@@ -65,7 +65,6 @@ use itp_sgx_io as io;
 use itp_sgx_io::SealedIO;
 use itp_storage::StorageProof;
 use itp_types::{Block, Header, SignedBlock};
-use its_sidechain::top_pool_rpc_author::global_author_container::GLOBAL_RPC_AUTHOR_COMPONENT;
 use log::*;
 use sgx_types::sgx_status_t;
 use sp_core::crypto::Pair;
@@ -293,28 +292,7 @@ pub unsafe extern "C" fn init_direct_invocation_server(
 	let watch_extractor = Arc::new(create_determine_watch::<Hash>());
 	let connection_registry = Arc::new(ConnectionRegistry::<Hash, TungsteniteWsConnection>::new());
 
-	let rsa_shielding_key = match Rsa3072Seal::unseal() {
-		Ok(k) => k,
-		Err(e) => {
-			error!("Failed to unseal shielding key: {:?}", e);
-			return sgx_status_t::SGX_ERROR_UNEXPECTED
-		},
-	};
-
-	its_sidechain::top_pool_rpc_author::initializer::initialize_top_pool_rpc_author(
-		connection_registry.clone(),
-		rsa_shielding_key,
-	);
-
-	let rpc_author = match GLOBAL_RPC_AUTHOR_COMPONENT.get() {
-		Some(a) => a,
-		None => {
-			error!("Failed to retrieve global top pool author");
-			return sgx_status_t::SGX_ERROR_UNEXPECTED
-		},
-	};
-
-	let io_handler = public_api_rpc_handler(rpc_author);
+	let io_handler = public_api_rpc_handler();
 	let rpc_handler = Arc::new(RpcWsHandler::new(io_handler, watch_extractor, connection_registry));
 
 	run_ws_server(server_addr.as_str(), rpc_handler);

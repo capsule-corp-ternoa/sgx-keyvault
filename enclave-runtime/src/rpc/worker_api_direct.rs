@@ -26,12 +26,7 @@ use itp_sgx_io::SealedIO;
 use itp_storage_verifier::GetStorageVerified;
 use itp_types::{
 	AccountId, DirectRequestStatus, NFTData, RetrieveNftSecretRequest, RpcReturnValue,
-	SignedRequest, StoreNftSecretRequest, H256,
-};
-use its_sidechain::{
-	primitives::types::SignedBlock,
-	rpc_handler::{direct_top_pool_api, import_block_api},
-	top_pool_rpc_author::traits::AuthorApi,
+	SignedRequest, StoreNftSecretRequest,
 };
 use jsonrpc_core::{serde_json::json, Error, IoHandler, Params, Value};
 use std::{borrow::ToOwned, format, str, string::String, sync::Arc, vec::Vec};
@@ -51,14 +46,8 @@ fn get_all_rpc_methods_string(io_handler: &IoHandler) -> String {
 	format!("methods: [{}]", method_string)
 }
 
-pub fn public_api_rpc_handler<R>(rpc_author: Arc<R>) -> IoHandler
-where
-	R: AuthorApi<H256, H256> + Send + Sync + 'static,
-{
-	let io = IoHandler::new();
-
-	// Add direct TOP pool rpc methods
-	let mut io = direct_top_pool_api::add_top_pool_direct_rpc_methods(rpc_author, io);
+pub fn public_api_rpc_handler() -> IoHandler {
+	let mut io = IoHandler::new();
 
 	// nft_storeSecret
 	let nft_store_secret_name: &str = "nft_storeSecret";
@@ -228,15 +217,6 @@ where
 	});
 
 	io
-}
-
-pub fn sidechain_io_handler<ImportFn, Error>(import_fn: ImportFn) -> IoHandler
-where
-	ImportFn: Fn(SignedBlock) -> Result<(), Error> + Sync + Send + 'static,
-	Error: std::fmt::Debug,
-{
-	let io = IoHandler::new();
-	import_block_api::add_import_block_rpc_method(import_fn, io)
 }
 
 pub fn get_verified_nft_owner(nft_id: u32) -> Result<AccountId, Error> {
