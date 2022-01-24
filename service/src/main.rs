@@ -431,7 +431,6 @@ pub fn init_light_client<E: EnclaveBase + Sidechain>(
 	api: &Api<sr25519::Pair, WsRpcClient>,
 	enclave_api: Arc<E>,
 ) -> Result<Header, Error> {
-	std::println!("init_light_client");
 	let genesis_hash = api.get_genesis_hash().unwrap();
 	let genesis_header: Header = api.get_header(Some(genesis_hash)).unwrap().unwrap();
 	info!("Got genesis Header: \n {:?} \n", genesis_header);

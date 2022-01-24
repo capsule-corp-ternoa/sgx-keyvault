@@ -1399,27 +1399,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "itp-stf-state-handler"
-version = "0.8.0"
-dependencies = [
- "ita-stf",
- "itp-settings",
- "itp-sgx-crypto",
- "itp-sgx-io",
- "itp-types",
- "lazy_static",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "rust-base58",
- "sgx-externalities",
- "sgx_tcrypto",
- "sgx_tstd",
- "sgx_types",
- "sp-core",
- "thiserror 1.0.9",
-]
-
-[[package]]
 name = "itp-storage"
 version = "0.8.0"
 dependencies = [
@@ -1464,10 +1443,8 @@ name = "itp-test"
 version = "0.8.0"
 dependencies = [
  "derive_more",
- "ita-stf",
  "itp-ocall-api",
  "itp-sgx-crypto",
- "itp-stf-state-handler",
  "itp-storage",
  "itp-storage-verifier",
  "itp-teerex-storage",

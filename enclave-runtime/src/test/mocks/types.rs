@@ -20,7 +20,7 @@
 
 use crate::test::mocks::rpc_responder_mock::RpcResponderMock;
 use itp_sgx_crypto::Aes;
-use itp_test::mock::{handle_state_mock::HandleStateMock, onchain_mock::OnchainMock};
+use itp_test::mock::onchain_mock::OnchainMock;
 use primitive_types::H256;
 use sgx_crypto_helper::rsa3072::Rsa3072KeyPair;
 use sp_core::ed25519 as spEd25519;
@@ -30,8 +30,6 @@ pub type TestSigner = spEd25519::Pair;
 pub type TestShieldingKey = Rsa3072KeyPair;
 
 pub type TestStateKey = Aes;
-
-pub type TestStateHandler = HandleStateMock;
 
 pub type TestOCallApi = OnchainMock;
 

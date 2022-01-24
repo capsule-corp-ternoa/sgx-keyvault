@@ -23,8 +23,6 @@ members = [
     "core-primitives/settings",
     "core-primitives/sgx/crypto",
     "core-primitives/sgx/io",
-    "core-primitives/stf-executor",
-    "core-primitives/stf-state-handler",
     "core-primitives/storage",
     "core-primitives/storage-verified",
     "core-primitives/teerex-storage",
@@ -32,18 +30,6 @@ members = [
     "core-primitives/time-utils",
     "core-primitives/types",
     "service",
-    "sidechain/block-composer",
-    "sidechain/consensus/aura",
-    "sidechain/consensus/common",
-    "sidechain/consensus/slots",
-    "sidechain/primitives",
-    "sidechain/rpc-handler",
-    "sidechain/sidechain-crate",
-    "sidechain/state",
-    "sidechain/top-pool",
-    "sidechain/top-pool-executor",
-    "sidechain/top-pool-rpc-author",
-    "sidechain/validateer-fetch",
 ]
 
 [patch."https://github.com/apache/teaclave-sgx-sdk.git"]

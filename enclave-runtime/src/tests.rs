@@ -23,16 +23,13 @@ use crate::{
 };
 use itp_ocall_api::EnclaveAttestationOCallApi;
 use itp_sgx_crypto::Aes;
-use itp_test::mock::{
-	handle_state_mock, handle_state_mock::HandleStateMock,
-	shielding_crypto_mock::ShieldingCryptoMock,
-};
+use itp_test::mock::shielding_crypto_mock::ShieldingCryptoMock;
 use itp_types::{Header, MrEnclave};
 use sgx_tunittest::*;
 use sgx_types::size_t;
 use sp_core::{crypto::Pair, ed25519 as spEd25519};
 use sp_runtime::traits::Header as HeaderT;
-use std::{string::String, sync::Arc, vec::Vec};
+use std::{string::String, vec::Vec};
 
 #[no_mangle]
 pub extern "C" fn test_main_entrance() -> size_t {
@@ -41,12 +38,6 @@ pub extern "C" fn test_main_entrance() -> size_t {
 		// needs node to be running.. unit tests?
 		// test_ocall_worker_request,
 		rpc::worker_api_direct::tests::test_given_io_handler_methods_then_retrieve_all_names_as_string,
-		handle_state_mock::tests::initialized_shards_list_is_empty,
-		handle_state_mock::tests::shard_exists_after_inserting,
-		handle_state_mock::tests::load_initialized_inserts_default_state,
-		handle_state_mock::tests::load_mutate_and_write_works,
-		handle_state_mock::tests::ensure_subsequent_state_loads_have_same_hash,
-		handle_state_mock::tests::ensure_encode_and_encrypt_does_not_affect_state_hash,
 		// mra cert tests
 		test_verify_mra_cert_should_work,
 		test_verify_wrong_cert_is_err,
@@ -68,12 +59,11 @@ pub fn state_key() -> Aes {
 
 /// Returns all the things that are commonly used in tests and runs
 /// `ensure_no_empty_shard_directory_exists`
-pub fn test_setup() -> (MrEnclave, ShieldingCryptoMock, Arc<HandleStateMock>) {
-	let state_handler = Arc::new(HandleStateMock::default());
+pub fn test_setup() -> (MrEnclave, ShieldingCryptoMock) {
 	let mrenclave = OcallApi.get_mrenclave_of_self().unwrap().m;
 
 	let encryption_key = ShieldingCryptoMock::default();
-	(mrenclave, encryption_key, state_handler)
+	(mrenclave, encryption_key)
 }
 
 /// Some random account that has no funds in the `Stf`'s `test_genesis` config.

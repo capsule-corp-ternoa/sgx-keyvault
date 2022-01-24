@@ -27,9 +27,7 @@ sp-runtime = { version = "4.0.0-dev", default-features = false, git = "https://g
 sp-std = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
 # local deps
-ita-stf = { path = "../../app-libs/stf", default-features = false }
 itp-sgx-crypto = { path = "../sgx/crypto", default-features = false }
-itp-stf-state-handler = { path = "../stf-state-handler", default-features = false }
 itp-teerex-storage = { path = "../teerex-storage", default-features = false }
 itp-types = { path = "../types", default-features = false }
 itp-ocall-api = { path = "../ocall-api", default-features = false }
@@ -48,7 +46,6 @@ std = [
     "sp-runtime/std",
     "sp-std/std",
     "itp-sgx-crypto/std",
-    "itp-stf-state-handler/std",
     "itp-storage/std",
     "itp-teerex-storage/std",
     "itp-types/std",
@@ -60,9 +57,7 @@ std = [
 sgx = [
     "sgx_tstd",
     "sgx-crypto-helper",
-    "ita-stf/sgx",
     "itp-sgx-crypto/sgx",
-    "itp-stf-state-handler/sgx",
     "its-top-pool/sgx",
     "jsonrpc-core_sgx",
     "sgx-externalities/sgx",
