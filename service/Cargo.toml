@@ -44,7 +44,6 @@ sgx_types = { branch = "master", git = "https://github.com/apache/teaclave-sgx-s
 sgx_crypto_helper = { branch = "master", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 
 # local
-ita-stf = { path = "../app-libs/stf" }
 itc-rpc-client = { path = "../core/rpc-client" }
 itp-api-client-extensions = { path = "../core-primitives/api-client-extensions" }
 itp-enclave-api = { path = "../core-primitives/enclave-api" }

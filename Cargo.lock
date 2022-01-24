@@ -2058,7 +2058,6 @@ dependencies = [
  "futures 0.3.18",
  "hex",
  "ipfs-api",
- "ita-stf",
  "itc-rpc-client",
  "itp-api-client-extensions",
  "itp-enclave-api",
