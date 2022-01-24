@@ -50,8 +50,6 @@ itp-enclave-api = { path = "../core-primitives/enclave-api" }
 itp-settings = { path = "../core-primitives/settings" }
 itp-test = { path = "../core-primitives/test" }
 itp-types = { path = "../core-primitives/types" }
-its-consensus-slots = { path = "../sidechain/consensus/slots" }
-its-primitives = { path = "../sidechain/primitives" }
 
 # scs / integritee
 substrate-api-client = { git = "https://github.com/scs/substrate-api-client", branch = "master" }

@@ -2019,8 +2019,6 @@ dependencies = [
  "itp-settings",
  "itp-test",
  "itp-types",
- "its-consensus-slots",
- "its-primitives",
  "its-test",
  "jsonrpsee",
  "lazy_static",

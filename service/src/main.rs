@@ -119,12 +119,7 @@ fn main() {
 
 		let node_api = node_api_factory.create_api().set_signer(AccountKeyring::Alice.pair());
 
-		GlobalWorker::reset_worker(Worker::new(
-			config.clone(),
-			node_api.clone(),
-			enclave.clone(),
-			Vec::new(),
-		));
+		GlobalWorker::reset_worker(Worker::new(config.clone(), node_api.clone(), enclave.clone()));
 
 		start_worker(config, &shard, enclave, skip_ra, dev, node_api);
 	} else if let Some(smatches) = matches.subcommand_matches("request-keys") {
