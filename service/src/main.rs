@@ -16,17 +16,12 @@
 */
 use crate::{
 	error::Error,
-	global_peer_updater::GlobalPeerUpdater,
-	globals::{
-		tokio_handle::GlobalTokioHandle,
-		worker::{GlobalWorker, Worker},
-	},
+	globals::worker::{GlobalWorker, Worker},
 	node_api_factory::{CreateNodeApi, GlobalUrlNodeApiFactory},
 	ocall_bridge::{
 		bridge_api::Bridge as OCallBridge, component_factory::OCallBridgeComponentFactory,
 	},
 	parentchain_block_syncer::{ParentchainBlockSyncer, SyncParentchainBlocks},
-	sync_block_gossiper::SyncBlockGossiper,
 	utils::{check_files, extract_shard},
 };
 use base58::ToBase58;
@@ -45,14 +40,9 @@ use itp_enclave_api::{
 	teerex_api::TeerexApi,
 };
 use itp_settings::{
-	files::{
-		ENCRYPTED_STATE_FILE, SHARDS_PATH, SHIELDING_KEY_FILE, SIDECHAIN_PURGE_INTERVAL,
-		SIDECHAIN_PURGE_LIMIT, SIDECHAIN_STORAGE_PATH, SIGNING_KEY_FILE,
-	},
+	files::{ENCRYPTED_STATE_FILE, SHARDS_PATH, SHIELDING_KEY_FILE, SIGNING_KEY_FILE},
 	worker::{EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS, REGISTERING_FEE_FACTOR_FOR_INIT_FUNDS},
 };
-use its_primitives::types::SignedBlock as SignedSidechainBlock;
-use its_storage::{start_sidechain_pruning_loop, BlockPruner, SidechainStorageLock};
 use log::*;
 use my_node_runtime::{Event, Hash, Header};
 use sgx_types::*;
@@ -65,7 +55,7 @@ use sp_keyring::AccountKeyring;
 use std::{
 	fs::{self, File},
 	io::{stdin, Write},
-	path::{Path, PathBuf},
+	path::Path,
 	str,
 	sync::{
 		mpsc::{channel, Sender},
@@ -82,13 +72,11 @@ use teerex_primitives::ShardIdentifier;
 mod config;
 mod enclave;
 mod error;
-mod global_peer_updater;
 mod globals;
 mod node_api_factory;
 mod ocall_bridge;
 mod parentchain_block_syncer;
 mod request_keys;
-mod sync_block_gossiper;
 mod tests;
 mod utils;
 mod worker;
@@ -105,8 +93,6 @@ fn main() {
 
 	let config = Config::from(&matches);
 
-	GlobalTokioHandle::initialize();
-
 	// log this information, don't println because some python scripts for GA rely on the
 	// stdout from the service
 	#[cfg(feature = "production")]
@@ -115,25 +101,13 @@ fn main() {
 	info!("*** Starting service in SGX debug mode");
 
 	// build the entire dependency tree
-	let worker = Arc::new(GlobalWorker {});
-	let tokio_handle = Arc::new(GlobalTokioHandle {});
-	let sync_block_gossiper =
-		Arc::new(SyncBlockGossiper::new(tokio_handle.clone(), worker.clone()));
-	let peer_updater = Arc::new(GlobalPeerUpdater::new(worker));
-	let sidechain_blockstorage = Arc::new(
-		SidechainStorageLock::<SignedSidechainBlock>::new(PathBuf::from(&SIDECHAIN_STORAGE_PATH))
-			.unwrap(),
-	);
 	let node_api_factory = Arc::new(GlobalUrlNodeApiFactory::new(config.node_url()));
 	let enclave = Arc::new(enclave_init(&config).unwrap());
 
 	// initialize o-call bridge with a concrete factory implementation
 	OCallBridge::initialize(Arc::new(OCallBridgeComponentFactory::new(
 		node_api_factory.clone(),
-		sync_block_gossiper,
 		enclave.clone(),
-		sidechain_blockstorage.clone(),
-		peer_updater,
 	)));
 
 	if let Some(smatches) = matches.subcommand_matches("run") {
@@ -152,7 +126,7 @@ fn main() {
 			Vec::new(),
 		));
 
-		start_worker(config, &shard, enclave, sidechain_blockstorage, skip_ra, dev, node_api);
+		start_worker(config, &shard, enclave, skip_ra, dev, node_api);
 	} else if let Some(smatches) = matches.subcommand_matches("request-keys") {
 		println!("*** Requesting keys from a registered worker \n");
 		let node_api = node_api_factory.create_api().set_signer(AccountKeyring::Alice.pair());
@@ -224,17 +198,15 @@ fn main() {
 
 /// FIXME: needs some discussion (restructuring?)
 #[allow(clippy::too_many_arguments)]
-fn start_worker<E, D>(
+fn start_worker<E>(
 	config: Config,
 	shard: &ShardIdentifier,
 	enclave: Arc<E>,
-	sidechain_storage: Arc<D>,
 	skip_ra: bool,
 	dev: bool,
 	mut node_api: Api<sr25519::Pair, WsRpcClient>,
 ) where
 	E: EnclaveBase + Sidechain + RemoteAttestation + TlsRemoteAttestation + TeerexApi + Clone,
-	D: BlockPruner + Sync + Send + 'static,
 {
 	println!("IntegriTEE Worker v{}", VERSION);
 	info!("starting worker on shard {}", shard.encode().to_base58());
@@ -350,19 +322,6 @@ fn start_worker<E, D>(
 				error!("Parentchain block syncing terminated with a failure: {:?}", e);
 			}
 			println!("[+] Parentchain block syncing has terminated");
-		})
-		.unwrap();
-
-	// ------------------------------------------------------------------------
-	// start sidechain pruning loop
-	thread::Builder::new()
-		.name("sidechain_pruning_loop".to_owned())
-		.spawn(move || {
-			start_sidechain_pruning_loop(
-				&sidechain_storage,
-				SIDECHAIN_PURGE_INTERVAL,
-				SIDECHAIN_PURGE_LIMIT,
-			);
 		})
 		.unwrap();
 

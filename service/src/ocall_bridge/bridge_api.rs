@@ -87,9 +87,6 @@ pub trait GetOCallBridgeComponents {
 	/// remote attestation OCall API
 	fn get_ra_api(&self) -> Arc<dyn RemoteAttestationBridge>;
 
-	/// side chain OCall API
-	fn get_sidechain_api(&self) -> Arc<dyn SidechainBridge>;
-
 	/// on chain (parentchain) OCall API
 	fn get_oc_api(&self) -> Arc<dyn WorkerOnChainBridge>;
 
