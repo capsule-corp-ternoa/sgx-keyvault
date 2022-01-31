@@ -17,6 +17,11 @@ jsonrpc-core_sgx = { package = "jsonrpc-core", git = "https://github.com/scs/jso
 
 # Ternoa / Integritee
 sgx-externalities = { default-features = false, git = "https://github.com/capsule-corp-ternoa/sgx-runtime", tag = "SGX-0.0.2", optional = true }
+sp-io = { default-features = false, git = "https://github.com/capsule-corp-ternoa/sgx-runtime", tag = "SGX-0.0.2", features = [
+    "disable_oom",
+    "disable_panic_handler",
+    "disable_allocator",
+], optional = true }
 
 # std-only deps
 jsonrpc-core = { version = "18", optional = true }
@@ -35,7 +40,6 @@ itp-storage-verifier = { path = "../storage-verified", default-features = false 
 itp-storage = { path = "../storage", default-features = false, features = [
     "test",
 ] }
-its-top-pool = { path = "../../sidechain/top-pool", default-features = false }
 
 [features]
 default = ["std"]
@@ -45,20 +49,20 @@ std = [
     "sp-core/std",
     "sp-runtime/std",
     "sp-std/std",
+    "sp-io/std",
     "itp-sgx-crypto/std",
     "itp-storage/std",
     "itp-teerex-storage/std",
     "itp-types/std",
     "itp-ocall-api/std",
     "itp-storage-verifier/std",
-    "its-top-pool/std",
     "jsonrpc-core",
 ]
 sgx = [
+    "sp-io/sgx",
     "sgx_tstd",
     "sgx-crypto-helper",
     "itp-sgx-crypto/sgx",
-    "its-top-pool/sgx",
     "jsonrpc-core_sgx",
     "sgx-externalities/sgx",
 ]

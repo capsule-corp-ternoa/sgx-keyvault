@@ -74,5 +74,4 @@ production = ['itp-settings/production']
 
 [dev-dependencies]
 anyhow = "1.0.40"
-its-test = { path = "../sidechain/test" }
 mockall = "0.10.1"

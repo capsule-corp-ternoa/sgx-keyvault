@@ -6,12 +6,11 @@ edition = "2018"
 resolver = "2"
 
 [dependencies]
-sgx_tstd = { branch = "master", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
+sgx_tstd = { branch = "master", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true, features = [
+    "untrusted_time",
+] }
 
 [features]
 default = ["std"]
-std = [
-]
-sgx = [
-    "sgx_tstd",
-]
+std = []
+sgx = ["sgx_tstd"]
