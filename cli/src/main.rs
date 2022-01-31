@@ -322,15 +322,20 @@ fn main() {
 						.parse()
 						.expect("nft-id cannot be converted to u32");
 					let api = get_chain_api(matches);
-
 					let data = match api.data(arg_nft_id) {
 						Ok(v) => v,
 						Err(e) => {
-							println!("{}", e);
+							println!("{{ \"status:\" \"0\", \"result\": {} }}", e);
 							return Ok(())
 						},
 					};
-					println!("data for nft with id {}: {:?}", &arg_nft_id, data);
+
+					if let Some(data) = data {
+						println!("{{\"status:\":\"1\",\"result\":{}}}", data.to_json(false));
+					} else {
+						println!("{{\"status:\":\"0\",\"result\":\"No Data found\"}}",);
+					}
+
 					Ok(())
 				}),
 		)
@@ -486,6 +491,8 @@ fn main() {
 							.sign(&sr25519_core::Pair::from(account));
 					let jsonrpc_call: String =
 						RpcRequest::compose_jsonrpc_call(rpc_method, data.encode());
+					println!("{}", jsonrpc_call);
+					println!("{:?}", data);
 
 					// call the api
 					let direct_api = get_worker_api_direct(matches);
@@ -505,17 +512,12 @@ fn main() {
 						};
 
 					if let Some(error) = &response.error {
-						print!("Failed to store NFT secret");
 						println!(
-							"{}",
-							if let Some(message) = &error.message {
-								format!(": {:#?}", message)
-							} else {
-								"".to_string()
-							}
-						)
+							"{{ \"status:\" \"0\", \"result\": \"{}\" }}",
+							error.message.clone().unwrap_or_else(|| String::new())
+						);
 					} else {
-						println!("Succes");
+						println!("{{ \"status:\" \"1\", \"result\": \"Success\" }}");
 					}
 
 					Ok(())
@@ -573,26 +575,15 @@ fn main() {
 								err_msg
 							),
 						};
-
 					if let Some(error) = &response.error {
-						print!("Failed to retrieve NFT secret");
 						println!(
-							"{}",
-							if let Some(message) = &error.message {
-								format!(": {:#?}", message)
-							} else {
-								"".to_string()
-							}
+							"{{ \"status:\" \"0\", \"result\": \"{}\" }}",
+							error.message.clone().unwrap_or_else(|| String::new())
 						);
 					} else {
-						print!("Succes");
 						println!(
-							"{}",
-							if let Some(result) = &response.result {
-								format!(": {:#?}", result)
-							} else {
-								"".to_string()
-							}
+							"{{ \"status:\" \"1\", \"result\": {:?} }}",
+							response.result.clone().unwrap_or_else(|| Vec::new())
 						);
 					}
 

@@ -166,6 +166,26 @@ pub struct NFTData {
 	pub converted_to_capsule: bool,
 }
 
+impl NFTData {
+	#[cfg(feature = "std")]
+	pub fn to_json(&self, to_human: bool) -> String {
+		let ipfs_reference = if to_human {
+			self.ipfs_reference.clone()
+		} else {
+			std::format!("0x{}", hex::encode(self.ipfs_reference.clone()))
+		};
+
+		let series_id = if to_human {
+			self.series_id.clone()
+		} else {
+			std::format!("0x{}", hex::encode(self.series_id.clone()))
+		};
+
+		std::format!("{{\"owner\":\"{}\",\"creator\":\"{}\",\"ipfsReference\":\"{}\",\"seriesId\":\"{}\",\"listedForSale\":{},\"inTransmission\":{},\"convertedToCapsule\":{}}}", 
+		self.owner, self.creator, ipfs_reference, series_id, self.listed_for_sale, self.in_transmission, self.converted_to_capsule)
+	}
+}
+
 pub trait SignableRequest
 where
 	Self: Encode + Sized + Clone,

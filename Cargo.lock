@@ -2692,6 +2692,7 @@ name = "itp-types"
 version = "0.8.0"
 dependencies = [
  "chrono",
+ "hex",
  "itp-storage",
  "parity-scale-codec",
  "primitive-types",
