@@ -497,7 +497,8 @@ fn main() {
 							}
 						);
 					} else {
-						print!("Succes");
+						print!("Success");
+						// TODO : Replace with json formatter
 						println!(
 							"{}",
 							if let Some(result) = &response.result {
