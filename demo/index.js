@@ -2,7 +2,7 @@ const { ApiPromise, WsProvider } = require("@polkadot/api");
 const { Keyring } = require('@polkadot/keyring');
 const shell = require('shelljs');
 
-const wait_for_tx = () => new Promise((resolve) => setTimeout(resolve, 8000));
+const wait_for_tx = () => new Promise((resolve) => setTimeout(resolve, 10000));
 
 class TernoaChain {
   api = null;
