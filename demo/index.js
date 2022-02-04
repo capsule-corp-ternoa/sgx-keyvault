@@ -1,6 +1,7 @@
 const { ApiPromise, WsProvider } = require("@polkadot/api");
 const { Keyring } = require('@polkadot/keyring');
 const shell = require('shelljs');
+const assert = require('assert');
 
 const wait_for_tx = () => new Promise((resolve) => setTimeout(resolve, 10000));
 
@@ -58,10 +59,18 @@ async function demo() {
   let nft = await chain.create_nft("test");
   await wait_for_tx();
   // Create nft secret
-  shell.exec('../target/release/integritee-cli store-nft-secret //Alice 0 "top_secret" ');
+  shell.exec('../target/release/integritee-cli store-nft-secret //Alice 0 "top_secret" ', function(code, stdout, stderr) {
+    console.log('Program output:', stdout);
+    assert(JSON.parse(stdout).status == true);
+    assert(JSON.parse(stdout).result == "");
+  });
   await wait_for_tx();
   // retreive nft secret
-  shell.exec('../target/release/integritee-cli retrieve-nft-secret //Alice 0');
+  shell.exec('../target/release/integritee-cli retrieve-nft-secret //Alice 0', function(code, stdout, stderr) {
+    console.log('Program output:', stdout);
+    assert(JSON.parse(stdout).status == true);
+    assert(JSON.parse(stdout).result == "top_secret");
+  });
 }
 
 demo();

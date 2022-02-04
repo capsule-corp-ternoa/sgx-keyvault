@@ -437,7 +437,7 @@ fn main() {
 						println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap());
 					} else {
 						let cli_response =
-							CliResponseFormat { status: false, result: "".to_string() };
+							CliResponseFormat { status: true, result: "".to_string() };
 						println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap())
 					}
 

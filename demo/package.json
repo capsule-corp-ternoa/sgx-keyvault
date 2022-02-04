@@ -12,6 +12,7 @@
     "dependencies": {
         "@polkadot/api": "^7.6.1",
         "@polkadot/keyring": "^8.3.3",
+        "assert": "^2.0.0",
         "shelljs": "^0.8.5"
     }
 }
