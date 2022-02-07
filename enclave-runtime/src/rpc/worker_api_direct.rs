@@ -238,7 +238,7 @@ pub fn get_verified_nft_owner(nft_id: u32) -> Result<AccountId, Error> {
 			&nft_id
 		)))?
 		.owner;
-	Ok(owner)
+	Ok(owner.into())
 }
 
 #[cfg(feature = "test")]

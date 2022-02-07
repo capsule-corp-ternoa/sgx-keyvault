@@ -59,3 +59,5 @@ bin/sidechain_db
 cli/my_keystore
 cli/my_trusted_keystore
 bin/light_client_db.bin.1
+demo/node_modules/
+demo/my_keystore/

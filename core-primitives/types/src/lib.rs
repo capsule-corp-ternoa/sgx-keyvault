@@ -1,7 +1,7 @@
 #![cfg_attr(all(not(target_env = "sgx"), not(feature = "std")), no_std)]
 #![cfg_attr(target_env = "sgx", feature(rustc_private))]
-
 use codec::{Decode, Encode};
+use serde::{Deserialize, Serialize};
 #[cfg(feature = "sgx")]
 use sgx_tstd as std;
 use sp_core::{
@@ -148,12 +148,12 @@ impl From<WorkerResponse<Vec<u8>>> for StorageEntry<Vec<u8>> {
 }
 
 /// Data related to an NFT, such as who is its owner.
-#[derive(Encode, Decode, Clone, PartialEq, Eq, Debug)]
+#[derive(Encode, Serialize, Deserialize, Decode, Clone, PartialEq, Eq, Debug)]
 pub struct NFTData {
 	// NFT owner
-	pub owner: AccountId,
+	pub owner: [u8; 32],
 	// NFT creator
-	pub creator: AccountId,
+	pub creator: [u8; 32],
 	// IPFS reference
 	pub ipfs_reference: String,
 	// Series ID

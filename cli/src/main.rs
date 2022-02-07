@@ -56,6 +56,7 @@ use itp_api_client_extensions::{PalletNftsApi, PalletTeerexApi};
 use itp_types::{
 	RetrieveNftSecretRequest, RpcRequest, RpcResponse, SignableRequest, StoreNftSecretRequest,
 };
+use serde::{Deserialize, Serialize};
 use substrate_client_keystore::{KeystoreExt, LocalKeystore};
 
 type AccountPublic = <Signature as Verify>::Signer;
@@ -219,7 +220,8 @@ fn main() {
 					} else {
 						0
 					};
-					println!("{}", balance);
+					let cli_response = CliResponseFormat { status: true, result: balance };
+					println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap());
 					Ok(())
 				}),
 		)
@@ -266,9 +268,11 @@ fn main() {
 					let _api = api.set_signer(sr25519_core::Pair::from(from));
 					let xt = _api.balance_transfer(GenericAddress::Id(to.clone()), amount);
 					let tx_hash = _api.send_extrinsic(xt.hex_encode(), XtStatus::InBlock).unwrap();
-					println!("[+] TrustedOperation got finalized. Hash: {:?}\n", tx_hash);
-					let result = _api.get_account_data(&to).unwrap().unwrap();
-					println!("balance for {} is now {}", to, result.free);
+					//println!("[+] TrustedOperation got finalized. Hash: {:?}\n", tx_hash);
+					//let result = _api.get_account_data(&to).unwrap().unwrap();
+					//println!("balance for {} is now {}", to, result.free);
+					let cli_response = CliResponseFormat { status: true, result: tx_hash };
+					println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap());
 					Ok(())
 				}),
 		)
@@ -325,7 +329,12 @@ fn main() {
 							return Ok(())
 						},
 					};
-					println!("data for nft with id {}: {:?}", &arg_nft_id, data);
+					//println!("data for nft with id {}: {:?}", &arg_nft_id, data);
+					let cli_response = CliResponseFormat::<itp_types::NFTData> {
+						status: true,
+						result: data.unwrap(),
+					};
+					println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap());
 					Ok(())
 				}),
 		)
@@ -418,16 +427,18 @@ fn main() {
 
 					if let Some(error) = &response.error {
 						print!("Failed to store NFT secret");
-						println!(
-							"{}",
-							if let Some(message) = &error.message {
-								format!(": {:#?}", message)
-							} else {
-								"".to_string()
-							}
-						)
+						let cli_response = CliResponseFormat::<String> {
+							status: false,
+							result: String::from_utf8(
+								error.message.clone().unwrap_or("".to_string()).into(),
+							)
+							.unwrap(),
+						};
+						println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap());
 					} else {
-						println!("Succes");
+						let cli_response =
+							CliResponseFormat { status: true, result: "".to_string() };
+						println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap())
 					}
 
 					Ok(())
@@ -487,25 +498,21 @@ fn main() {
 						};
 
 					if let Some(error) = &response.error {
-						print!("Failed to retrieve NFT secret");
-						println!(
-							"{}",
-							if let Some(message) = &error.message {
-								format!(": {:#?}", message)
-							} else {
-								"".to_string()
-							}
-						);
+						//print!("Failed to retrieve NFT secret");
+						let cli_response = CliResponseFormat::<String> {
+							status: false,
+							result: String::from_utf8(
+								error.message.clone().unwrap_or("".to_string()).into(),
+							)
+							.unwrap(),
+						};
+						println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap());
 					} else {
-						print!("Succes");
-						println!(
-							"{}",
-							if let Some(result) = &response.result {
-								format!(": {:#?}", result)
-							} else {
-								"".to_string()
-							}
-						);
+						let cli_response = CliResponseFormat {
+							status: true,
+							result: String::from_utf8(response.result.unwrap()).unwrap(),
+						};
+						println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap());
 					}
 
 					Ok(())
@@ -728,5 +735,24 @@ fn get_pair_from_str(account: &str) -> sr25519::AppPair {
 			drop(store);
 			_pair
 		},
+	}
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CliResponseFormat<T: Serialize> {
+	pub status: bool,
+	pub result: T,
+}
+
+impl<T> CliResponseFormat<T>
+where
+	T: Serialize,
+{
+	pub fn pretty_format(metadata: &CliResponseFormat<T>) -> Option<String> {
+		let buf = Vec::new();
+		let formatter = serde_json::ser::PrettyFormatter::with_indent(b" ");
+		let mut ser = serde_json::Serializer::with_formatter(buf, formatter);
+		metadata.serialize(&mut ser).unwrap();
+		String::from_utf8(ser.into_inner()).ok()
 	}
 }
