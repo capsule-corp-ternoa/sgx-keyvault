@@ -39,6 +39,12 @@ class TernoaChain {
     return data.free / 1e6;
   }
 
+  async query_data(id) {
+    let api = await this.connect_to_chain();
+    const info = await api.query.nfts.data(id);
+    return info.toJSON();
+  }
+
   async create_asset(ipfs) {
     let api = await this.connect_to_chain();
     // Constuct the keyring after the API (crypto has an async init)
@@ -80,6 +86,14 @@ async function demo() {
     console.log('Program output:', stdout);
     assert(JSON.parse(stdout).status == true);
     assert(JSON.parse(stdout).result == "top_secret");
+  });
+
+  // ensure nft-data in chain and enclave matches
+  let nft_data = await chain.query_data(0);
+  console.log(nft_data);
+  shell.exec('../target/release/integritee-cli nft-data 0', function(code, stdout, stderr) {
+    console.log('Program output:', stdout);
+    assert(JSON.parse(stdout).status == true);
   });
 }
 
