@@ -108,9 +108,8 @@ Worker_Name := bin/app
 
 ######## Integritee-cli settings ########
 Client_SRC_Path := cli
-STF_SRC_Path := app-libs/stf
 Client_Rust_Flags := $(CARGO_TARGET)
-Client_SRC_Files := $(shell find $(Client_SRC_Path)/ -type f -name '*.rs') $(shell find $(STF_SRC_Path)/ -type f -name '*.rs') $(shell find $(Client_SRC_Path)/ -type f -name 'Cargo.toml')
+Client_SRC_Files := $(shell find $(Client_SRC_Path)/ -type f -name '*.rs') $(shell find $(Client_SRC_Path)/ -type f -name 'Cargo.toml')
 Client_Include_Paths := -I ./$(Client_SRC_Path) -I./include -I$(SGX_SDK)/include -I$(CUSTOM_EDL_PATH)
 Client_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(Client_Include_Paths)
 
@@ -264,7 +263,6 @@ help:
 .PHONY: setup
 setup:
 	@rm -rf bin/shards/*
-	@rm -f bin/sidechain_db/*
 	@rm -f bin/last_slot.bin
 	@rm -f bin/light_client_db.bin
 	@rm -f bin/light_client_db.bin.1

@@ -17,75 +17,41 @@
 */
 
 use crate::{
-	global_peer_updater::UpdateWorkerPeers,
 	node_api_factory::CreateNodeApi,
 	ocall_bridge::{
 		bridge_api::{
-			GetOCallBridgeComponents, IpfsBridge, RemoteAttestationBridge, SidechainBridge,
-			WorkerOnChainBridge,
+			GetOCallBridgeComponents, IpfsBridge, RemoteAttestationBridge, WorkerOnChainBridge,
 		},
 		ipfs_ocall::IpfsOCall,
 		remote_attestation_ocall::RemoteAttestationOCall,
-		sidechain_ocall::SidechainOCall,
 		worker_on_chain_ocall::WorkerOnChainOCall,
 	},
-	sync_block_gossiper::GossipBlocks,
 };
 use itp_enclave_api::remote_attestation::RemoteAttestationCallBacks;
-use its_primitives::types::SignedBlock as SignedSidechainBlock;
-use its_storage::BlockStorage;
 use std::sync::Arc;
 
 /// Concrete implementation, should be moved out of the OCall Bridge, into the worker
 /// since the OCall bridge itself should not know any concrete types to ensure
 /// our dependency graph is worker -> ocall bridge
-pub struct OCallBridgeComponentFactory<NodeApi, Gossiper, EnclaveApi, Storage, PeerUpdater> {
+pub struct OCallBridgeComponentFactory<NodeApi, EnclaveApi> {
 	node_api_factory: Arc<NodeApi>,
-	block_gossiper: Arc<Gossiper>,
 	enclave_api: Arc<EnclaveApi>,
-	block_storage: Arc<Storage>,
-	peer_updater: Arc<PeerUpdater>,
 }
 
-impl<NodeApi, Gossiper, EnclaveApi, Storage, PeerUpdater>
-	OCallBridgeComponentFactory<NodeApi, Gossiper, EnclaveApi, Storage, PeerUpdater>
-{
-	pub fn new(
-		node_api_factory: Arc<NodeApi>,
-		block_gossiper: Arc<Gossiper>,
-		enclave_api: Arc<EnclaveApi>,
-		block_storage: Arc<Storage>,
-		peer_updater: Arc<PeerUpdater>,
-	) -> Self {
-		OCallBridgeComponentFactory {
-			node_api_factory,
-			block_gossiper,
-			enclave_api,
-			block_storage,
-			peer_updater,
-		}
+impl<NodeApi, EnclaveApi> OCallBridgeComponentFactory<NodeApi, EnclaveApi> {
+	pub fn new(node_api_factory: Arc<NodeApi>, enclave_api: Arc<EnclaveApi>) -> Self {
+		OCallBridgeComponentFactory { node_api_factory, enclave_api }
 	}
 }
 
-impl<NodeApi, Gossiper, EnclaveApi, Storage, PeerUpdater> GetOCallBridgeComponents
-	for OCallBridgeComponentFactory<NodeApi, Gossiper, EnclaveApi, Storage, PeerUpdater>
+impl<NodeApi, EnclaveApi> GetOCallBridgeComponents
+	for OCallBridgeComponentFactory<NodeApi, EnclaveApi>
 where
 	NodeApi: CreateNodeApi + 'static,
-	Gossiper: GossipBlocks + 'static,
 	EnclaveApi: RemoteAttestationCallBacks + 'static,
-	Storage: BlockStorage<SignedSidechainBlock> + 'static,
-	PeerUpdater: UpdateWorkerPeers + 'static,
 {
 	fn get_ra_api(&self) -> Arc<dyn RemoteAttestationBridge> {
 		Arc::new(RemoteAttestationOCall::new(self.enclave_api.clone()))
-	}
-
-	fn get_sidechain_api(&self) -> Arc<dyn SidechainBridge> {
-		Arc::new(SidechainOCall::new(
-			self.block_gossiper.clone(),
-			self.block_storage.clone(),
-			self.peer_updater.clone(),
-		))
 	}
 
 	fn get_oc_api(&self) -> Arc<dyn WorkerOnChainBridge> {

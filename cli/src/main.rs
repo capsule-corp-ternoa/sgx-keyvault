@@ -27,13 +27,11 @@ extern crate chrono;
 use chrono::{DateTime, Utc};
 use std::time::{Duration, UNIX_EPOCH};
 
-use sgx_crypto_helper::rsa3072::Rsa3072PubKey;
-
 use sp_application_crypto::{ed25519, sr25519};
 use sp_keyring::AccountKeyring;
 use std::path::PathBuf;
 
-use base58::{FromBase58, ToBase58};
+use base58::ToBase58;
 
 use clap::{AppSettings, Arg, ArgMatches};
 use clap_nested::{Command, Commander};
@@ -45,22 +43,20 @@ use sp_runtime::{
 	traits::{IdentifyAccount, Verify},
 	MultiSignature,
 };
-use std::{result::Result as StdResult, sync::mpsc::channel, thread};
+use std::{sync::mpsc::channel, thread};
 use substrate_api_client::{
-	compose_extrinsic, compose_extrinsic_offline,
+	compose_extrinsic_offline,
 	rpc::{ws_client::Subscriber, WsRpcClient},
 	utils::FromHexString,
 	Api, GenericAddress, Metadata, RpcClient, UncheckedExtrinsicV4, XtStatus,
 };
-use teerex_primitives::Request;
 
-use ita_stf::{ShardIdentifier, TrustedCallSigned, TrustedOperation};
 use itc_rpc_client::direct_client::{DirectApi, DirectClient as DirectWorkerApi};
-use itp_api_client_extensions::{PalletNftsApi, PalletTeerexApi, TEEREX};
+use itp_api_client_extensions::{PalletNftsApi, PalletTeerexApi};
 use itp_types::{
-	DirectRequestStatus, RetrieveNftSecretRequest, RpcRequest, RpcResponse, RpcReturnValue,
-	SignableRequest, StoreNftSecretRequest,
+	RetrieveNftSecretRequest, RpcRequest, RpcResponse, SignableRequest, StoreNftSecretRequest,
 };
+use serde::{Deserialize, Serialize};
 use substrate_client_keystore::{KeystoreExt, LocalKeystore};
 
 type AccountPublic = <Signature as Verify>::Signer;
@@ -224,7 +220,8 @@ fn main() {
 					} else {
 						0
 					};
-					println!("{}", balance);
+					let cli_response = CliResponseFormat { status: true, result: balance };
+					println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap());
 					Ok(())
 				}),
 		)
@@ -271,9 +268,11 @@ fn main() {
 					let _api = api.set_signer(sr25519_core::Pair::from(from));
 					let xt = _api.balance_transfer(GenericAddress::Id(to.clone()), amount);
 					let tx_hash = _api.send_extrinsic(xt.hex_encode(), XtStatus::InBlock).unwrap();
-					println!("[+] TrustedOperation got finalized. Hash: {:?}\n", tx_hash);
-					let result = _api.get_account_data(&to).unwrap().unwrap();
-					println!("balance for {} is now {}", to, result.free);
+					//println!("[+] TrustedOperation got finalized. Hash: {:?}\n", tx_hash);
+					//let result = _api.get_account_data(&to).unwrap().unwrap();
+					//println!("balance for {} is now {}", to, result.free);
+					let cli_response = CliResponseFormat { status: true, result: tx_hash };
+					println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap());
 					Ok(())
 				}),
 		)
@@ -330,7 +329,12 @@ fn main() {
 							return Ok(())
 						},
 					};
-					println!("data for nft with id {}: {:?}", &arg_nft_id, data);
+					//println!("data for nft with id {}: {:?}", &arg_nft_id, data);
+					let cli_response = CliResponseFormat::<itp_types::NFTData> {
+						status: true,
+						result: data.unwrap(),
+					};
+					println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap());
 					Ok(())
 				}),
 		)
@@ -356,89 +360,6 @@ fn main() {
 				})
 				.runner(|_args: &str, matches: &ArgMatches<'_>| {
 					listen(matches);
-					Ok(())
-				}),
-		)
-		.add_cmd(
-			Command::new("shield-funds")
-				.description("Transfer funds from an on-chain account to an incognito account")
-				.options(|app| {
-					app.arg(
-						Arg::with_name("from")
-							.takes_value(true)
-							.required(true)
-							.value_name("SS58")
-							.help("Sender's on-chain AccountId in ss58check format"),
-					)
-					.arg(
-						Arg::with_name("to")
-							.takes_value(true)
-							.required(true)
-							.value_name("SS58")
-							.help("Recipient's incognito AccountId in ss58check format"),
-					)
-					.arg(
-						Arg::with_name("amount")
-							.takes_value(true)
-							.required(true)
-							.value_name("U128")
-							.help("Amount to be transferred"),
-					)
-					.arg(
-						Arg::with_name("shard")
-							.takes_value(true)
-							.required(true)
-							.value_name("STRING")
-							.help("Shard identifier"),
-					)
-				})
-				.runner(move |_args: &str, matches: &ArgMatches<'_>| {
-					let chain_api = get_chain_api(matches);
-					let amount = matches
-						.value_of("amount")
-						.unwrap()
-						.parse()
-						.expect("amount can't be converted to u128");
-
-					let shard_opt = match matches.value_of("shard") {
-						Some(s) => match s.from_base58() {
-							Ok(s) => ShardIdentifier::decode(&mut &s[..]),
-							_ => panic!("shard argument must be base58 encoded"),
-						},
-						_ => panic!(
-							"at least one of `mrenclave` or `shard` arguments must be supplied"
-						),
-					};
-					let shard = match shard_opt {
-						Ok(shard) => shard,
-						Err(e) => panic!("{}", e),
-					};
-
-					// get the sender
-					let arg_from = matches.value_of("from").unwrap();
-					let from = get_pair_from_str(arg_from);
-					let chain_api = chain_api.set_signer(sr25519_core::Pair::from(from));
-
-					// get the recipient
-					let arg_to = matches.value_of("to").unwrap();
-					let to = get_accountid_from_str(arg_to);
-					let (_to_encoded, to_encrypted) = match encode_encrypt(matches, to) {
-						Ok((encoded, encrypted)) => (encoded, encrypted),
-						Err(e) => panic!("{}", e),
-					};
-					// compose the extrinsic
-					let xt: UncheckedExtrinsicV4<([u8; 2], Vec<u8>, u128, H256)> = compose_extrinsic!(
-						chain_api,
-						TEEREX,
-						"shield_funds",
-						to_encrypted,
-						amount,
-						shard
-					);
-
-					let tx_hash =
-						chain_api.send_extrinsic(xt.hex_encode(), XtStatus::Finalized).unwrap();
-					println!("[+] TrustedOperation got finalized. Hash: {:?}\n", tx_hash);
 					Ok(())
 				}),
 		)
@@ -506,16 +427,18 @@ fn main() {
 
 					if let Some(error) = &response.error {
 						print!("Failed to store NFT secret");
-						println!(
-							"{}",
-							if let Some(message) = &error.message {
-								format!(": {:#?}", message)
-							} else {
-								"".to_string()
-							}
-						)
+						let cli_response = CliResponseFormat::<String> {
+							status: false,
+							result: String::from_utf8(
+								error.message.clone().unwrap_or("".to_string()).into(),
+							)
+							.unwrap(),
+						};
+						println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap());
 					} else {
-						println!("Succes");
+						let cli_response =
+							CliResponseFormat { status: true, result: "".to_string() };
+						println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap())
 					}
 
 					Ok(())
@@ -575,31 +498,26 @@ fn main() {
 						};
 
 					if let Some(error) = &response.error {
-						print!("Failed to retrieve NFT secret");
-						println!(
-							"{}",
-							if let Some(message) = &error.message {
-								format!(": {:#?}", message)
-							} else {
-								"".to_string()
-							}
-						);
+						//print!("Failed to retrieve NFT secret");
+						let cli_response = CliResponseFormat::<String> {
+							status: false,
+							result: String::from_utf8(
+								error.message.clone().unwrap_or("".to_string()).into(),
+							)
+							.unwrap(),
+						};
+						println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap());
 					} else {
-						print!("Succes");
-						println!(
-							"{}",
-							if let Some(result) = &response.result {
-								format!(": {:#?}", result)
-							} else {
-								"".to_string()
-							}
-						);
+						let cli_response = CliResponseFormat {
+							status: true,
+							result: String::from_utf8(response.result.unwrap()).unwrap(),
+						};
+						println!("{}", CliResponseFormat::pretty_format(&cli_response).unwrap());
 					}
 
 					Ok(())
 				}),
 		)
-		.add_cmd(ita_stf::cli::cmd(&perform_trusted_operation))
 		.no_cmd(|_args, _matches| {
 			println!("No subcommand matched");
 			Ok(())
@@ -620,125 +538,6 @@ fn get_chain_api(matches: &ArgMatches<'_>) -> Api<sr25519::Pair, WsRpcClient> {
 	Api::<sr25519::Pair, WsRpcClient>::new(WsRpcClient::new(&url)).unwrap()
 }
 
-fn perform_trusted_operation(matches: &ArgMatches<'_>, top: &TrustedOperation) -> Option<Vec<u8>> {
-	match top {
-		TrustedOperation::indirect_call(call) => send_request(matches, call.clone()),
-		TrustedOperation::direct_call(call) =>
-			send_direct_request(matches, TrustedOperation::direct_call(call.clone())),
-		TrustedOperation::get(getter) => get_state(matches, TrustedOperation::get(getter.clone())),
-	}
-}
-
-fn get_state(matches: &ArgMatches<'_>, getter: TrustedOperation) -> Option<Vec<u8>> {
-	// TODO: ensure getter is signed?
-	let (_operation_call_encoded, operation_call_encrypted) = match encode_encrypt(matches, getter)
-	{
-		Ok((encoded, encrypted)) => (encoded, encrypted),
-		Err(msg) => {
-			println!("[Error] {}", msg);
-			return None
-		},
-	};
-	let shard = read_shard(matches).unwrap();
-
-	// compose jsonrpc call
-	let data = Request { shard, cyphertext: operation_call_encrypted };
-	let rpc_method = "author_submitAndWatchExtrinsic".to_owned();
-	let jsonrpc_call: String = RpcRequest::compose_jsonrpc_call(rpc_method, data.encode());
-
-	let direct_api = get_worker_api_direct(matches);
-	let (sender, receiver) = channel();
-	direct_api.watch(jsonrpc_call, sender);
-
-	loop {
-		match receiver.recv() {
-			Ok(response) => {
-				let response: RpcResponse<Vec<u8>> = serde_json::from_str(&response).unwrap();
-				if let Ok(return_value) = RpcReturnValue::decode(&mut response.result.as_slice()) {
-					if return_value.status == DirectRequestStatus::Error {
-						println!(
-							"[Error] {}",
-							String::decode(&mut return_value.value.as_slice()).unwrap()
-						);
-						return None
-					}
-					if !return_value.do_watch {
-						return match Option::decode(&mut return_value.value.as_slice()) {
-							Ok(value_opt) => value_opt,
-							Err(_) => panic!("Error when decoding response"),
-						}
-					}
-				};
-			},
-			Err(_) => return None,
-		};
-	}
-}
-
-fn encode_encrypt<E: Encode>(
-	matches: &ArgMatches<'_>,
-	to_encrypt: E,
-) -> Result<(Vec<u8>, Vec<u8>), String> {
-	let worker_api_direct = get_worker_api_direct(matches);
-	let shielding_pubkey: Rsa3072PubKey = match worker_api_direct.get_rsa_pubkey() {
-		Ok(key) => key,
-		Err(err_msg) => return Err(err_msg.to_string()),
-	};
-
-	let encoded = to_encrypt.encode();
-	let mut encrypted: Vec<u8> = Vec::new();
-	shielding_pubkey.encrypt_buffer(&encoded, &mut encrypted).unwrap();
-	Ok((encoded, encrypted))
-}
-
-fn send_request(matches: &ArgMatches<'_>, call: TrustedCallSigned) -> Option<Vec<u8>> {
-	let chain_api = get_chain_api(matches);
-	let (_, call_encrypted) = match encode_encrypt(matches, call) {
-		Ok((encoded, encrypted)) => (encoded, encrypted),
-		Err(msg) => {
-			println!("[Error]: {}", msg);
-			return None
-		},
-	};
-
-	let shard = read_shard(matches).unwrap();
-
-	let arg_signer = matches.value_of("xt-signer").unwrap();
-	let signer = get_pair_from_str(arg_signer);
-	let _chain_api = chain_api.set_signer(sr25519_core::Pair::from(signer));
-
-	let request = Request { shard, cyphertext: call_encrypted };
-	let xt = compose_extrinsic!(_chain_api, TEEREX, "call_worker", request);
-
-	// send and watch extrinsic until block is executed
-	let block_hash =
-		_chain_api.send_extrinsic(xt.hex_encode(), XtStatus::InBlock).unwrap().unwrap();
-	info!(
-		"Trusted call extrinsic sent and sucessfully included in parentchain block with hash {:?}.",
-		block_hash
-	);
-	info!("Waiting for execution confirmation from enclave...");
-	let (events_in, events_out) = channel();
-	_chain_api.subscribe_events(events_in).unwrap();
-
-	loop {
-		let ret: ProcessedParentchainBlockArgs = _chain_api
-			.wait_for_event::<ProcessedParentchainBlockArgs>(
-				TEEREX,
-				"ProcessedParentchainBlock",
-				None,
-				&events_out,
-			)
-			.unwrap();
-		info!("Confirmation of ProcessedParentchainBlock received");
-		debug!("Expected block Hash: {:?}", block_hash);
-		debug!("Confirmed stf block Hash: {:?}", ret.block_hash);
-		if ret.block_hash == block_hash {
-			return Some(ret.block_hash.encode())
-		}
-	}
-}
-
 fn get_worker_api_direct(matches: &ArgMatches<'_>) -> DirectWorkerApi {
 	let url = format!(
 		"{}:{}",
@@ -747,94 +546,6 @@ fn get_worker_api_direct(matches: &ArgMatches<'_>) -> DirectWorkerApi {
 	);
 	info!("Connecting to integritee-service-direct-port on '{}'", url);
 	DirectWorkerApi::new(url)
-}
-
-fn read_shard(matches: &ArgMatches<'_>) -> StdResult<ShardIdentifier, codec::Error> {
-	match matches.value_of("shard") {
-		Some(s) => match s.from_base58() {
-			Ok(s) => ShardIdentifier::decode(&mut &s[..]),
-			_ => panic!("shard argument must be base58 encoded"),
-		},
-		None => match matches.value_of("mrenclave") {
-			Some(m) => match m.from_base58() {
-				Ok(s) => ShardIdentifier::decode(&mut &s[..]),
-				_ => panic!("mrenclave argument must be base58 encoded"),
-			},
-			None => panic!("at least one of `mrenclave` or `shard` arguments must be supplied"),
-		},
-	}
-}
-/// sends a rpc watch request to the worker api server
-fn send_direct_request(
-	matches: &ArgMatches<'_>,
-	operation_call: TrustedOperation,
-) -> Option<Vec<u8>> {
-	let (_operation_call_encoded, operation_call_encrypted) =
-		match encode_encrypt(matches, operation_call) {
-			Ok((encoded, encrypted)) => (encoded, encrypted),
-			Err(msg) => {
-				println!("[Error] {}", msg);
-				return None
-			},
-		};
-	let shard = read_shard(matches).unwrap();
-
-	// compose jsonrpc call
-	let data = Request { shard, cyphertext: operation_call_encrypted };
-	let direct_invocation_call = RpcRequest {
-		jsonrpc: "2.0".to_owned(),
-		method: "author_submitAndWatchExtrinsic".to_owned(),
-		params: data.encode(),
-		id: 1,
-	};
-	let jsonrpc_call: String = serde_json::to_string(&direct_invocation_call).unwrap();
-
-	debug!("get direct api");
-	let direct_api = get_worker_api_direct(matches);
-
-	debug!("setup sender and receiver");
-	let (sender, receiver) = channel();
-	direct_api.watch(jsonrpc_call, sender);
-
-	debug!("waiting for rpc response");
-	loop {
-		match receiver.recv() {
-			Ok(response) => {
-				debug!("received response");
-				let response: RpcResponse<Vec<u8>> = serde_json::from_str(&response).unwrap();
-				if let Ok(return_value) = RpcReturnValue::decode(&mut response.result.as_slice()) {
-					debug!("successfully decoded rpc response");
-					match return_value.status {
-						DirectRequestStatus::Error => {
-							debug!("request status is error");
-							if let Ok(value) = String::decode(&mut return_value.value.as_slice()) {
-								println!("[Error] {}", value);
-							}
-							return None
-						},
-						DirectRequestStatus::TrustedOperationStatus(status) => {
-							debug!("request status is: {:?}", status);
-							if let Ok(value) = Hash::decode(&mut return_value.value.as_slice()) {
-								println!("Trusted call {:?} is {:?}", value, status);
-							}
-						},
-						_ => {
-							debug!("request status is ignored");
-							return None
-						},
-					}
-					if !return_value.do_watch {
-						debug!("do watch is false, closing connection");
-						return None
-					}
-				};
-			},
-			Err(e) => {
-				error!("failed to receive rpc response: {:?}", e);
-				return None
-			},
-		};
-	}
 }
 
 #[allow(dead_code)]
@@ -1024,5 +735,24 @@ fn get_pair_from_str(account: &str) -> sr25519::AppPair {
 			drop(store);
 			_pair
 		},
+	}
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CliResponseFormat<T: Serialize> {
+	pub status: bool,
+	pub result: T,
+}
+
+impl<T> CliResponseFormat<T>
+where
+	T: Serialize,
+{
+	pub fn pretty_format(metadata: &CliResponseFormat<T>) -> Option<String> {
+		let buf = Vec::new();
+		let formatter = serde_json::ser::PrettyFormatter::with_indent(b" ");
+		let mut ser = serde_json::Serializer::with_formatter(buf, formatter);
+		metadata.serialize(&mut ser).unwrap();
+		String::from_utf8(ser.into_inner()).ok()
 	}
 }

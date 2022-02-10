@@ -17,6 +17,11 @@ jsonrpc-core_sgx = { package = "jsonrpc-core", git = "https://github.com/scs/jso
 
 # Ternoa / Integritee
 sgx-externalities = { default-features = false, git = "https://github.com/capsule-corp-ternoa/sgx-runtime", tag = "SGX-0.0.2", optional = true }
+sp-io = { default-features = false, git = "https://github.com/capsule-corp-ternoa/sgx-runtime", tag = "SGX-0.0.2", features = [
+    "disable_oom",
+    "disable_panic_handler",
+    "disable_allocator",
+], optional = true }
 
 # std-only deps
 jsonrpc-core = { version = "18", optional = true }
@@ -27,9 +32,7 @@ sp-runtime = { version = "4.0.0-dev", default-features = false, git = "https://g
 sp-std = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
 # local deps
-ita-stf = { path = "../../app-libs/stf", default-features = false }
 itp-sgx-crypto = { path = "../sgx/crypto", default-features = false }
-itp-stf-state-handler = { path = "../stf-state-handler", default-features = false }
 itp-teerex-storage = { path = "../teerex-storage", default-features = false }
 itp-types = { path = "../types", default-features = false }
 itp-ocall-api = { path = "../ocall-api", default-features = false }
@@ -37,7 +40,6 @@ itp-storage-verifier = { path = "../storage-verified", default-features = false 
 itp-storage = { path = "../storage", default-features = false, features = [
     "test",
 ] }
-its-top-pool = { path = "../../sidechain/top-pool", default-features = false }
 
 [features]
 default = ["std"]
@@ -47,23 +49,20 @@ std = [
     "sp-core/std",
     "sp-runtime/std",
     "sp-std/std",
+    "sp-io/std",
     "itp-sgx-crypto/std",
-    "itp-stf-state-handler/std",
     "itp-storage/std",
     "itp-teerex-storage/std",
     "itp-types/std",
     "itp-ocall-api/std",
     "itp-storage-verifier/std",
-    "its-top-pool/std",
     "jsonrpc-core",
 ]
 sgx = [
+    "sp-io/sgx",
     "sgx_tstd",
     "sgx-crypto-helper",
-    "ita-stf/sgx",
     "itp-sgx-crypto/sgx",
-    "itp-stf-state-handler/sgx",
-    "its-top-pool/sgx",
     "jsonrpc-core_sgx",
     "sgx-externalities/sgx",
 ]

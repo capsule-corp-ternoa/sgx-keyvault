@@ -13,17 +13,6 @@ extern "C" {
 		untrusted_worker_addr_size: u32,
 	) -> sgx_status_t;
 
-	pub fn get_state(
-		eid: sgx_enclave_id_t,
-		retval: *mut sgx_status_t,
-		cyphertext: *const u8,
-		cyphertext_size: u32,
-		shard: *const u8,
-		shard_size: u32,
-		value: *mut u8,
-		value_size: u32,
-	) -> sgx_status_t;
-
 	pub fn init_direct_invocation_server(
 		eid: sgx_enclave_id_t,
 		retval: *mut sgx_status_t,
@@ -43,18 +32,6 @@ extern "C" {
 		latest_header: *mut u8,
 		latest_header_size: usize,
 	) -> sgx_status_t;
-
-	pub fn trigger_parentchain_block_import(
-		eid: sgx_enclave_id_t,
-		retval: *mut sgx_status_t,
-	) -> sgx_status_t;
-
-	pub fn execute_trusted_getters(
-		eid: sgx_enclave_id_t,
-		retval: *mut sgx_status_t,
-	) -> sgx_status_t;
-
-	pub fn execute_trusted_calls(eid: sgx_enclave_id_t, retval: *mut sgx_status_t) -> sgx_status_t;
 
 	pub fn sync_parentchain(
 		eid: sgx_enclave_id_t,
@@ -106,15 +83,6 @@ extern "C" {
 	pub fn dump_ra_to_disk(eid: sgx_enclave_id_t, retval: *mut sgx_status_t) -> sgx_status_t;
 
 	pub fn test_main_entrance(eid: sgx_enclave_id_t, retval: *mut sgx_status_t) -> sgx_status_t;
-
-	pub fn call_rpc_methods(
-		eid: sgx_enclave_id_t,
-		retval: *mut sgx_status_t,
-		request: *const u8,
-		request_len: u32,
-		response: *mut u8,
-		response_len: u32,
-	) -> sgx_status_t;
 
 	pub fn mock_register_enclave_xt(
 		eid: sgx_enclave_id_t,

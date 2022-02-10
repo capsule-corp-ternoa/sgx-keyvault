@@ -58,18 +58,6 @@ extern "C" {
 		resp_size: u32,
 	) -> sgx_status_t;
 
-	pub fn ocall_propose_sidechain_blocks(
-		ret_val: *mut sgx_status_t,
-		signed_blocks: *const u8,
-		signed_blocks_size: u32,
-	) -> sgx_status_t;
-
-	pub fn ocall_store_sidechain_blocks(
-		ret_val: *mut sgx_status_t,
-		signed_blocks: *const u8,
-		signed_blocks_size: u32,
-	) -> sgx_status_t;
-
 	pub fn ocall_send_to_parentchain(
 		ret_val: *mut sgx_status_t,
 		extrinsics: *const u8,

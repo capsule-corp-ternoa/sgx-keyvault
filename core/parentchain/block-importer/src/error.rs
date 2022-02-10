@@ -30,8 +30,6 @@ pub enum Error {
 	Sgx(sgx_status_t),
 	#[error("Extrinsics factory error: {0}")]
 	ExtrinsicsFactory(#[from] itp_extrinsics_factory::error::Error),
-	#[error("STF execution error: {0}")]
-	StfExecution(#[from] itp_stf_executor::error::Error),
 	#[error("Light-client error: {0}")]
 	LightClient(#[from] itc_parentchain_light_client::error::Error),
 	#[error(transparent)]

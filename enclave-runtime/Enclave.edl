@@ -37,12 +37,6 @@ enclave {
 			[in, size=untrusted_worker_addr_size] uint8_t* untrusted_worker_addr, uint32_t untrusted_worker_addr_size
 		);
 
-		public sgx_status_t get_state(
-			[in, size=cyphertext_size] uint8_t* cyphertext, uint32_t cyphertext_size,
-			[in, size=shard_size] uint8_t* shard, uint32_t shard_size,
-			[out, size=value_size] uint8_t* value, uint32_t value_size
-		);
-
         public sgx_status_t init_direct_invocation_server(
             [in, size=server_addr_size] uint8_t* server_addr, uint32_t server_addr_size
         );
@@ -53,12 +47,6 @@ enclave {
             [in, size=authority_proof_size] uint8_t* authority_proof, size_t authority_proof_size,
             [out, size=latest_header_size] uint8_t* latest_header, size_t latest_header_size
         );
-
-        public sgx_status_t trigger_parentchain_block_import();
-
-        public sgx_status_t execute_trusted_getters();
-
-        public sgx_status_t execute_trusted_calls();
 
         public sgx_status_t sync_parentchain(
             [in, size=blocks_size] uint8_t* blocks, size_t blocks_size,
@@ -97,11 +85,6 @@ enclave {
 		public sgx_status_t run_key_provisioning_server(int fd, sgx_quote_sign_type_t quote_type, int skip_ra);
         public sgx_status_t request_key_provisioning(int fd, sgx_quote_sign_type_t quote_type, int skip_ra);
 
-		public sgx_status_t call_rpc_methods(
-			[in, size=request_len] uint8_t* request, uint32_t request_len,
-			[out, size=response_len] uint8_t* response, uint32_t response_len
-		);
-
 		public size_t test_main_entrance();
 	};
 
@@ -139,14 +122,6 @@ enclave {
 		sgx_status_t ocall_worker_request(
 	        [in, size = req_size] uint8_t * request, uint32_t req_size,
 	        [out, size = resp_size] uint8_t * response, uint32_t resp_size
-	    );
-
-		sgx_status_t ocall_propose_sidechain_blocks(
-	        [in, size = signed_blocks_size] uint8_t * signed_blocks, uint32_t signed_blocks_size
-	    );
-
-		sgx_status_t ocall_store_sidechain_blocks(
-	        [in, size = signed_blocks_size] uint8_t * signed_blocks, uint32_t signed_blocks_size
 	    );
 
         sgx_status_t ocall_send_to_parentchain(

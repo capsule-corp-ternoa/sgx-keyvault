@@ -16,17 +16,12 @@
 */
 use crate::{
 	error::Error,
-	global_peer_updater::GlobalPeerUpdater,
-	globals::{
-		tokio_handle::{GetTokioHandle, GlobalTokioHandle},
-		worker::{GlobalWorker, Worker},
-	},
+	globals::worker::{GlobalWorker, Worker},
 	node_api_factory::{CreateNodeApi, GlobalUrlNodeApiFactory},
 	ocall_bridge::{
 		bridge_api::Bridge as OCallBridge, component_factory::OCallBridgeComponentFactory,
 	},
 	parentchain_block_syncer::{ParentchainBlockSyncer, SyncParentchainBlocks},
-	sync_block_gossiper::SyncBlockGossiper,
 	utils::{check_files, extract_shard},
 };
 use base58::ToBase58;
@@ -37,26 +32,17 @@ use enclave::{
 	api::enclave_init,
 	tls_ra::{enclave_request_key_provisioning, enclave_run_key_provisioning_server},
 };
-use futures::executor::block_on;
 use itp_api_client_extensions::{AccountApi, ChainApi, PalletTeerexApi};
 use itp_enclave_api::{
-	direct_request::DirectRequest,
 	enclave_base::EnclaveBase,
 	remote_attestation::{RemoteAttestation, TlsRemoteAttestation},
 	sidechain::Sidechain,
 	teerex_api::TeerexApi,
 };
 use itp_settings::{
-	files::{
-		ENCRYPTED_STATE_FILE, SHARDS_PATH, SHIELDING_KEY_FILE, SIDECHAIN_PURGE_INTERVAL,
-		SIDECHAIN_PURGE_LIMIT, SIDECHAIN_STORAGE_PATH, SIGNING_KEY_FILE,
-	},
-	sidechain::SLOT_DURATION,
+	files::{ENCRYPTED_STATE_FILE, SHARDS_PATH, SHIELDING_KEY_FILE, SIGNING_KEY_FILE},
 	worker::{EXISTENTIAL_DEPOSIT_FACTOR_FOR_INIT_FUNDS, REGISTERING_FEE_FACTOR_FOR_INIT_FUNDS},
 };
-use its_consensus_slots::start_slot_worker;
-use its_primitives::types::SignedBlock as SignedSidechainBlock;
-use its_storage::{start_sidechain_pruning_loop, BlockPruner, SidechainStorageLock};
 use log::*;
 use my_node_runtime::{Event, Hash, Header};
 use sgx_types::*;
@@ -69,14 +55,14 @@ use sp_keyring::AccountKeyring;
 use std::{
 	fs::{self, File},
 	io::{stdin, Write},
-	path::{Path, PathBuf},
+	path::Path,
 	str,
 	sync::{
 		mpsc::{channel, Sender},
 		Arc,
 	},
 	thread,
-	time::{Duration, Instant},
+	time::Duration,
 };
 use substrate_api_client::{
 	rpc::WsRpcClient, utils::FromHexString, Api, GenericAddress, Header as HeaderTrait, XtStatus,
@@ -86,13 +72,11 @@ use teerex_primitives::ShardIdentifier;
 mod config;
 mod enclave;
 mod error;
-mod global_peer_updater;
 mod globals;
 mod node_api_factory;
 mod ocall_bridge;
 mod parentchain_block_syncer;
 mod request_keys;
-mod sync_block_gossiper;
 mod tests;
 mod utils;
 mod worker;
@@ -109,8 +93,6 @@ fn main() {
 
 	let config = Config::from(&matches);
 
-	GlobalTokioHandle::initialize();
-
 	// log this information, don't println because some python scripts for GA rely on the
 	// stdout from the service
 	#[cfg(feature = "production")]
@@ -119,25 +101,13 @@ fn main() {
 	info!("*** Starting service in SGX debug mode");
 
 	// build the entire dependency tree
-	let worker = Arc::new(GlobalWorker {});
-	let tokio_handle = Arc::new(GlobalTokioHandle {});
-	let sync_block_gossiper =
-		Arc::new(SyncBlockGossiper::new(tokio_handle.clone(), worker.clone()));
-	let peer_updater = Arc::new(GlobalPeerUpdater::new(worker));
-	let sidechain_blockstorage = Arc::new(
-		SidechainStorageLock::<SignedSidechainBlock>::new(PathBuf::from(&SIDECHAIN_STORAGE_PATH))
-			.unwrap(),
-	);
 	let node_api_factory = Arc::new(GlobalUrlNodeApiFactory::new(config.node_url()));
 	let enclave = Arc::new(enclave_init(&config).unwrap());
 
 	// initialize o-call bridge with a concrete factory implementation
 	OCallBridge::initialize(Arc::new(OCallBridgeComponentFactory::new(
 		node_api_factory.clone(),
-		sync_block_gossiper,
 		enclave.clone(),
-		sidechain_blockstorage.clone(),
-		peer_updater,
 	)));
 
 	if let Some(smatches) = matches.subcommand_matches("run") {
@@ -149,23 +119,9 @@ fn main() {
 
 		let node_api = node_api_factory.create_api().set_signer(AccountKeyring::Alice.pair());
 
-		GlobalWorker::reset_worker(Worker::new(
-			config.clone(),
-			node_api.clone(),
-			enclave.clone(),
-			Vec::new(),
-		));
+		GlobalWorker::reset_worker(Worker::new(config.clone(), node_api.clone(), enclave.clone()));
 
-		start_worker(
-			config,
-			&shard,
-			enclave,
-			sidechain_blockstorage,
-			skip_ra,
-			dev,
-			node_api,
-			tokio_handle,
-		);
+		start_worker(config, &shard, enclave, skip_ra, dev, node_api);
 	} else if let Some(smatches) = matches.subcommand_matches("request-keys") {
 		println!("*** Requesting keys from a registered worker \n");
 		let node_api = node_api_factory.create_api().set_signer(AccountKeyring::Alice.pair());
@@ -237,25 +193,15 @@ fn main() {
 
 /// FIXME: needs some discussion (restructuring?)
 #[allow(clippy::too_many_arguments)]
-fn start_worker<E, T, D>(
+fn start_worker<E>(
 	config: Config,
 	shard: &ShardIdentifier,
 	enclave: Arc<E>,
-	sidechain_storage: Arc<D>,
 	skip_ra: bool,
 	dev: bool,
 	mut node_api: Api<sr25519::Pair, WsRpcClient>,
-	tokio_handle: Arc<T>,
 ) where
-	T: GetTokioHandle,
-	E: EnclaveBase
-		+ DirectRequest
-		+ Sidechain
-		+ RemoteAttestation
-		+ TlsRemoteAttestation
-		+ TeerexApi
-		+ Clone,
-	D: BlockPruner + Sync + Send + 'static,
+	E: EnclaveBase + Sidechain + RemoteAttestation + TlsRemoteAttestation + TeerexApi + Clone,
 {
 	println!("IntegriTEE Worker v{}", VERSION);
 	info!("starting worker on shard {}", shard.encode().to_base58());
@@ -294,20 +240,6 @@ fn start_worker<E, T, D>(
 			.init_direct_invocation_server(direct_invocation_server_addr)
 			.unwrap();
 		println!("[+] RPC direction invocation server shut down");
-	});
-
-	// ------------------------------------------------------------------------
-	// Start untrusted worker rpc server.
-	let handle = tokio_handle.get_handle();
-	// FIXME: this should be removed - this server should only handle untrusted things.
-	// i.e move sidechain block importing to trusted worker.
-	let enclave_for_block_gossip_rpc_server = enclave.clone();
-	let untrusted_url = config.untrusted_worker_url();
-	println!("[+] Untrusted RPC server listening on {}", &untrusted_url);
-	handle.spawn(async move {
-		itc_rpc_server::run_server(&untrusted_url, enclave_for_block_gossip_rpc_server)
-			.await
-			.unwrap()
 	});
 
 	// ------------------------------------------------------------------------
@@ -363,27 +295,12 @@ fn start_worker<E, T, D>(
 		node_api.get_header(register_enclave_xt_hash).unwrap().unwrap();
 	if primary_validateer(&node_api, &register_enclave_xt_header).unwrap() {
 		last_synced_header = import_parentchain_blocks_until_self_registry(
-			enclave.clone(),
 			parentchain_block_syncer,
 			&last_synced_header,
 			&register_enclave_xt_header,
 		)
 		.unwrap();
 	}
-
-	// ------------------------------------------------------------------------
-	// Start interval sidechain block production (execution of trusted calls, sidechain block production).
-	let sidechain_enclave_api = enclave.clone();
-	thread::Builder::new()
-		.name("interval_block_production_timer".to_owned())
-		.spawn(move || {
-			let future = start_slot_worker(
-				|| execute_trusted_calls(sidechain_enclave_api.as_ref()),
-				SLOT_DURATION,
-			);
-			block_on(future);
-		})
-		.unwrap();
 
 	// ------------------------------------------------------------------------
 	// start parentchain syncing loop (subscribe to header updates)
@@ -400,29 +317,6 @@ fn start_worker<E, T, D>(
 				error!("Parentchain block syncing terminated with a failure: {:?}", e);
 			}
 			println!("[+] Parentchain block syncing has terminated");
-		})
-		.unwrap();
-
-	//-------------------------------------------------------------------------
-	// start execution of trusted getters
-	let trusted_getters_enclave_api = enclave;
-	thread::Builder::new()
-		.name("trusted_getters_execution".to_owned())
-		.spawn(move || {
-			start_interval_trusted_getter_execution(trusted_getters_enclave_api.as_ref())
-		})
-		.unwrap();
-
-	// ------------------------------------------------------------------------
-	// start sidechain pruning loop
-	thread::Builder::new()
-		.name("sidechain_pruning_loop".to_owned())
-		.spawn(move || {
-			start_sidechain_pruning_loop(
-				&sidechain_storage,
-				SIDECHAIN_PURGE_INTERVAL,
-				SIDECHAIN_PURGE_LIMIT,
-			);
 		})
 		.unwrap();
 
@@ -445,47 +339,6 @@ fn start_worker<E, T, D>(
 			if let Ok(events) = parse_events(msg.clone()) {
 				print_events(events, sender.clone())
 			}
-		}
-	}
-}
-
-/// Starts the execution of trusted getters in repeating intervals.
-///
-/// The getters are executed in a pre-defined slot duration.
-fn start_interval_trusted_getter_execution<E: Sidechain>(enclave_api: &E) {
-	use itp_settings::enclave::TRUSTED_GETTERS_SLOT_DURATION;
-
-	schedule_on_repeating_intervals(
-		|| {
-			if let Err(e) = enclave_api.execute_trusted_getters() {
-				error!("Execution of trusted getters failed: {:?}", e);
-			}
-		},
-		TRUSTED_GETTERS_SLOT_DURATION,
-	);
-}
-
-/// Schedules a task on perpetually looping intervals.
-///
-/// In case the task takes longer than is scheduled by the interval duration,
-/// the interval timing will drift. The task is responsible for
-/// ensuring it does not use up more time than is scheduled.
-fn schedule_on_repeating_intervals<T>(task: T, interval_duration: Duration)
-where
-	T: Fn(),
-{
-	let mut interval_start = Instant::now();
-	loop {
-		let elapsed = interval_start.elapsed();
-
-		if elapsed >= interval_duration {
-			// update interval time
-			interval_start = Instant::now();
-			task();
-		} else {
-			// sleep for the rest of the interval
-			let sleep_time = interval_duration - elapsed;
-			thread::sleep(sleep_time);
 		}
 	}
 }
@@ -617,15 +470,6 @@ fn subscribe_to_parentchain_new_headers<E: EnclaveBase + Sidechain>(
 
 		last_synced_header = parentchain_block_syncer.sync_parentchain(last_synced_header);
 	}
-}
-
-/// Execute trusted operations in the enclave
-///
-///
-fn execute_trusted_calls<E: Sidechain>(enclave_api: &E) {
-	if let Err(e) = enclave_api.execute_trusted_calls() {
-		error!("{:?}", e);
-	};
 }
 
 fn init_shard(shard: &ShardIdentifier) {
@@ -769,11 +613,7 @@ fn bootstrap_funds_from_alice(
 }
 
 /// Ensure we're synced up until the parentchain block where we have registered ourselves.
-fn import_parentchain_blocks_until_self_registry<
-	E: EnclaveBase + TeerexApi + Sidechain,
-	ParentchainSyncer: SyncParentchainBlocks,
->(
-	enclave_api: Arc<E>,
+fn import_parentchain_blocks_until_self_registry<ParentchainSyncer: SyncParentchainBlocks>(
 	parentchain_block_syncer: Arc<ParentchainSyncer>,
 	last_synced_header: &Header,
 	register_enclave_xt_header: &Header,
@@ -786,7 +626,6 @@ fn import_parentchain_blocks_until_self_registry<
 	while last_synced_header.number() < register_enclave_xt_header.number() {
 		last_synced_header = parentchain_block_syncer.sync_parentchain(last_synced_header);
 	}
-	enclave_api.trigger_parentchain_block_import()?;
 
 	Ok(last_synced_header)
 }

@@ -264,12 +264,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 
 [[package]]
-name = "bs58"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
-
-[[package]]
 name = "byte-slice-cast"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -438,7 +432,7 @@ dependencies = [
  "convert_case",
  "proc-macro2",
  "quote 1.0.10",
- "rustc_version 0.3.3",
+ "rustc_version",
  "syn 1.0.81",
 ]
 
@@ -504,7 +498,6 @@ dependencies = [
  "hex",
  "httparse",
  "ipfs-unixfs",
- "ita-stf",
  "itc-direct-rpc-server",
  "itc-parentchain",
  "itc-tls-websocket-server",
@@ -518,15 +511,12 @@ dependencies = [
  "itp-settings",
  "itp-sgx-crypto",
  "itp-sgx-io",
- "itp-stf-executor",
- "itp-stf-state-handler",
  "itp-storage",
  "itp-storage-verifier",
  "itp-teerex-storage",
  "itp-test",
  "itp-time-utils",
  "itp-types",
- "its-sidechain",
  "jsonrpc-core",
  "lazy_static",
  "linked-hash-map",
@@ -629,22 +619,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
-name = "frame-executive"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "sp-tracing",
-]
-
-[[package]]
 name = "frame-metadata"
 version = "14.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -739,15 +713,6 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "sp-version",
-]
-
-[[package]]
-name = "frame-system-rpc-runtime-api"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "parity-scale-codec",
- "sp-api",
 ]
 
 [[package]]
@@ -1158,31 +1123,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ita-stf"
-version = "0.8.0"
-dependencies = [
- "derive_more",
- "env_logger",
- "frame-support",
- "frame-system",
- "itp-settings",
- "itp-storage",
- "itp-types",
- "its-primitives",
- "its-state",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "pallet-balances",
- "parity-scale-codec",
- "sgx-externalities",
- "sgx-runtime",
- "sgx_tstd",
- "sp-application-crypto",
- "sp-core",
- "sp-io",
- "sp-runtime",
-]
-
-[[package]]
 name = "itc-direct-rpc-server"
 version = "0.8.0"
 dependencies = [
@@ -1205,7 +1145,6 @@ dependencies = [
  "itc-parentchain-block-import-dispatcher",
  "itc-parentchain-block-import-queue",
  "itc-parentchain-block-importer",
- "itc-parentchain-indirect-calls-executor",
  "itc-parentchain-light-client",
 ]
 
@@ -1237,13 +1176,10 @@ dependencies = [
 name = "itc-parentchain-block-importer"
 version = "0.8.0"
 dependencies = [
- "ita-stf",
- "itc-parentchain-indirect-calls-executor",
  "itc-parentchain-light-client",
  "itp-extrinsics-factory",
  "itp-ocall-api",
  "itp-settings",
- "itp-stf-executor",
  "itp-types",
  "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
  "parity-scale-codec",
@@ -1252,28 +1188,6 @@ dependencies = [
  "sp-runtime",
  "thiserror 1.0.9",
  "tiny-keccak",
-]
-
-[[package]]
-name = "itc-parentchain-indirect-calls-executor"
-version = "0.8.0"
-dependencies = [
- "bs58",
- "ita-stf",
- "itp-extrinsics-factory",
- "itp-ocall-api",
- "itp-settings",
- "itp-sgx-crypto",
- "itp-stf-executor",
- "itp-types",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "sgx_tstd",
- "sgx_types",
- "sp-core",
- "sp-runtime",
- "substrate-api-client",
- "thiserror 1.0.9",
 ]
 
 [[package]]
@@ -1435,49 +1349,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "itp-stf-executor"
-version = "0.8.0"
-dependencies = [
- "ita-stf",
- "itp-ocall-api",
- "itp-stf-state-handler",
- "itp-storage",
- "itp-storage-verifier",
- "itp-test",
- "itp-time-utils",
- "itp-types",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "sgx-externalities",
- "sgx_tstd",
- "sgx_types",
- "sp-core",
- "sp-runtime",
- "thiserror 1.0.9",
-]
-
-[[package]]
-name = "itp-stf-state-handler"
-version = "0.8.0"
-dependencies = [
- "ita-stf",
- "itp-settings",
- "itp-sgx-crypto",
- "itp-sgx-io",
- "itp-types",
- "lazy_static",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "rust-base58",
- "sgx-externalities",
- "sgx_tcrypto",
- "sgx_tstd",
- "sgx_types",
- "sp-core",
- "thiserror 1.0.9",
-]
-
-[[package]]
 name = "itp-storage"
 version = "0.8.0"
 dependencies = [
@@ -1522,15 +1393,12 @@ name = "itp-test"
 version = "0.8.0"
 dependencies = [
  "derive_more",
- "ita-stf",
  "itp-ocall-api",
  "itp-sgx-crypto",
- "itp-stf-state-handler",
  "itp-storage",
  "itp-storage-verifier",
  "itp-teerex-storage",
  "itp-types",
- "its-top-pool",
  "jsonrpc-core",
  "parity-scale-codec",
  "sgx-externalities",
@@ -1538,6 +1406,7 @@ dependencies = [
  "sgx_tstd",
  "sgx_types",
  "sp-core",
+ "sp-io",
  "sp-runtime",
  "sp-std",
 ]
@@ -1564,243 +1433,6 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "substrate-api-client",
-]
-
-[[package]]
-name = "its-block-composer"
-version = "0.8.0"
-dependencies = [
- "ita-stf",
- "itp-settings",
- "itp-sgx-crypto",
- "itp-stf-executor",
- "itp-time-utils",
- "itp-types",
- "its-primitives",
- "its-state",
- "its-top-pool-rpc-author",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "sgx-externalities",
- "sgx_tstd",
- "sgx_types",
- "sp-core",
- "sp-runtime",
- "thiserror 1.0.9",
-]
-
-[[package]]
-name = "its-consensus-aura"
-version = "0.8.0"
-dependencies = [
- "finality-grandpa",
- "frame-support",
- "ita-stf",
- "itc-parentchain-block-import-dispatcher",
- "itp-ocall-api",
- "itp-settings",
- "itp-sgx-crypto",
- "itp-stf-executor",
- "itp-stf-state-handler",
- "itp-storage-verifier",
- "itp-time-utils",
- "itp-types",
- "its-block-composer",
- "its-consensus-common",
- "its-consensus-slots",
- "its-primitives",
- "its-state",
- "its-top-pool-executor",
- "its-validateer-fetch",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "sgx-externalities",
- "sgx_tstd",
- "sp-core",
- "sp-runtime",
-]
-
-[[package]]
-name = "its-consensus-common"
-version = "0.8.0"
-dependencies = [
- "itp-ocall-api",
- "itp-sgx-crypto",
- "itp-types",
- "its-primitives",
- "its-state",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "sgx_tstd",
- "sgx_types",
- "sp-runtime",
- "thiserror 1.0.9",
-]
-
-[[package]]
-name = "its-consensus-slots"
-version = "0.8.0"
-dependencies = [
- "derive_more",
- "itp-sgx-io",
- "itp-time-utils",
- "itp-types",
- "its-consensus-common",
- "its-primitives",
- "lazy_static",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "sgx_tstd",
- "sp-consensus-slots",
- "sp-runtime",
-]
-
-[[package]]
-name = "its-primitives"
-version = "0.8.0"
-dependencies = [
- "parity-scale-codec",
- "sp-core",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "its-rpc-handler"
-version = "0.8.0"
-dependencies = [
- "itp-types",
- "its-primitives",
- "its-top-pool-rpc-author",
- "jsonrpc-core",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "rust-base58",
- "sgx_tstd",
- "sgx_types",
- "sp-core",
-]
-
-[[package]]
-name = "its-sidechain"
-version = "0.8.0"
-dependencies = [
- "its-block-composer",
- "its-consensus-aura",
- "its-consensus-common",
- "its-consensus-slots",
- "its-primitives",
- "its-rpc-handler",
- "its-state",
- "its-top-pool",
- "its-top-pool-executor",
- "its-top-pool-rpc-author",
- "its-validateer-fetch",
-]
-
-[[package]]
-name = "its-state"
-version = "0.8.0"
-dependencies = [
- "frame-support",
- "itp-storage",
- "its-primitives",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "serde 1.0.133",
- "sgx-externalities",
- "sgx_tstd",
- "sp-core",
- "sp-io",
- "sp-std",
- "thiserror 1.0.9",
-]
-
-[[package]]
-name = "its-top-pool"
-version = "0.8.0"
-dependencies = [
- "byteorder 1.4.3",
- "derive_more",
- "ita-stf",
- "itc-direct-rpc-server",
- "itp-types",
- "its-primitives",
- "jsonrpc-core",
- "linked-hash-map",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "retain_mut",
- "serde 1.0.133",
- "sgx_tstd",
- "sgx_types",
- "sp-application-crypto",
- "sp-core",
- "sp-runtime",
- "thiserror 1.0.9",
-]
-
-[[package]]
-name = "its-top-pool-executor"
-version = "0.8.0"
-dependencies = [
- "ita-stf",
- "itp-stf-executor",
- "itp-time-utils",
- "itp-types",
- "its-primitives",
- "its-state",
- "its-top-pool-rpc-author",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "sgx-externalities",
- "sgx_tstd",
- "sgx_types",
- "sp-core",
- "sp-runtime",
- "thiserror 1.0.9",
-]
-
-[[package]]
-name = "its-top-pool-rpc-author"
-version = "0.8.0"
-dependencies = [
- "derive_more",
- "ita-stf",
- "itc-direct-rpc-server",
- "itc-tls-websocket-server",
- "itp-component-container",
- "itp-sgx-crypto",
- "itp-stf-state-handler",
- "itp-test",
- "itp-types",
- "its-top-pool",
- "jsonrpc-core",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "sgx_tcrypto_helper",
- "sgx_tstd",
- "sgx_types",
- "sp-core",
- "sp-runtime",
- "thiserror 1.0.9",
-]
-
-[[package]]
-name = "its-validateer-fetch"
-version = "0.8.0"
-dependencies = [
- "derive_more",
- "frame-support",
- "itp-ocall-api",
- "itp-storage",
- "itp-storage-verifier",
- "itp-teerex-storage",
- "itp-types",
- "parity-scale-codec",
- "sp-core",
- "sp-runtime",
- "sp-std",
- "thiserror 1.0.30",
 ]
 
 [[package]]
@@ -2146,180 +1778,6 @@ name = "opaque-debug"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
-
-[[package]]
-name = "pallet-aura"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "frame-support",
- "frame-system",
- "pallet-timestamp",
- "parity-scale-codec",
- "scale-info",
- "sp-application-crypto",
- "sp-consensus-aura",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-authorship"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "frame-support",
- "frame-system",
- "impl-trait-for-tuples",
- "parity-scale-codec",
- "scale-info",
- "sp-authorship",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-balances"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "frame-support",
- "frame-system",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "scale-info",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-grandpa"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "frame-support",
- "frame-system",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "pallet-authorship",
- "pallet-session",
- "parity-scale-codec",
- "scale-info",
- "sp-application-crypto",
- "sp-core",
- "sp-finality-grandpa",
- "sp-io",
- "sp-runtime",
- "sp-session",
- "sp-staking",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-parentchain"
-version = "0.9.0"
-source = "git+https://github.com/integritee-network/pallets.git?branch=master#31cf747a0240a319b141580eabadb52794d3e509"
-dependencies = [
- "frame-support",
- "frame-system",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-randomness-collective-flip"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "safe-mix",
- "scale-info",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-session"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "frame-support",
- "frame-system",
- "impl-trait-for-tuples",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "pallet-timestamp",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-session",
- "sp-staking",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-sudo"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-timestamp"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "frame-support",
- "frame-system",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "scale-info",
- "sp-inherents",
- "sp-runtime",
- "sp-std",
- "sp-timestamp",
-]
-
-[[package]]
-name = "pallet-transaction-payment"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "smallvec 1.7.0",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-transaction-payment-rpc-runtime-api"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "pallet-transaction-payment",
- "parity-scale-codec",
- "sp-api",
- "sp-runtime",
-]
 
 [[package]]
 name = "parity-scale-codec"
@@ -2724,20 +2182,11 @@ dependencies = [
 
 [[package]]
 name = "rustc_version"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
-dependencies = [
- "semver 0.9.0",
-]
-
-[[package]]
-name = "rustc_version"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f0dfe2087c51c460008730de8b57e6a320782fbfb312e1f4d520e6c6fae155ee"
 dependencies = [
- "semver 0.11.0",
+ "semver",
 ]
 
 [[package]]
@@ -2784,15 +2233,6 @@ name = "ryu"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
-
-[[package]]
-name = "safe-mix"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d3d055a2582e6b00ed7a31c1524040aa391092bf636328350813f3a0605215c"
-dependencies = [
- "rustc_version 0.2.3",
-]
 
 [[package]]
 name = "sc-utils"
@@ -2872,27 +2312,12 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d7eb9ef2c18661902cc47e535f9bc51b78acd254da71d375c2f6720d9a40403"
-dependencies = [
- "semver-parser 0.7.0",
-]
-
-[[package]]
-name = "semver"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f301af10236f6df4160f7c3f04eec6dbc70ace82d23326abad5edee88801c6b6"
 dependencies = [
- "semver-parser 0.10.2",
+ "semver-parser",
 ]
-
-[[package]]
-name = "semver-parser"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 
 [[package]]
 name = "semver-parser"
@@ -3005,40 +2430,6 @@ dependencies = [
  "serde 1.0.133",
  "sgx_tstd",
  "sgx_types",
-]
-
-[[package]]
-name = "sgx-runtime"
-version = "0.8.0"
-source = "git+https://github.com/capsule-corp-ternoa/sgx-runtime?tag=SGX-0.0.2#abcde9a38b899d90c992f5235074b2eefff04ba8"
-dependencies = [
- "frame-executive",
- "frame-support",
- "frame-system",
- "frame-system-rpc-runtime-api",
- "pallet-aura",
- "pallet-balances",
- "pallet-grandpa",
- "pallet-parentchain",
- "pallet-randomness-collective-flip",
- "pallet-sudo",
- "pallet-timestamp",
- "pallet-transaction-payment",
- "pallet-transaction-payment-rpc-runtime-api",
- "parity-scale-codec",
- "scale-info",
- "sp-api",
- "sp-block-builder",
- "sp-consensus-aura",
- "sp-core",
- "sp-inherents",
- "sp-offchain",
- "sp-runtime",
- "sp-session",
- "sp-std",
- "sp-transaction-pool",
- "sp-version",
- "ternoa-nfts",
 ]
 
 [[package]]
@@ -3359,56 +2750,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sp-authorship"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "parity-scale-codec",
- "sp-inherents",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "sp-block-builder"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "parity-scale-codec",
- "sp-api",
- "sp-inherents",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "sp-consensus-aura"
-version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "parity-scale-codec",
- "scale-info",
- "sp-api",
- "sp-application-crypto",
- "sp-consensus-slots",
- "sp-inherents",
- "sp-runtime",
- "sp-std",
- "sp-timestamp",
-]
-
-[[package]]
-name = "sp-consensus-slots"
-version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "parity-scale-codec",
- "scale-info",
- "sp-arithmetic",
- "sp-runtime",
-]
-
-[[package]]
 name = "sp-core"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
@@ -3524,16 +2865,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sp-offchain"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "sp-api",
- "sp-core",
- "sp-runtime",
-]
-
-[[package]]
 name = "sp-runtime"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
@@ -3582,19 +2913,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sp-session"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "parity-scale-codec",
- "scale-info",
- "sp-api",
- "sp-core",
- "sp-staking",
- "sp-std",
-]
-
-[[package]]
 name = "sp-staking"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
@@ -3622,18 +2940,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sp-timestamp"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "parity-scale-codec",
- "sp-api",
- "sp-inherents",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "sp-tracing"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
@@ -3642,15 +2948,6 @@ dependencies = [
  "sp-std",
  "tracing",
  "tracing-core",
-]
-
-[[package]]
-name = "sp-transaction-pool"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=master#7406442bea0194ffcafc4e8d48d895d4d8d11346"
-dependencies = [
- "sp-api",
- "sp-runtime",
 ]
 
 [[package]]
@@ -3805,47 +3102,6 @@ version = "1.0.5"
 source = "git+https://github.com/mesalock-linux/termcolor-sgx#fee5ac79b4a90197d646f3df5e1b45ac56be718b"
 dependencies = [
  "sgx_tstd",
-]
-
-[[package]]
-name = "ternoa-common"
-version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#3991509fc8a147fed719c3a6542af312f9d21419"
-dependencies = [
- "frame-support",
- "sp-runtime",
- "sp-std",
- "ternoa-primitives",
-]
-
-[[package]]
-name = "ternoa-nfts"
-version = "0.3.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#3991509fc8a147fed719c3a6542af312f9d21419"
-dependencies = [
- "frame-support",
- "frame-system",
- "log 0.4.14 (git+https://github.com/mesalock-linux/log-sgx)",
- "parity-scale-codec",
- "scale-info",
- "sp-runtime",
- "sp-std",
- "ternoa-common",
- "ternoa-primitives",
-]
-
-[[package]]
-name = "ternoa-primitives"
-version = "0.2.0"
-source = "git+https://github.com/capsule-corp-ternoa/chain?tag=SGX-0.0.2#3991509fc8a147fed719c3a6542af312f9d21419"
-dependencies = [
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-application-crypto",
- "sp-core",
- "sp-runtime",
- "sp-std",
 ]
 
 [[package]]

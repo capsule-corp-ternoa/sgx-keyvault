@@ -25,10 +25,6 @@ pub mod files {
 	pub static ENCLAVE_FILE: &str = "enclave.signed.so";
 	pub static SHIELDING_KEY_FILE: &str = "enclave-shielding-pubkey.json";
 	pub static SIGNING_KEY_FILE: &str = "enclave-signing-pubkey.bin";
-	/// sidechain database path
-	pub static SIDECHAIN_STORAGE_PATH: &str = "sidechain_db";
-	pub static SIDECHAIN_PURGE_INTERVAL: u64 = 7200; // purge sidechain every .. s
-	pub static SIDECHAIN_PURGE_LIMIT: u64 = 100; // keep the last.. sidechainblocks when purging
 
 	// used by enclave
 	pub const RSA3072_SEALED_KEY_FILE: &str = "rsa3072_key_sealed.bin";
@@ -60,8 +56,6 @@ pub mod files {
 pub mod worker {
 	// the maximum size of any extrinsic that the enclave will ever generate in B
 	pub const EXTRINSIC_MAX_SIZE: usize = 4196;
-	// the maximum size of a value that will be queried from the state in B
-	pub const STATE_VALUE_MAX_SIZE: usize = 1024;
 	// the maximum size of the header
 	pub const HEADER_MAX_SIZE: usize = 200;
 	// maximum size of shielding key

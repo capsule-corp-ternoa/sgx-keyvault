@@ -43,16 +43,8 @@ impl EnclaveBase for EnclaveBaseMock {
 		Ok(genesis_header)
 	}
 
-	fn trigger_parentchain_block_import(&self) -> EnclaveResult<()> {
-		unimplemented!()
-	}
-
 	fn set_nonce(&self, _: u32) -> EnclaveResult<()> {
 		unimplemented!()
-	}
-
-	fn get_state(&self, _cyphertext: Vec<u8>, _shard: Vec<u8>) -> EnclaveResult<Vec<u8>> {
-		Ok(Vec::<u8>::new())
 	}
 
 	fn get_rsa_shielding_pubkey(&self) -> EnclaveResult<Rsa3072PubKey> {

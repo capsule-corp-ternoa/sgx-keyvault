@@ -57,12 +57,3 @@ unsafe impl<D: Decode> DecodeRaw for D {
 		Decode::decode(&mut s)
 	}
 }
-
-pub unsafe fn utf8_str_from_raw<'a>(
-	data: *const u8,
-	len: usize,
-) -> Result<&'a str, std::str::Utf8Error> {
-	let bytes = slice::from_raw_parts(data, len);
-
-	std::str::from_utf8(bytes)
-}
