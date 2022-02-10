@@ -25,7 +25,7 @@ where
 	}
 
 	fn owner(&self, nft_id: u32) -> ApiResult<Option<AccountId>> {
-		Ok(self.data(nft_id)?.map(|d| d.owner))
+		Ok(self.data(nft_id)?.map(|d| d.owner.into()))
 	}
 
 	fn is_owner(&self, nft_id: u32, account: AccountId) -> ApiResult<Option<bool>> {
